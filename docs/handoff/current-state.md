@@ -6,7 +6,7 @@ Last updated: 2026-06-18
 
 - Repository: `https://github.com/AKRA-WEB/WEBAPP-V2`
 - Local path: `C:\dev\AKRA-WEBAPP-V2`
-- Status: Planning baseline
+- Status: Phase 1 app shell scaffolded
 - Production impact: None
 - V1 reference path: `C:\dev\WEBAPP`
 
@@ -26,29 +26,35 @@ Target stack:
 ## Current Baseline
 
 This repository was cloned as an empty GitHub repo and initialized with planning
-and handoff documents only. No application runtime has been scaffolded yet.
+and handoff documents. A minimal Next.js app shell has now been scaffolded.
 
 ## Active Plan
 
-Plan ID: `V2-0001`
+Plan ID: `V2-0002`
 
-Goal: Establish a safe planning and handoff structure for the V2 rewrite before
-any framework scaffold or production migration begins.
+Goal: Establish the V2 app shell with Supabase-ready environment boundaries
+before any production migration begins.
 
 Status:
 
 - Repo cloned locally.
 - Planning/handoff docs created.
-- Source placeholder folders created.
+- Next.js 16 app shell added.
+- Supabase SSR/browser/proxy helpers added.
+- Login shell added using Supabase Auth client-side sign-in.
+- Permission helper stub added.
+- `.env.example` added with placeholders only.
+- Real Supabase keys and Vercel project details were not committed.
 - No V1 production files changed.
 
 ## Next Actions
 
-1. Confirm whether the first implementation step should be framework scaffold
-   or deeper data-model inventory.
-2. If scaffolding is approved, create a Next.js TypeScript app in this repo.
-3. Create Supabase staging project manually or through approved tooling.
-4. Start detailed sheet-to-table mapping before any production data import.
+1. Add real environment variables locally and in Vercel project settings.
+2. Decide whether Supabase Auth will replace Main SSO immediately or bridge it
+   temporarily during migration.
+3. Build Phase 2 core schema for profiles, roles, permissions, app registry,
+   and audit logs.
+4. Start detailed V1 sheet-to-table mapping before any production data import.
 5. Pick the first pilot module. Recommended: `Picking`.
 
 ## Open Questions
@@ -60,8 +66,14 @@ Status:
   `Picking`?
 - Will V1 Sheets remain read-only archives after each module cutover, or should
   there be a temporary sync window?
+- Should the user rotate the service role key shared in chat before production
+  use? Recommended if this conversation may be exposed beyond trusted agents.
 
 ## Safety Notes
 
 Do not modify V1 repos, GAS deployments, production Sheets, or production URLs
 while working in V2 unless the user explicitly approves a cutover task.
+
+Do not commit real Supabase keys. The service role key must only be stored in
+local ignored env files, Vercel environment variables, or a secure secret
+manager.

@@ -8,7 +8,7 @@ validated module by module.
 
 ## Current Status
 
-- Status: Planning baseline
+- Status: Phase 1 app shell scaffolded
 - Production impact: None
 - Target stack: Next.js on Vercel, Supabase/Postgres, TypeScript
 - Migration style: Incremental module migration, no big-bang cutover
@@ -31,3 +31,21 @@ For context about the existing production apps, read:
 Do not change V1 production repos, Google Apps Script deployments, Google
 Sheets schemas, GitHub Pages deployments, or live GAS URLs from this V2 repo.
 V2 work must stay isolated until a specific module cutover is approved.
+
+## Local Setup
+
+Create `.env.local` from `.env.example` for local development. Keep real keys
+out of git.
+
+```text
+NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-publishable-or-anon-key
+SUPABASE_SECRET_KEY=server-only-secret-key
+```
+
+Run:
+
+```sh
+npm install
+npm run dev
+```

@@ -17,7 +17,7 @@ Vercel.
 
 ## Phase 0 - Planning Baseline
 
-Status: In progress
+Status: Done
 
 Deliverables:
 
@@ -35,6 +35,8 @@ Exit criteria:
 
 ## Phase 1 - App Shell
 
+Status: In progress
+
 Deliverables:
 
 - Next.js TypeScript scaffold
@@ -49,6 +51,13 @@ Exit criteria:
 - App boots locally.
 - Preview deployment works.
 - No production data connected by default.
+
+Current notes:
+
+- Next.js scaffold exists and builds.
+- Supabase helpers exist but real env values are not committed.
+- Vercel deployment has not been run from this repo yet.
+- Core schema and real permission model are still Phase 2.
 
 ## Phase 2 - Core Identity And Permissions
 
