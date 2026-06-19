@@ -8,10 +8,12 @@ validated module by module.
 
 ## Current Status
 
-- Status: Phase 1 app shell scaffolded
+- Status: Phase 3 Picking pilot schema applied and verified in staging
 - Production impact: None
 - Target stack: Next.js on Vercel, Supabase/Postgres, TypeScript
 - Migration style: Incremental module migration, no big-bang cutover
+- Current database baseline: Supabase draft migrations `0001`-`0006` applied to
+  staging; no V1 data imported yet
 
 ## Read First
 
@@ -41,6 +43,7 @@ out of git.
 NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-publishable-or-anon-key
 SUPABASE_SECRET_KEY=server-only-secret-key
+DATABASE_URL=postgresql://postgres:password@db.project-ref.supabase.co:5432/postgres
 ```
 
 Run:
