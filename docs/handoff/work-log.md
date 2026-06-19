@@ -511,3 +511,76 @@ Findings:
 
 No V1 production apps, GAS deployments, Sheets, URLs, or secrets were
 touched.
+
+## 2026-06-19 - Vercel Env Vars, Build Fix, And Discovery Of Unpushed Commits
+
+Context:
+
+- User added `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`,
+  and the rotated `SUPABASE_SECRET_KEY` to the Vercel project
+  (`https://vercel.com/akrapanich-3912s-projects/project-webapp-v2`) by hand
+  through the dashboard, scoped to Preview + Development (not Production),
+  then redeployed.
+
+Findings:
+
+- First redeploy failed: `Error: No Output Directory named "public" found
+  after the Build completed.` Root cause was the Vercel project's Framework
+  Preset not being set to Next.js (or an Output Directory override of
+  `public`). Fixed by the user in Settings → Build and Deployment by setting
+  Framework Preset to Next.js and clearing any Output Directory override;
+  redeploy then succeeded.
+- The unique deployment URL (with a random hash suffix) returned HTTP 401
+  from Vercel's own Deployment Protection / Vercel Authentication wall (body:
+  "Authentication Required"), not an app error. This was expected — the
+  workspace's `vercel` CLI session cannot bypass it (see the
+  `scope_not_accessible` finding above), so verification had to be done by
+  the user directly in a browser already authenticated to the Vercel team.
+- After the build fix, the user opened the **production alias**
+  (`https://project-webapp-v2.vercel.app/`) and saw the dashboard, but it
+  showed a `Phase 1` status pill (current code has `Phase 2`) and no sidebar
+  link reaches `/login` or `/admin/permissions` (all `AppShell` nav items are
+  still placeholders pointing at `/`; module cards are plain `<article>`s,
+  not links — this matches the current source, not a bug).
+- Root cause of the stale `Phase 1` content: `git log` showed `HEAD` was
+  still at `e99fc59 Scaffold Next.js app shell`. All Phase 2/3 work (core +
+  Picking schema migrations, `/admin/permissions`, `get-permission-snapshot`,
+  the Supabase-backed app registry, ADRs, plans, runbooks, and tooling
+  scripts) had been sitting uncommitted in the working tree this whole time
+  and was never pushed to `https://github.com/AKRA-WEB/WEBAPP-V2`. Vercel
+  builds from that GitHub remote, so it only ever had the Phase 1 scaffold to
+  deploy — `/admin/permissions` did not exist in any deployed build yet.
+- User confirmed sign-in at `/login` (typed directly, since there is no nav
+  link to it yet) works against the live deployment with the test account
+  `test-admin@akra-v2.test`.
+
+Changes:
+
+- Committed and pushed the previously-uncommitted Phase 2/3 work in three
+  commits on `main`:
+  - `c31bc54` — core identity/permissions schema, Picking pilot schema,
+    `/admin/permissions`, the app registry, ADRs, and import-mapping docs.
+  - `1d8dede` — migration tooling scripts and the staging migration runbook.
+  - `325d6ee` — handoff docs, README, `.env.example` `DATABASE_URL` entry,
+    and `CLAUDE.md`.
+- Excluded the user's local debug screenshot (`screenshot/`) from any commit;
+  it is not part of the application and was left untracked.
+
+Verification:
+
+- `npm run lint`, `npm run typecheck`, and `git diff --check` passed before
+  committing (CRLF-only warnings).
+- No V1 production apps, GAS deployments, Sheets, URLs, or secrets were
+  touched. `.env.local` remains git-ignored and was never staged.
+
+Known follow-ups:
+
+- After this push, trigger another Vercel deploy and re-verify `/login` +
+  `/admin/permissions` now show the real Phase 2 dashboard and permission
+  viewer (previous checks were against the stale Phase 1 deployment).
+- Wire real navigation: `AppShell` sidebar items and dashboard module cards
+  still need real `href`s (including a visible way to reach `/login` and
+  `/admin/permissions`) instead of Phase-1 placeholders.
+- Decide whether the Production Vercel environment should also get the
+  Supabase env vars and have Deployment Protection adjusted, or stay locked
+  down until a real cutover decision is made.

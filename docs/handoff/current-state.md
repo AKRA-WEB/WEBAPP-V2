@@ -106,27 +106,44 @@ Status:
   to `/`, `/admin/permissions` renders the `ADMIN` role card, all 13
   permissions, all 8 apps, with no console errors. Playwright is not a project
   dependency; the one-off check script was deleted after use.
+- User added the public Supabase env vars and the rotated `SUPABASE_SECRET_KEY`
+  to the V2 Vercel project (`https://vercel.com/akrapanich-3912s-projects/project-webapp-v2`)
+  by hand via the dashboard, scoped to Preview + Development.
+- Found and fixed a Vercel build failure (`No Output Directory named "public"
+  found`) caused by the project's Framework Preset not being set to Next.js;
+  fixing the preset (and clearing any Output Directory override) made the
+  build succeed.
+- Discovered all Phase 2/3 work had been sitting uncommitted locally and was
+  never pushed, so Vercel had only ever deployed the Phase 1 scaffold
+  (`e99fc59`) — explaining the stale `Phase 1` pill and missing
+  `/admin/permissions` route the user saw on the live deployment. Committed
+  and pushed it in three commits on `main` (`c31bc54`, `1d8dede`, `325d6ee`);
+  see the 2026-06-19 work-log entry for details.
+- User confirmed sign-in at `/login` works against the live deployment (typed
+  directly; there is no nav link to it yet) with the `test-admin@akra-v2.test`
+  test account.
 - No V1 production files changed.
 
 ## Next Actions
 
-1. Add the rotated server-only staging service role key to Vercel project
-   settings. (Local `.env.local` already has it; sign-in and
-   `/admin/permissions` are verified end to end locally.) The V2 Vercel
-   project lives at `https://vercel.com/akrapanich-3912s-projects/project-webapp-v2`;
-   the locally logged-in `vercel` CLI account (`akra-web`) only has access to
-   the `buymoreth-erp-projects` scope and cannot reach
-   `akrapanich-3912s-projects`, so this step needs to be done by hand in the
-   Vercel dashboard (or by `vercel login` with the account that owns
-   `akrapanich-3912s-projects`), not by this agent's CLI session.
-2. Create/link remaining staging Supabase Auth users and seed role assignments
+1. Trigger a fresh Vercel deploy now that Phase 2/3 work is pushed, and
+   re-verify `/login` + `/admin/permissions` show the real Phase 2 content
+   (previous live checks were against the stale Phase 1 deployment).
+2. Wire real navigation: `AppShell` sidebar items and dashboard module cards
+   are still Phase-1 placeholders (`href="/"` / no link at all) with no
+   visible way to reach `/login` or `/admin/permissions`.
+3. Decide whether the Production Vercel environment should also get the
+   Supabase env vars and have Deployment Protection adjusted, or stay locked
+   down until a real cutover decision is made (env vars are currently
+   Preview + Development only).
+4. Create/link remaining staging Supabase Auth users and seed role assignments
    for additional test accounts (one ADMIN test account exists; see
    `scripts/create-test-account.mjs`).
-3. Use `docs/migration/core-v1-import-mapping.md` to prepare a staging import
+5. Use `docs/migration/core-v1-import-mapping.md` to prepare a staging import
    for real V1 `User` / `AppConfig` / `RoleConfig` / `PermConfig` data.
-4. Wire server-side permission guards into routes/actions using
+6. Wire server-side permission guards into routes/actions using
    `getPermissionSnapshot()` + `can()`.
-5. Start implementing V2 Picking routes/actions after the Picking schema is
+7. Start implementing V2 Picking routes/actions after the Picking schema is
    applied and verified in a local or staging Supabase database.
 
 ## Open Questions
