@@ -837,3 +837,69 @@ Verification:
 
 - Checked `git status` and ran static checks `npm run lint`, `npm run typecheck`, and `npm run check:migrations`.
 - Tested and verified account creation logs.
+
+## 2026-06-19 - Main Portal Design Direction
+
+Plan: `V2-0017` (`docs/plans/V2-0017-main-portal-design-direction.md`).
+
+Context:
+
+- User asked whether the V2 Main page should be newly designed or brought over
+  from the old Main page.
+- Used `modern-web-guidance` for current web UI guidance and retrieved the
+  relevant container-query and deferred-rendering guidance.
+- Used `ui-ux-pro-max` checklist guidance for accessibility, touch target,
+  navigation, typography, responsive, and token-driven UI decisions. The skill's
+  optional search script path is not present in this workspace, so the CLI
+  search step could not run and the checklist guidance was used directly.
+- Read V1 Main `index.html` as reference only. V1 Main is a live Portal + SSO
+  launcher with admin tools for users, app visibility, roles, and permissions.
+
+Changes:
+
+- Added `docs/plans/V2-0017-main-portal-design-direction.md`.
+- Added ADR `docs/decisions/0008-main-portal-redesign-with-v1-behavior.md`.
+- Updated `docs/plans/index.md` and `docs/handoff/current-state.md`.
+
+Decision proposed:
+
+- Preserve V1 Main behavior and mental model: sign in once, show allowed
+  modules, show user/role context, expose admin controls only to admins, and
+  keep familiar module labels.
+- Do not copy V1 Main's single-file implementation or visual shell directly.
+  V2 Main should use the unified V2 app shell, server-side permission checks,
+  and an operator-facing portal layout.
+
+Verification:
+
+- Scoped documentation check passed:
+  `git diff --check -- docs/plans/index.md docs/handoff/current-state.md docs/handoff/work-log.md docs/plans/V2-0017-main-portal-design-direction.md docs/decisions/0008-main-portal-redesign-with-v1-behavior.md`
+  produced no whitespace errors, with the existing CRLF-to-LF warning for
+  `docs/handoff/work-log.md`.
+- Repo-wide `git diff --check` currently fails on an unrelated `.gitignore`
+  blank line at EOF from the active `V2-0015` working tree changes
+  (`import-snapshots/`, `import-reports/`, and
+  `scripts/core-import-dry-run.mjs`). Those files were not edited by this Main
+  planning update.
+- No V1 production apps, GAS deployments, Sheets, URLs, LINE tokens, Supabase
+  secrets, runtime code, deployment settings, or database schema files were
+  changed by this planning update.
+
+## 2026-06-19 - Core Import Dry Run (V2-0015)
+
+Plan: `V2-0015` (`docs/plans/V2-0015-core-import-dry-run.md`).
+
+Context:
+- Executed plan `V2-0015` to build a validation-first, no-write dry-run import workflow for V1 core user, role, and permission data.
+
+Changes:
+- Added `scripts/core-import-dry-run.mjs` which reads V1 CSV snapshots, validates columns/headers, maps V1 roles and permissions to V2 equivalents, generates synthetic emails (e.g. name@akra-v2.test) for profiles without email, and outputs a detailed Markdown report at `import-reports/dry-run-report.md`.
+- Modified `.gitignore` to ignore `import-snapshots/` and `import-reports/` to keep V1 data and reports out of Git history.
+- Rewrote the database check in the dry-run script to use `@supabase/supabase-js` HTTP queries instead of `pg` direct port-5432 connection, avoiding network timeouts/IPv6 resolution blocks.
+- Generated sample synthetic snapshot CSV files (`User.csv`, `RoleConfig.csv`, `PermConfig.csv`, `AppConfig.csv`) under `import-snapshots/` so the script is instantly runnable and testable.
+- Updated plans index, `V2-0015` plan file, and current state documentation to Complete.
+
+Verification:
+- Checked `git status` and ran static checks `npm run lint`, `npm run typecheck`, and `npm run check:migrations`. All passed.
+- Executed `node scripts/core-import-dry-run.mjs` and verified it successfully queries Supabase staging database via HTTP API (finding 4 roles and 13 permissions), parses CSVs correctly, and generates the expected Markdown report file without blockers.
+- No V1 production files, GAS deployments, or live DB writes were performed.

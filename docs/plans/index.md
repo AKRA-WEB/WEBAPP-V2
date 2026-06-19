@@ -28,10 +28,10 @@ Picking write workflows.
    - Outcome: Production/Preview/Development environment scope is recorded (Vercel Production remains disconnected from staging), test roles (PICKING_WRITER, PICKING_READER, GUEST) created, and non-admin test users created.
    - File: `docs/plans/V2-0014-deployment-boundary-and-staging-access.md`
 4. `V2-0015` - Core import dry run
-   - Status: Draft.
-   - Next action: build a validation-first, no-write import dry run for V1
-     core identity and permission snapshots.
+   - Status: Complete on 2026-06-19.
+   - Outcome: Built dry-run validation script `scripts/core-import-dry-run.mjs` checking V1 snapshots, normalizing roles/permissions, generating synthetic emails, and querying staging DB via HTTPS API.
    - File: `docs/plans/V2-0015-core-import-dry-run.md`
+
 5. `V2-0016` - Server permission guard pattern
    - Status: Draft.
    - Next action: add a reusable server guard around `getPermissionSnapshot()`
@@ -42,12 +42,18 @@ Picking write workflows.
    - Next action: revisit after `V2-0014` and `V2-0016`; confirm first Picking
      slice and open decisions before coding.
    - File: `docs/plans/V2-0010-picking-product-scope-and-flow.md`
-7. `V2-0011` - Conductor planning index
+7. `V2-0017` - Main portal design direction
+   - Status: Draft.
+   - Next action: confirm the hybrid direction: preserve V1 Main behavior and
+     module mental model, but redesign the V2 Main portal instead of copying the
+     V1 visual shell.
+   - File: `docs/plans/V2-0017-main-portal-design-direction.md`
+8. `V2-0011` - Conductor planning index
    - Status: Complete on 2026-06-19.
    - Outcome: root `CONDUCTOR.md` and this plan index now define the central
      resume/handoff workflow.
    - File: `docs/plans/V2-0011-conductor-planning-index.md`
-8. `V2-0012` - Architect command format
+9. `V2-0012` - Architect command format
    - Status: Complete on 2026-06-19.
    - Outcome: `Architect:` is now the standard plan-only command and a detailed
      template exists at `docs/plans/templates/architect-plan-template.md`.
@@ -78,6 +84,10 @@ Picking write workflows.
   include create requisition in the first coded slice.
 - Whether LINE notification follows create requisition immediately or waits
   until in-app status/problem flows are proven.
+- Whether V2 Main should require sign-in immediately or show a signed-out portal
+  state with a Sign In action.
+- Whether queued modules should be visible to ordinary users during migration or
+  only to admins/internal testers.
 
 ## Update Rules
 

@@ -1,6 +1,7 @@
 # Plan V2-0009: Next Execution Sequence
 
-Status: In progress — step 1 complete
+Status: In progress — step 4 complete (steps 1, 2, 3, 4 done)
+
 
 ## Goal
 
@@ -108,23 +109,15 @@ Verification:
 
 ### 4. Core Import Dry Run
 
-Build a staging-only import workflow for V1 `User`, `AppConfig`, `RoleConfig`,
-and `PermConfig` based on `docs/migration/core-v1-import-mapping.md`.
+Status: Complete on 2026-06-19.
 
-The first pass should validate exported CSV snapshots and produce a deterministic
-report before writing transformed rows. Real import should be a separate,
-approved step after the report is reviewed.
+Outcome: Created `scripts/core-import-dry-run.mjs` which validates headers, normalizes roles/permissions, generates synthetic emails (e.g. name@akra-v2.test), and outputs a detailed markdown report inside `import-reports/dry-run-report.md`. It resolves DB roles/permissions via Supabase HTTPS API to avoid IPv6/port-5432 network timeout issues.
 
-Expected files:
+Files:
+- `scripts/core-import-dry-run.mjs`
+- `import-reports/dry-run-report.md` (local only, git-ignored)
+- Synthetic snapshot fixtures generated in `import-snapshots/` (local only, git-ignored)
 
-- New import/validation script under `scripts/`
-- Optional docs under `docs/runbooks/`
-- Handoff docs
-
-Verification:
-
-- Deterministic row-count and unknown-role/unknown-permission reports
-- No passwords, secrets, GAS URLs, or LINE tokens written to repo files
 
 ### 5. Server Permission Guard Pattern
 

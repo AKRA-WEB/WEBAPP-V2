@@ -47,6 +47,7 @@ Plan IDs:
 - `V2-0014` (`docs/plans/V2-0014-deployment-boundary-and-staging-access.md`)
 - `V2-0015` (`docs/plans/V2-0015-core-import-dry-run.md`)
 - `V2-0016` (`docs/plans/V2-0016-server-permission-guard-pattern.md`)
+- `V2-0017` (`docs/plans/V2-0017-main-portal-design-direction.md`)
 
 Goal: Finish the Phase 2 core schema baseline and draft the Phase 3 Picking
 pilot schema/mapping so the first module can be staged without touching V1
@@ -163,26 +164,32 @@ Status:
   - `V2-0014` covers the deployment boundary decision and non-admin staging
     test user matrix.
   - `V2-0015` covers a validation-first V1 core import dry run with no database
-    writes in the first slice.
+    writes in the first slice (V2-0015 complete).
   - `V2-0016` covers a reusable server-side permission guard before Picking
     routes/actions.
-- Current workspace note: navigation/conductor/planning work is committed (V2-0013 complete). V2-0014 environment boundary is confirmed (Vercel Production remains disconnected from staging), test roles (PICKING_WRITER, PICKING_READER, GUEST) are seeded on staging via IPv4 pooler, and three non-admin staging test accounts are created.
+- Current workspace note: navigation/conductor/planning work is committed (V2-0013 complete). V2-0014 environment boundary is confirmed (Vercel Production remains disconnected from staging), test roles (PICKING_WRITER, PICKING_READER, GUEST) are seeded on staging. Three non-admin staging test accounts are created. V2-0015 (Core import dry run) is complete; built and verified the dry-run script `scripts/core-import-dry-run.mjs` which parses V1 snapshot CSVs, maps/normalizes roles/permissions, generates synthetic emails, and resolves current DB permissions via HTTPS API.
+- Added `V2-0017` as the Main portal design-direction gate. ADR `0008`
+  proposes the hybrid decision: preserve V1 Main's workflow and module mental
+  model, but redesign the V2 Main portal instead of copying the V1 visual shell
+  or single-file implementation.
 - No V1 production files changed.
 
 ## Next Actions
 
-1. Execute `V2-0015`: prepare a staging-only core import dry run from V1 `User`
-   / `AppConfig` / `RoleConfig` / `PermConfig` data using
-   `docs/migration/core-v1-import-mapping.md`; validate before writing rows.
-2. Execute `V2-0016`: add a reusable server-side permission guard pattern
+1. Execute `V2-0016`: add a reusable server-side permission guard pattern
    around `getPermissionSnapshot()` + `can()` and apply it before adding write
    workflows.
+2. Prepare and run the actual V1 core import script (writing profiles/user_roles/role_permissions to staging) based on `scripts/core-import-dry-run.mjs` validation report.
 3. Use `V2-0010` as the gate for V2 Picking implementation: confirm MVP and
    first slice, then start with a permission-gated read path, then create
    requisition server actions, then status/problem workflows and LINE
    integration.
-4. Keep `docs/plans/index.md` updated whenever a plan status or next action
+4. Confirm `V2-0017` Main portal direction before polishing `/` beyond the
+   current migration dashboard. Recommended direction: redesign V2 Main while
+   preserving V1 Main behavior and familiar module labels.
+5. Keep `docs/plans/index.md` updated whenever a plan status or next action
    changes.
+
 
 ## Open Questions
 
@@ -194,6 +201,10 @@ Status:
 - How should V1 users without email addresses be represented in Supabase Auth?
 - Will V1 Sheets remain read-only archives after each module cutover, or should
   there be a temporary sync window?
+- Should V2 Main require sign-in immediately, or show a signed-out portal state
+  with a Sign In action?
+- Should queued modules be visible to ordinary users during migration, or only
+  to admins/internal testers?
 
 ## Safety Notes
 

@@ -1,12 +1,7 @@
 # Plan V2-0015: Core Import Dry Run
 
-Status: Draft
+Status: Complete on 2026-06-19
 
-Architect command:
-
-```text
-Architect: plan a staging-only dry run for V1 core user/app/role/permission import.
-```
 
 ## 1. Goal
 
@@ -179,7 +174,6 @@ and fix the script before any approved staging write step.
 
 ## 10. Handoff Notes
 
-- Next action: execute after staging access users prove non-admin permissions.
-- Blockers: needs V1 export snapshots or synthetic fixtures.
-- Related plans: `V2-0004`, `V2-0009`, `V2-0014`.
-- Related ADRs: none yet; add one if the identity bridge decision is made.
+- Next action: prepare the actual import migration script when user approves database write workflows.
+- Outcome: `scripts/core-import-dry-run.mjs` was successfully built, incorporating `@supabase/supabase-js` API client querying to bypass IPv6/port-5432 network issues. It produces a detailed validation and proposal report.
+- Related plans: `V2-0004`, `V2-0009`, `V2-0014`, `V2-0016`.

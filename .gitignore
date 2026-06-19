@@ -31,4 +31,5 @@ Thumbs.db
 
 # Local screenshots and artifacts
 screenshot/
-
+import-snapshots/
+import-reports/
