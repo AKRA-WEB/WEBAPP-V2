@@ -584,3 +584,24 @@ Known follow-ups:
 - Decide whether the Production Vercel environment should also get the
   Supabase env vars and have Deployment Protection adjusted, or stay locked
   down until a real cutover decision is made.
+
+## 2026-06-19 - Push To Main And Live Verification
+
+Changes:
+
+- User explicitly authorized pushing directly to `main` (no PR; solo-dev
+  repo, no branch protection in use). Pushed `e99fc59..8a8f083` to
+  `origin/main`.
+- Vercel auto-redeployed from the push.
+
+Verification:
+
+- User opened `https://project-webapp-v2.vercel.app/admin/permissions` after
+  signing in with `test-admin@akra-v2.test` and confirmed (via screenshot) it
+  now renders the real Phase 2 content: `ADMIN` role card, `Permissions
+  (13)`, `Apps (8)`, `Read only` pill — matching the local Playwright check
+  exactly.
+- Next Action 1 from the prior baseline (rotated service key + Vercel env
+  vars + sign-in/`/admin/permissions` end-to-end) is fully closed.
+- No V1 production apps, GAS deployments, Sheets, URLs, or secrets were
+  touched.

@@ -122,28 +122,33 @@ Status:
 - User confirmed sign-in at `/login` works against the live deployment (typed
   directly; there is no nav link to it yet) with the `test-admin@akra-v2.test`
   test account.
+- Pushed `e99fc59..8a8f083` to `origin/main` (user explicitly authorized the
+  direct push to `main`, no PR, solo-dev repo). Vercel auto-redeployed from
+  the push.
+- Re-verified live: `/admin/permissions` on
+  `https://project-webapp-v2.vercel.app/` now renders the real Phase 2
+  content — `ADMIN` role card, `Permissions (13)`, `Apps (8)`, `Read only`
+  pill — matching the local Playwright check exactly. Next Action 1 (rotated
+  key + Vercel + sign-in/`/admin/permissions` e2e) is now fully closed.
 - No V1 production files changed.
 
 ## Next Actions
 
-1. Trigger a fresh Vercel deploy now that Phase 2/3 work is pushed, and
-   re-verify `/login` + `/admin/permissions` show the real Phase 2 content
-   (previous live checks were against the stale Phase 1 deployment).
-2. Wire real navigation: `AppShell` sidebar items and dashboard module cards
+1. Wire real navigation: `AppShell` sidebar items and dashboard module cards
    are still Phase-1 placeholders (`href="/"` / no link at all) with no
    visible way to reach `/login` or `/admin/permissions`.
-3. Decide whether the Production Vercel environment should also get the
+2. Decide whether the Production Vercel environment should also get the
    Supabase env vars and have Deployment Protection adjusted, or stay locked
    down until a real cutover decision is made (env vars are currently
    Preview + Development only).
-4. Create/link remaining staging Supabase Auth users and seed role assignments
+3. Create/link remaining staging Supabase Auth users and seed role assignments
    for additional test accounts (one ADMIN test account exists; see
    `scripts/create-test-account.mjs`).
-5. Use `docs/migration/core-v1-import-mapping.md` to prepare a staging import
+4. Use `docs/migration/core-v1-import-mapping.md` to prepare a staging import
    for real V1 `User` / `AppConfig` / `RoleConfig` / `PermConfig` data.
-6. Wire server-side permission guards into routes/actions using
+5. Wire server-side permission guards into routes/actions using
    `getPermissionSnapshot()` + `can()`.
-7. Start implementing V2 Picking routes/actions after the Picking schema is
+6. Start implementing V2 Picking routes/actions after the Picking schema is
    applied and verified in a local or staging Supabase database.
 
 ## Open Questions
