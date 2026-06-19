@@ -2,6 +2,7 @@ import {
   BarChart3,
   Boxes,
   ClipboardList,
+  type LucideIcon,
   PackageCheck,
   ReceiptText,
   RefreshCcw,
@@ -11,59 +12,34 @@ import {
 
 import { AppShell } from "@/components/app-shell";
 import { StatusPill } from "@/components/status-pill";
+import { getAppRegistry, type AppStatus } from "@/modules/core/app-registry";
 
-const modules = [
-  {
-    name: "Core",
-    description: "Users, roles, permissions, audit",
-    status: "Planning",
-    icon: ShieldCheck,
-  },
-  {
-    name: "Picking",
-    description: "Requisition, bill numbers, issue flow",
-    status: "Pilot",
-    icon: ClipboardList,
-  },
-  {
-    name: "Purchasing",
-    description: "PR, PO, vendor lead time",
-    status: "Queued",
-    icon: ReceiptText,
-  },
-  {
-    name: "Receiving",
-    description: "GR, warehouse locations, reset/recall",
-    status: "Queued",
-    icon: PackageCheck,
-  },
-  {
-    name: "Warehouse",
-    description: "TRDAKRA, dispatch, survey, stock",
-    status: "Queued",
-    icon: Boxes,
-  },
-  {
-    name: "Returns",
-    description: "Return intake, claims, damaged goods",
-    status: "Queued",
-    icon: RefreshCcw,
-  },
-  {
-    name: "KPI",
-    description: "Daily records and dashboards",
-    status: "Queued",
-    icon: BarChart3,
-  },
-  {
-    name: "Notifications",
-    description: "LINE jobs and delivery hooks",
-    status: "Queued",
-    icon: Truck,
-  },
-];
+const icons: Record<string, LucideIcon> = {
+  BarChart3,
+  Boxes,
+  ClipboardList,
+  PackageCheck,
+  ReceiptText,
+  RefreshCcw,
+  ShieldCheck,
+  Truck,
+};
 
-export default function Home() {
+function statusTone(status: AppStatus) {
+  if (status === "Pilot" || status === "Live") {
+    return "green";
+  }
+
+  if (status === "Planning") {
+    return "blue";
+  }
+
+  return "slate";
+}
+
+export default async function Home() {
+  const { items: modules } = await getAppRegistry();
+
   return (
     <AppShell>
       <section className="workspace-header">
@@ -71,7 +47,7 @@ export default function Home() {
           <p className="eyebrow">AKRA WEBAPP V2</p>
           <h1>Migration Control</h1>
         </div>
-        <StatusPill tone="blue">Phase 1</StatusPill>
+        <StatusPill tone="blue">Phase 2</StatusPill>
       </section>
 
       <section className="summary-grid" aria-label="Migration summary">
@@ -95,17 +71,17 @@ export default function Home() {
 
       <section className="module-grid" aria-label="Modules">
         {modules.map((module) => {
-          const Icon = module.icon;
+          const Icon = icons[module.icon] ?? Boxes;
 
           return (
-            <article className="module-card" key={module.name}>
+            <article className="module-card" key={module.key}>
               <div className="module-card__icon" aria-hidden="true">
                 <Icon size={22} strokeWidth={1.8} />
               </div>
               <div className="module-card__body">
                 <div className="module-card__title-row">
                   <h2>{module.name}</h2>
-                  <StatusPill tone={module.status === "Pilot" ? "green" : "slate"}>
+                  <StatusPill tone={statusTone(module.status)}>
                     {module.status}
                   </StatusPill>
                 </div>

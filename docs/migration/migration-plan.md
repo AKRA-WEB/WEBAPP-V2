@@ -35,7 +35,7 @@ Exit criteria:
 
 ## Phase 1 - App Shell
 
-Status: In progress
+Status: Done
 
 Deliverables:
 
@@ -57,9 +57,11 @@ Current notes:
 - Next.js scaffold exists and builds.
 - Supabase helpers exist but real env values are not committed.
 - Vercel deployment has not been run from this repo yet.
-- Core schema and real permission model are still Phase 2.
+- Core schema and real permission model continue in Phase 2.
 
 ## Phase 2 - Core Identity And Permissions
+
+Status: In progress
 
 Deliverables:
 
@@ -74,7 +76,18 @@ Exit criteria:
 - Permission checks work in server-side code.
 - No `service_role` key is exposed to the browser.
 
+Current notes:
+
+- Draft migrations `0001`-`0003`, plus grant-hardening correction `0006`, have
+  been applied to the staging Supabase project and DB-verified.
+- V1 core import mapping is drafted in
+  `docs/migration/core-v1-import-mapping.md`.
+- End-to-end Supabase Auth and permission viewer verification is pending a
+  rotated server-only key and staging auth/user setup.
+
 ## Phase 3 - Pilot Module
+
+Status: Started (staging schema applied; no data/routes yet)
 
 Recommended pilot: `Picking`
 
@@ -91,6 +104,17 @@ Exit criteria:
 - V2 pilot can run without writing to V1 production Sheets.
 - Behavior is verified against V1 expectations.
 - Cutover checklist is completed and approved before production switch.
+
+Current notes:
+
+- V1 Picking source and conductor plans have been read as reference only.
+- Draft migrations `0004`-`0005` define the Picking pilot schema and RLS and
+  have been applied to the staging Supabase project.
+- V1 Picking mapping is drafted in `docs/migration/picking-v1-mapping.md`.
+- No V1 Picking data has been exported/imported and no V2 Picking routes or
+  actions have been implemented yet.
+- V1 production Picking app, GAS deployment, Sheets, URLs, and LINE tokens were
+  not changed.
 
 ## Phase 4 - Purchasing And Receiving
 

@@ -44,6 +44,22 @@ For each module, capture:
 - Migration test cases
 - Cutover checklist status
 
+## V2 Progress
+
+- `core` / `auth`: Phase 2 schema drafted and applied to staging (plans
+  `V2-0003`, `V2-0008`) — `profiles`, `roles`, `permissions`,
+  `role_permissions`, `user_roles`, `apps`, `audit_logs` with RLS and a
+  structural seed. `0006_core_grant_hardening.sql` closes broad default grants
+  found during staging verification. V1 `User` / `AppConfig` / `RoleConfig` /
+  `PermConfig` import mapping is drafted in
+  `docs/migration/core-v1-import-mapping.md`; no real V1 data has been exported
+  or imported.
+- `picking`: Phase 3 pilot schema and V1 mapping drafted (plan `V2-0006`) —
+  products, staff, requisitions, lines, problem reports, lifecycle events,
+  daily bill sequences, and server-only token/contact tables. Migrations have
+  been applied to staging and DB-verified; no V1 Picking data exported or
+  imported.
+
 ## Notes From V1 Context
 
 - V1 uses Google Sheets as the primary database and GAS as backend.
