@@ -605,3 +605,213 @@ Verification:
   vars + sign-in/`/admin/permissions` end-to-end) is fully closed.
 - No V1 production apps, GAS deployments, Sheets, URLs, or secrets were
   touched.
+
+## 2026-06-19 - Next Execution Sequence Plan
+
+Plan: `V2-0009` (`docs/plans/V2-0009-next-execution-sequence.md`).
+
+Context:
+
+- User asked for an Architect-style plan for the next work after live
+  verification of `/admin/permissions`.
+- No `CONDUCTOR.md` exists in the V2 repo, so the V2 `AGENTS.md` planning and
+  handoff rules were used.
+
+Changes:
+
+- Added a proposed execution sequence covering navigation, deployment boundary,
+  staging user matrix, core import dry run, server permission guard pattern, and
+  the first Picking UI/actions.
+- Updated `docs/handoff/current-state.md` to include `V2-0009` and replace the
+  next-action list with the recommended sequence.
+
+Verification:
+
+- `git diff --check` passed with a CRLF-to-LF warning for
+  `docs/handoff/work-log.md` only.
+- No V1 production apps, GAS deployments, Sheets, URLs, or secrets were touched.
+
+## 2026-06-19 - Navigation And Module Route Shell
+
+Plan: `V2-0009` step 1.
+
+Changes:
+
+- Updated `src/components/app-shell.tsx` so sidebar navigation links to real V2
+  routes: dashboard, permissions, Picking, Purchasing, Receiving, Warehouse,
+  Returns, KPI, and Sign In.
+- Updated `src/app/page.tsx` so dashboard module cards link to the registry
+  route when present; route-less registry items remain non-clickable.
+- Added lightweight module landing pages for `/picking`, `/purchasing`,
+  `/receiving`, `/warehouse`, `/returns`, and `/kpi` using
+  `src/modules/core/module-landing-page.tsx`.
+- Added `src/app/icon.svg` to avoid a favicon 404 during browser checks.
+
+Verification:
+
+- `npm run lint` passed.
+- `npm run typecheck` passed.
+- `npm run build` passed and generated all new module routes.
+- HTTP smoke checks against `next start` passed for `/`, `/picking`, and
+  `/icon.svg`.
+- Browser smoke check with Playwright CLI against
+  `http://127.0.0.1:3001/` -> `/picking` passed with no console errors.
+- Generated `.playwright-cli/` smoke-test artifacts were removed after
+  verification.
+- `git diff --check` passed with CRLF-to-LF warnings only.
+- No V1 production apps, GAS deployments, Sheets, URLs, or secrets were touched.
+
+## 2026-06-19 - Picking Product Scope And User Flow Gate
+
+Plan: `V2-0010` (`docs/plans/V2-0010-picking-product-scope-and-flow.md`).
+
+Context:
+
+- User asked whether the repo already had a full requirement/scope,
+  architecture/data, UI/UX flow, task breakdown, and tooling workflow.
+- Review found that V2 already had strong architecture, data, migration,
+  task-breakdown, handoff, and verification docs, but Picking did not yet have
+  a dedicated MVP/nice-to-have/out-of-scope/user-flow/wireframe/logic gate
+  before UI or write-action implementation.
+
+Changes:
+
+- Added `docs/plans/V2-0010-picking-product-scope-and-flow.md` defining the
+  Picking problem/users, MVP, nice-to-have items, out-of-scope items, user
+  flows, screen notes, system logic, data/integration points, task breakdown,
+  verification steps, rollback/no-production-impact note, and open decisions.
+- Added ADR `docs/decisions/0005-picking-product-scope-gate-before-ui.md`
+  requiring this product scope and user-flow gate before implementing Picking UI
+  or server write actions.
+- Updated `docs/plans/V2-0009-next-execution-sequence.md` and
+  `docs/handoff/current-state.md` so future agents see `V2-0010` as the gate
+  before the Picking implementation slice.
+
+Verification:
+
+- `git diff --check` passed with CRLF-to-LF warnings only.
+- No V1 production apps, GAS deployments, Sheets, URLs, LINE tokens, Supabase
+  secrets, or runtime code were changed by this planning gate.
+
+## 2026-06-19 - Central Conductor And Plan Index
+
+Plan: `V2-0011` (`docs/plans/V2-0011-conductor-planning-index.md`).
+
+Context:
+
+- User asked for a central planning file similar to the V1 Conductor so another
+  AI agent can inspect the active plan and continue work after context is
+  cleared.
+- V2 already had individual plan files, `current-state.md`, and `work-log.md`,
+  but no root conductor or central plan board.
+
+Changes:
+
+- Added root `CONDUCTOR.md` with read order, plan lifecycle statuses, resume
+  protocol, handoff rules, and V1 safety boundaries.
+- Added `docs/plans/index.md` as the central active queue and plan board.
+- Added `docs/plans/V2-0011-conductor-planning-index.md` to record this
+  process change as a plan.
+- Added ADR `docs/decisions/0006-central-conductor-and-plan-index.md`.
+- Updated `AGENTS.md`, `README.md`, and `docs/handoff/current-state.md` so future
+  agents read the conductor and plan index before continuing work.
+
+Verification:
+
+- `git diff --check` passed with CRLF-to-LF warnings only.
+- Touched conductor docs have no trailing whitespace.
+- No V1 production apps, GAS deployments, Sheets, URLs, LINE tokens, Supabase
+  secrets, runtime code, or deployment settings were changed by this process
+  update.
+
+## 2026-06-19 - Architect Command Format
+
+Plan: `V2-0012` (`docs/plans/V2-0012-architect-command-format.md`).
+
+Context:
+
+- User asked to use `Architect:` instead of `Conductor:` as the command for
+  detailed plan drafting.
+- User also asked for a detailed reusable format for plans.
+
+Changes:
+
+- Added `docs/plans/templates/architect-plan-template.md` with a detailed plan
+  structure covering goal, requirement/scope, MVP, nice-to-have, out-of-scope,
+  architecture/data, UI/user flow, system logic, task breakdown, files expected
+  to change, verification, rollback/no-production-impact, open questions, and
+  handoff notes.
+- Added plan `docs/plans/V2-0012-architect-command-format.md`.
+- Added ADR `docs/decisions/0007-architect-command-for-plan-drafting.md`.
+- Updated `CONDUCTOR.md`, `AGENTS.md`, `README.md`, `docs/plans/index.md`, and
+  `docs/handoff/current-state.md` so `Architect:` means plan-only and `Go:` is
+  the execution command.
+
+Verification:
+
+- `git diff --check` passed with CRLF-to-LF warnings only.
+- Touched Architect command docs have no trailing whitespace.
+- No V1 production apps, GAS deployments, Sheets, URLs, LINE tokens, Supabase
+  secrets, runtime code, deployment settings, or database schema files were
+  changed by this process update.
+
+## 2026-06-19 - Focused Architect Plans For Next Execution Slices
+
+Context:
+
+- User asked to draft Architect-style plans for any next work that can be
+  planned now.
+- Used the Supabase skill because the upcoming plans involve Supabase Auth,
+  RLS, server-side credentials, and import workflows.
+- Rechecked current official Supabase and Vercel docs before planning:
+  - Supabase changelog: April 28, 2026 Data API explicit grant change remains
+    relevant to future table/RLS planning.
+  - Supabase SSR Auth docs continue to recommend server-side clients and
+    validated claims for protected server routes.
+  - Supabase RLS and database function docs continue to require RLS on exposed
+    tables, explicit grants, restricted function execute privileges, and fixed
+    `search_path` for `security definer` functions.
+  - Vercel docs confirm environment variables are scoped to Production,
+    Preview, and Development, and Deployment Protection scope differs by plan.
+
+Changes:
+
+- Added `docs/plans/V2-0013-local-baseline-closeout.md` for verifying,
+  staging, committing, pushing, and deployment-checking the current local
+  navigation/conductor/planning baseline before further implementation.
+- Added `docs/plans/V2-0014-deployment-boundary-and-staging-access.md` for the
+  Production/Preview/Development boundary decision and non-admin staging user
+  matrix.
+- Added `docs/plans/V2-0015-core-import-dry-run.md` for a validation-first,
+  no-write V1 core import dry run.
+- Added `docs/plans/V2-0016-server-permission-guard-pattern.md` for a reusable
+  server-side guard around `getPermissionSnapshot()` and `can()` before Picking
+  routes/actions.
+- Updated `docs/plans/index.md` and `docs/handoff/current-state.md` so the
+  focused plans appear in the active queue.
+
+Verification:
+
+- `git diff --check` passed with CRLF-to-LF warnings only.
+- No V1 production apps, GAS deployments, Sheets, URLs, LINE tokens, Supabase
+  secrets, runtime code, deployment settings, or database schema files were
+  changed by this planning update.
+
+## 2026-06-19 - Local Baseline Closeout (V2-0013)
+
+Context:
+
+- Executed plan `V2-0013` to close out the current local baseline of navigation, landing pages, decisions, plans, conductor setup, and project initialization guide.
+
+Changes:
+
+- Added `.gitignore` ignore rule for `screenshot/` to keep local artifacts out of Git history.
+- Created `project_init_guide.md` in the artifacts folder as a detailed Thai guide for project setup, migrations, and quality checks.
+- Updated `docs/plans/index.md` and `docs/plans/V2-0013-local-baseline-closeout.md` status to Complete.
+- Updated `docs/handoff/current-state.md` workspace notes and promoted Next Actions.
+
+Verification:
+
+- Ran `npm run lint`, `npm run typecheck`, `npm run check:migrations`, and `npm run build` all successfully.
+- Checked `git diff --check`.
+

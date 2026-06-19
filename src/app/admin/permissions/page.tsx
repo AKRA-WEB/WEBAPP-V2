@@ -26,7 +26,7 @@ export const metadata = {
 
 function Notice({ title, body }: { title: string; body: string }) {
   return (
-    <AppShell>
+    <AppShell activeHref="/admin/permissions">
       <section className="workspace-header">
         <div>
           <p className="eyebrow">Core · Admin</p>
@@ -84,7 +84,7 @@ export default async function PermissionsViewerPage() {
   const apps = (appsResult.data ?? []) as AppRow[];
 
   return (
-    <AppShell>
+    <AppShell activeHref="/admin/permissions">
       <section className="workspace-header">
         <div>
           <p className="eyebrow">Core · Admin</p>

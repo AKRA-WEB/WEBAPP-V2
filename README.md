@@ -20,13 +20,24 @@ validated module by module.
 Every agent or developer must read these files before changing anything:
 
 1. `AGENTS.md`
-2. `docs/handoff/current-state.md`
-3. `docs/architecture/target-architecture.md`
-4. `docs/migration/migration-plan.md`
+2. `CONDUCTOR.md`
+3. `docs/plans/index.md`
+4. `docs/handoff/current-state.md`
+5. `docs/architecture/target-architecture.md`
+6. `docs/migration/migration-plan.md`
 
 For context about the existing production apps, read:
 
 - `C:\dev\WEBAPP\development_context.md`
+
+## Planning Commands
+
+Use `Architect:` to request a detailed plan before implementation. The agent
+must draft or update a plan file, update `docs/plans/index.md`, and wait for an
+execution command such as `Go:` before changing runtime code.
+
+The default plan format lives at
+`docs/plans/templates/architect-plan-template.md`.
 
 ## Safety Rule
 

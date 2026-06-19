@@ -1,15 +1,36 @@
 import Link from "next/link";
-import { BarChart3, Boxes, ClipboardList, Home, PackageCheck } from "lucide-react";
+import type { Route } from "next";
+import {
+  BarChart3,
+  Boxes,
+  ClipboardList,
+  Home,
+  LogIn,
+  PackageCheck,
+  ReceiptText,
+  RefreshCcw,
+  ShieldCheck,
+} from "lucide-react";
 
 const navItems = [
   { label: "Dashboard", href: "/", icon: Home },
-  { label: "Picking", href: "/", icon: ClipboardList },
-  { label: "Warehouse", href: "/", icon: Boxes },
-  { label: "Receiving", href: "/", icon: PackageCheck },
-  { label: "KPI", href: "/", icon: BarChart3 },
+  { label: "Permissions", href: "/admin/permissions", icon: ShieldCheck },
+  { label: "Picking", href: "/picking", icon: ClipboardList },
+  { label: "Purchasing", href: "/purchasing", icon: ReceiptText },
+  { label: "Receiving", href: "/receiving", icon: PackageCheck },
+  { label: "Warehouse", href: "/warehouse", icon: Boxes },
+  { label: "Returns", href: "/returns", icon: RefreshCcw },
+  { label: "KPI", href: "/kpi", icon: BarChart3 },
+  { label: "Sign In", href: "/login", icon: LogIn },
 ] as const;
 
-export function AppShell({ children }: { children: React.ReactNode }) {
+export function AppShell({
+  activeHref = "/",
+  children,
+}: {
+  activeHref?: string;
+  children: React.ReactNode;
+}) {
   return (
     <div className="app-shell">
       <aside className="sidebar">
@@ -24,13 +45,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
 
         <nav className="side-nav" aria-label="Main navigation">
-          {navItems.map((item, index) => {
+          {navItems.map((item) => {
             const Icon = item.icon;
+            const isCurrent =
+              item.href === "/"
+                ? activeHref === "/"
+                : activeHref === item.href || activeHref.startsWith(`${item.href}/`);
 
             return (
               <Link
-                aria-current={index === 0 ? "page" : undefined}
-                href={item.href}
+                aria-current={isCurrent ? "page" : undefined}
+                href={item.href as Route}
                 key={item.label}
               >
                 <Icon size={18} strokeWidth={1.8} aria-hidden="true" />

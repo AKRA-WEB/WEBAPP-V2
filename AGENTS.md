@@ -23,12 +23,14 @@ change.
 Before planning or editing, read:
 
 1. `README.md`
-2. `docs/handoff/current-state.md`
-3. `docs/handoff/work-log.md`
-4. `docs/architecture/target-architecture.md`
-5. `docs/migration/migration-plan.md`
-6. `docs/migration/module-inventory.md`
-7. `C:\dev\WEBAPP\development_context.md` for V1 behavior and module status
+2. `CONDUCTOR.md`
+3. `docs/plans/index.md`
+4. `docs/handoff/current-state.md`
+5. `docs/handoff/work-log.md`
+6. `docs/architecture/target-architecture.md`
+7. `docs/migration/migration-plan.md`
+8. `docs/migration/module-inventory.md`
+9. `C:\dev\WEBAPP\development_context.md` for V1 behavior and module status
 
 If the task involves Supabase, also verify current Supabase docs/changelog
 before implementing schema, auth, RLS, or migration changes.
@@ -46,6 +48,11 @@ Write handoff records in English so any future agent can continue after chat
 context is cleared. User-facing summaries may be Thai.
 
 ## 4. Planning Standard
+
+If the user message starts with `Architect:`, draft or update a detailed plan
+only. Do not implement runtime code until the user sends an execution command
+such as `Go:`. Use `docs/plans/templates/architect-plan-template.md` as the
+default structure and update `docs/plans/index.md` plus handoff docs.
 
 For multi-step work, write or update a small plan with:
 

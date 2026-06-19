@@ -106,6 +106,11 @@ button {
   text-decoration: none;
 }
 
+.side-nav a:hover {
+  background: rgb(255 255 255 / 8%);
+  color: #ffffff;
+}
+
 .side-nav a[aria-current="page"] {
   background: rgb(255 255 255 / 12%);
   color: #ffffff;
@@ -176,11 +181,22 @@ button {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   gap: 0.85rem;
+  min-block-size: 7rem;
   padding: 1rem;
   border: 1px solid var(--border);
   border-radius: 8px;
   background: var(--surface);
   box-shadow: var(--shadow);
+  color: inherit;
+  text-decoration: none;
+}
+
+.module-card--link:hover {
+  border-color: rgb(29 111 216 / 40%);
+}
+
+.module-card--disabled {
+  opacity: 0.72;
 }
 
 .module-card__icon {
@@ -214,6 +230,37 @@ button {
   color: var(--muted);
   font-size: 0.92rem;
   line-height: 1.45;
+}
+
+.module-detail {
+  display: grid;
+  gap: 1rem;
+  max-inline-size: 760px;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.module-detail h2 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.module-detail p {
+  margin: 0.4rem 0 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.detail-list {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0;
+  padding-inline-start: 1.2rem;
+  color: var(--muted);
+  line-height: 1.5;
 }
 
 .status-pill {

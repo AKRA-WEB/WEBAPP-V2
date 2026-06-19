@@ -39,6 +39,14 @@ Plan IDs:
 - `V2-0006` (`docs/plans/V2-0006-picking-pilot-schema.md`)
 - `V2-0007` (`docs/plans/V2-0007-supabase-migration-preflight.md`)
 - `V2-0008` (`docs/plans/V2-0008-staging-migration-apply.md`)
+- `V2-0009` (`docs/plans/V2-0009-next-execution-sequence.md`)
+- `V2-0010` (`docs/plans/V2-0010-picking-product-scope-and-flow.md`)
+- `V2-0011` (`docs/plans/V2-0011-conductor-planning-index.md`)
+- `V2-0012` (`docs/plans/V2-0012-architect-command-format.md`)
+- `V2-0013` (`docs/plans/V2-0013-local-baseline-closeout.md`)
+- `V2-0014` (`docs/plans/V2-0014-deployment-boundary-and-staging-access.md`)
+- `V2-0015` (`docs/plans/V2-0015-core-import-dry-run.md`)
+- `V2-0016` (`docs/plans/V2-0016-server-permission-guard-pattern.md`)
 
 Goal: Finish the Phase 2 core schema baseline and draft the Phase 3 Picking
 pilot schema/mapping so the first module can be staged without touching V1
@@ -130,26 +138,57 @@ Status:
   content — `ADMIN` role card, `Permissions (13)`, `Apps (8)`, `Read only`
   pill — matching the local Playwright check exactly. Next Action 1 (rotated
   key + Vercel + sign-in/`/admin/permissions` e2e) is now fully closed.
+- Added plan `V2-0009` to define the next execution sequence: navigation,
+  deployment boundary decision, staging user matrix, core import dry run,
+  server permission guards, then the Picking pilot UI/actions.
+- Implemented `V2-0009` step 1: `AppShell` now exposes real links for
+  dashboard, `/admin/permissions`, `/login`, and module routes; dashboard module
+  cards link to registry routes; placeholder landing pages exist for
+  `/picking`, `/purchasing`, `/receiving`, `/warehouse`, `/returns`, and
+  `/kpi`.
+- Added `V2-0010` as the required product-scope and user-flow gate before
+  implementing Picking UI or write actions. ADR `0005` records the decision to
+  lock MVP, nice-to-have, out-of-scope, user flows, screen notes, logic, and
+  verification before coding the first Picking workflow.
+- Added root `CONDUCTOR.md` and `docs/plans/index.md` as the central
+  conductor-style planning entry point for future agents. ADR `0006` records
+  that agents must use the conductor and plan index to resume active work.
+- Added `Architect:` as the user-facing detailed planning command. ADR `0007`
+  records that `Architect:` is plan-only, while `Go:` is the execution command;
+  the default detailed plan format lives at
+  `docs/plans/templates/architect-plan-template.md`.
+- Added focused Architect plans for the next execution slices:
+  - `V2-0013` closes out the current uncommitted local baseline with
+    verification, commit, push, and deployment check.
+  - `V2-0014` covers the deployment boundary decision and non-admin staging
+    test user matrix.
+  - `V2-0015` covers a validation-first V1 core import dry run with no database
+    writes in the first slice.
+  - `V2-0016` covers a reusable server-side permission guard before Picking
+    routes/actions.
+- Current workspace note: navigation/conductor/planning work, including these focused Architect plans and the project initialization guide, is fully committed and pushed (V2-0013 complete).
 - No V1 production files changed.
 
 ## Next Actions
 
-1. Wire real navigation: `AppShell` sidebar items and dashboard module cards
-   are still Phase-1 placeholders (`href="/"` / no link at all) with no
-   visible way to reach `/login` or `/admin/permissions`.
-2. Decide whether the Production Vercel environment should also get the
-   Supabase env vars and have Deployment Protection adjusted, or stay locked
-   down until a real cutover decision is made (env vars are currently
-   Preview + Development only).
-3. Create/link remaining staging Supabase Auth users and seed role assignments
-   for additional test accounts (one ADMIN test account exists; see
-   `scripts/create-test-account.mjs`).
-4. Use `docs/migration/core-v1-import-mapping.md` to prepare a staging import
-   for real V1 `User` / `AppConfig` / `RoleConfig` / `PermConfig` data.
-5. Wire server-side permission guards into routes/actions using
-   `getPermissionSnapshot()` + `can()`.
-6. Start implementing V2 Picking routes/actions after the Picking schema is
-   applied and verified in a local or staging Supabase database.
+1. Execute `V2-0014`: decide the deployment boundary: keep Production Vercel
+   protected/no staging Supabase env by default, or explicitly connect it while
+   documenting that this is not a V1 cutover.
+2. Continue `V2-0014`: create/link remaining staging Supabase Auth users and
+   seed role assignments for non-admin test accounts (one ADMIN test account
+   exists; see `scripts/create-test-account.mjs`).
+3. Execute `V2-0015`: prepare a staging-only core import dry run from V1 `User`
+   / `AppConfig` / `RoleConfig` / `PermConfig` data using
+   `docs/migration/core-v1-import-mapping.md`; validate before writing rows.
+4. Execute `V2-0016`: add a reusable server-side permission guard pattern
+   around `getPermissionSnapshot()` + `can()` and apply it before adding write
+   workflows.
+5. Use `V2-0010` as the gate for V2 Picking implementation: confirm MVP and
+   first slice, then start with a permission-gated read path, then create
+   requisition server actions, then status/problem workflows and LINE
+   integration.
+6. Keep `docs/plans/index.md` updated whenever a plan status or next action
+   changes.
 
 ## Open Questions
 
