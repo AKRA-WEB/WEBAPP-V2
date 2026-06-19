@@ -166,28 +166,22 @@ Status:
     writes in the first slice.
   - `V2-0016` covers a reusable server-side permission guard before Picking
     routes/actions.
-- Current workspace note: navigation/conductor/planning work, including these focused Architect plans and the project initialization guide, is fully committed and pushed (V2-0013 complete).
+- Current workspace note: navigation/conductor/planning work is committed (V2-0013 complete). V2-0014 environment boundary is confirmed (Vercel Production remains disconnected from staging), test roles (PICKING_WRITER, PICKING_READER, GUEST) are seeded on staging via IPv4 pooler, and three non-admin staging test accounts are created.
 - No V1 production files changed.
 
 ## Next Actions
 
-1. Execute `V2-0014`: decide the deployment boundary: keep Production Vercel
-   protected/no staging Supabase env by default, or explicitly connect it while
-   documenting that this is not a V1 cutover.
-2. Continue `V2-0014`: create/link remaining staging Supabase Auth users and
-   seed role assignments for non-admin test accounts (one ADMIN test account
-   exists; see `scripts/create-test-account.mjs`).
-3. Execute `V2-0015`: prepare a staging-only core import dry run from V1 `User`
+1. Execute `V2-0015`: prepare a staging-only core import dry run from V1 `User`
    / `AppConfig` / `RoleConfig` / `PermConfig` data using
    `docs/migration/core-v1-import-mapping.md`; validate before writing rows.
-4. Execute `V2-0016`: add a reusable server-side permission guard pattern
+2. Execute `V2-0016`: add a reusable server-side permission guard pattern
    around `getPermissionSnapshot()` + `can()` and apply it before adding write
    workflows.
-5. Use `V2-0010` as the gate for V2 Picking implementation: confirm MVP and
+3. Use `V2-0010` as the gate for V2 Picking implementation: confirm MVP and
    first slice, then start with a permission-gated read path, then create
    requisition server actions, then status/problem workflows and LINE
    integration.
-6. Keep `docs/plans/index.md` updated whenever a plan status or next action
+4. Keep `docs/plans/index.md` updated whenever a plan status or next action
    changes.
 
 ## Open Questions

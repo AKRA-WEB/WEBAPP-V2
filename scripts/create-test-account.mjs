@@ -1,7 +1,21 @@
 import { createClient } from "@supabase/supabase-js";
+import { readFileSync, existsSync } from "node:fs";
+import { join } from "node:path";
 
-const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const serviceKey = process.env.SUPABASE_SECRET_KEY;
+const root = process.cwd();
+let url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+let serviceKey = process.env.SUPABASE_SECRET_KEY;
+
+if (existsSync(join(root, ".env.local"))) {
+  const envText = readFileSync(join(root, ".env.local"), "utf8");
+  for (const line of envText.split(/\r?\n/)) {
+    const matchUrl = line.match(/^\s*NEXT_PUBLIC_SUPABASE_URL\s*=\s*(.+)$/);
+    const matchKey = line.match(/^\s*SUPABASE_SECRET_KEY\s*=\s*(.+)$/);
+    if (matchUrl) url = matchUrl[1].trim();
+    if (matchKey) serviceKey = matchKey[1].trim();
+  }
+}
+
 const [email, password, roleKey = "ADMIN"] = process.argv.slice(2);
 
 if (!url || !serviceKey) {

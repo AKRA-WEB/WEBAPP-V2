@@ -24,9 +24,8 @@ Picking write workflows.
      then return to the Picking pilot gate.
    - File: `docs/plans/V2-0009-next-execution-sequence.md`
 3. `V2-0014` - Deployment boundary and staging access
-   - Status: Draft.
-   - Next action: confirm Production/Preview/Development Supabase env boundary,
-     then create non-admin staging test accounts for permission checks.
+   - Status: Complete on 2026-06-19.
+   - Outcome: Production/Preview/Development environment scope is recorded (Vercel Production remains disconnected from staging), test roles (PICKING_WRITER, PICKING_READER, GUEST) created, and non-admin test users created.
    - File: `docs/plans/V2-0014-deployment-boundary-and-staging-access.md`
 4. `V2-0015` - Core import dry run
    - Status: Draft.

@@ -1,4 +1,4 @@
-import { readFileSync, readdirSync } from "node:fs";
+import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import pg from "pg";
 
@@ -12,7 +12,18 @@ const allMigrationFiles = readdirSync(migrationDir)
 const requestedFiles = process.argv.slice(2);
 const migrationFiles = requestedFiles.length > 0 ? requestedFiles : allMigrationFiles;
 
-const databaseUrl = process.env.DATABASE_URL;
+let databaseUrl = process.env.DATABASE_URL;
+
+if (!databaseUrl && existsSync(join(root, ".env.local"))) {
+  const envText = readFileSync(join(root, ".env.local"), "utf8");
+  for (const line of envText.split(/\r?\n/)) {
+    const match = line.match(/^\s*DATABASE_URL\s*=\s*(.+)$/);
+    if (match) {
+      databaseUrl = match[1].trim();
+      break;
+    }
+  }
+}
 
 if (!databaseUrl) {
   console.error("DATABASE_URL is required.");

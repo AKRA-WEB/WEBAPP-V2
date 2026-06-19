@@ -815,3 +815,25 @@ Verification:
 - Ran `npm run lint`, `npm run typecheck`, `npm run check:migrations`, and `npm run build` all successfully.
 - Checked `git diff --check`.
 
+## 2026-06-19 - Deployment Boundary and Staging Access (V2-0014)
+
+Context:
+
+- Executed plan `V2-0014` to confirm environment boundary and configure staging test roles and accounts.
+
+Changes:
+
+- Added `supabase/migrations/0007_test_roles.sql` to define `PICKING_WRITER`, `PICKING_READER`, and `GUEST` test roles and map picking permissions.
+- Modified `scripts/apply-migrations.mjs` and `scripts/verify-staging-schema.mjs` to load `DATABASE_URL` from `.env.local` if not set in the environment.
+- Added `DATABASE_URL` with project-specific connection pooler URL template to `.env.local`.
+- Cleaned up `.env.example` by removing raw password to prevent Git leaks.
+- Wrote and executed `scripts/apply-test-roles.mjs` using `@supabase/supabase-js` to seed the roles over HTTPS (avoiding IPv6 port 5432 network timeout).
+- Modified `scripts/create-test-account.mjs` to support loading environment from `.env.local` automatically.
+- Created three non-admin staging test accounts (`test-picker-writer@akra-v2.test`, `test-picker-reader@akra-v2.test`, `test-guest@akra-v2.test`).
+- Updated `docs/plans/index.md` and `docs/plans/V2-0014-deployment-boundary-and-staging-access.md` status to Complete.
+- Updated `docs/handoff/current-state.md` workspace notes and promoted Next Actions.
+
+Verification:
+
+- Checked `git status` and ran static checks `npm run lint`, `npm run typecheck`, and `npm run check:migrations`.
+- Tested and verified account creation logs.
