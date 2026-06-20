@@ -1091,3 +1091,64 @@ Verification:
   `trd_alias_products_trd_only` is 0.
 - No V1 production apps, GAS deployments, Sheets, URLs, LINE tokens, or V1
   production data were changed.
+
+## 2026-06-20 - Real V1 Core Import (V2-0009 Next Action 1)
+
+- Found real V1 `User`/`AppConfig`/`RoleConfig`/`PermConfig` exports already
+  on disk under `import-data/main/` (gitignored), in a different shape than
+  the synthetic fixtures `scripts/core-import-dry-run.mjs` was built against:
+  `User.csv` header is `ID,Name,Roles,Password` (capitalized), `RoleConfig.csv`
+  keys roles by `val` instead of `role`, and real `PermConfig.csv` has more
+  `app-ret.*` keys than the original V1-to-V2 permission map covered.
+- Checked V1 `Main/Code.gs` (local, gitignored) for a live bulk-export path
+  before assuming one was needed: confirmed it has none (only per-user SSO
+  lookups and write-only admin actions behind a JWT), so the real exports
+  already on disk were the only practical data source; no Google Sheets API
+  credentials were set up.
+- Updated `scripts/core-import-dry-run.mjs` to prefer real data under
+  `import-data/main/` over the synthetic fixtures, with case-insensitive /
+  alias header lookups (`role`/`val`, `ID`/`id`, etc.) so real V1 header
+  naming doesn't trip header validation. Fixed a synthetic-email collision
+  bug: email is now keyed on the V1 row's unique `ID`
+  (`name.id@akra-v2.test`), not display name alone, after the synthetic
+  fixture proved two same-named users would otherwise collide into one
+  Supabase Auth account. Extended `v1ToV2PermissionMap` with six previously
+  unmapped `app-ret.*` keys (`ADD_CLM`, `WH_CLM`, `AUDIT_CREATE`,
+  `AUDIT_REVIEW`, `BATCH_RET`, `TRACK_CUST`) → `returns.write`.
+  `app-akra.manageProducts` was deliberately left unmapped (see ADR `0011`).
+- Ran the dry run against the real data: 15 users, 0 blockers, 1 warning
+  (`app-akra.manageProducts` unmapped). Report at
+  `import-reports/dry-run-report.md` (local only, git-ignored).
+- User reviewed the report and confirmed at the checkpoint: create the 5
+  missing V2 roles (`SUPERVISOR`, `AKRA`, `TRD`, `WAREHOUSE`, `CASHIER`), drop
+  `app-akra.manageProducts` from this import, and import all 15 V1 users
+  as-is (including four with non-numeric/test-looking IDs the agent flagged
+  for confirmation). Recorded in ADR `0011`.
+- Added `scripts/core-import-apply.mjs`: idempotent write script gated on
+  `--confirm-core-import` and on `NEXT_PUBLIC_SUPABASE_URL` matching the known
+  staging project ref. Creates missing roles from `RoleConfig.csv`, upserts
+  `role_permissions`, and creates/links `auth.users` (email_confirm: true, no
+  password — the V1 `Password` column is never read or stored) + `profiles` +
+  `user_roles` per real V1 user, keyed on `legacy_uid`/`legacy_source` for
+  safe re-runs.
+- Ran `node scripts/core-import-apply.mjs --confirm-core-import` against
+  staging: created 5 roles, upserted 18 `role_permissions` grants, and
+  created/linked 15 users. Apply report at
+  `import-reports/core-import-apply-report.md` (local only, git-ignored).
+
+Verification:
+
+- `node --check` passed on both updated/new scripts.
+- Running `scripts/core-import-apply.mjs` without `--confirm-core-import`
+  refuses to write (exit 1).
+- `npm run db:verify-staging-schema` passed (27 public tables, 25 policies)
+  after the write.
+- Targeted query against staging confirmed: 15 `profiles` rows with
+  `legacy_source = 'v1-main'`, exactly the 5 new role keys present in
+  `roles`, 22 total `user_roles` rows, 21 total `role_permissions` rows
+  (consistent with 18 new grants plus pre-existing `V2-0014` staging test
+  role grants).
+- `npm run lint` and `npm run typecheck` passed.
+- No V1 production apps, GAS deployments, Sheets, URLs, LINE tokens, or V1
+  production data were changed. Real V1 export CSVs and generated reports
+  stayed local/gitignored throughout.

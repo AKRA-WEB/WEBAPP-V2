@@ -196,11 +196,30 @@ Status:
 - Added repeatable read-only verification command `npm run db:verify-catalog-import`
   for catalog row counts, warehouse business-unit mapping, and TRDAKRA scope
   classification.
+- Completed Next Action 1 (V2-0009): ran the real V1 core import. Found real
+  V1 `User`/`RoleConfig`/`PermConfig` exports already on disk under
+  `import-data/main/`; confirmed V1 `Main/Code.gs` has no bulk-export path, so
+  these on-disk exports were the data source. Updated
+  `scripts/core-import-dry-run.mjs` to read real data (case-insensitive/alias
+  header handling) and fixed a synthetic-email collision bug (now keyed on
+  V1 `ID`, not display name alone). Extended the V1-to-V2 permission map for
+  six previously unmapped `app-ret.*` keys; left `app-akra.manageProducts`
+  unmapped (no clean V2 permission home yet — see ADR `0011`). Dry run passed
+  (15 users, 0 blockers, 1 warning). User confirmed at the report checkpoint:
+  create 5 missing roles, drop `manageProducts`, import all 15 users as-is.
+  Added `scripts/core-import-apply.mjs` (idempotent, gated on
+  `--confirm-core-import` + staging project-ref check, never reads/stores the
+  V1 `Password` column) and ran it against staging: created roles
+  `SUPERVISOR`/`AKRA`/`TRD`/`WAREHOUSE`/`CASHIER`, upserted 18
+  `role_permissions` grants, and created/linked 15 real V1 users as
+  `auth.users` + `profiles` (synthetic `@akra-v2.test` emails, no password
+  set) + `user_roles`. Verified via `npm run db:verify-staging-schema` and a
+  targeted staging query. `lint`/`typecheck` pass.
 - No V1 production files changed.
 
 ## Next Actions
 
-1. Prepare and run the actual V1 core import script (writing profiles/user_roles/role_permissions to staging) based on `scripts/core-import-dry-run.mjs` validation report.
+1. ~~Prepare and run the actual V1 core import script (writing profiles/user_roles/role_permissions to staging) based on `scripts/core-import-dry-run.mjs` validation report.~~ Done 2026-06-20.
 2. Use `V2-0010` as the gate for V2 Picking implementation: confirm MVP and
    first slice, then start with a permission-gated read path, then create
    requisition server actions, then status/problem workflows and LINE

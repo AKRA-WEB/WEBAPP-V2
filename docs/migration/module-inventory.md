@@ -50,10 +50,13 @@ For each module, capture:
   `V2-0003`, `V2-0008`) — `profiles`, `roles`, `permissions`,
   `role_permissions`, `user_roles`, `apps`, `audit_logs` with RLS and a
   structural seed. `0006_core_grant_hardening.sql` closes broad default grants
-  found during staging verification. V1 `User` / `AppConfig` / `RoleConfig` /
-  `PermConfig` import mapping is drafted in
-  `docs/migration/core-v1-import-mapping.md`; no real V1 data has been exported
-  or imported.
+  found during staging verification. V1 `User` / `RoleConfig` / `PermConfig`
+  import mapping is drafted in `docs/migration/core-v1-import-mapping.md`;
+  the real V1 core identity import (15 users, 5 roles, role_permissions
+  grants) was completed to staging on 2026-06-20 via
+  `scripts/core-import-apply.mjs` (ADR `0011`). V1 `AppConfig` was not
+  imported as data (the V2 `apps` registry is structurally seeded separately,
+  plan `V2-0005`).
 - `picking`: Phase 3 pilot schema and V1 mapping drafted (plan `V2-0006`) —
   products, staff, requisitions, lines, problem reports, lifecycle events,
   daily bill sequences, and server-only token/contact tables. Migrations have

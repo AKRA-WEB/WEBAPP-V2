@@ -7,10 +7,11 @@ after `CONDUCTOR.md` when another agent needs to continue work.
 
 ## Current Direction
 
-V2 is in Phase 3 preparation. The core schema, Picking pilot schema, and shared
-catalog/warehouse baseline are applied and verified in staging. The next
-implementation work should finish the actual V1 core import and then return to
-the Picking gate before write workflows.
+V2 is in Phase 3 preparation. The core schema, Picking pilot schema, shared
+catalog/warehouse baseline, and the real V1 core identity import (users,
+roles, role_permissions) are applied and verified in staging. The next
+implementation work should return to the Picking gate (`V2-0010`) before
+write workflows.
 
 ## Active Queue
 
@@ -19,9 +20,10 @@ the Picking gate before write workflows.
    - Outcome: all local changes (navigation shell, landing pages, planning templates, decisions, conductor setup, and project init guide) are verified, committed, and pushed.
    - File: `docs/plans/V2-0013-local-baseline-closeout.md`
 2. `V2-0009` - Next execution sequence
-   - Status: In progress; steps 1-5 are complete.
-   - Next action: prepare and run the actual V1 core import, then return to the
-     Picking pilot gate (`V2-0010`).
+   - Status: In progress; steps 1-5 complete. Real V1 core import (the
+     deferred part of step 4) completed 2026-06-20: see ADR `0011` and the
+     2026-06-20 work-log entry.
+   - Next action: return to the Picking pilot gate (`V2-0010`) for step 6.
    - File: `docs/plans/V2-0009-next-execution-sequence.md`
 3. `V2-0014` - Deployment boundary and staging access
    - Status: Complete on 2026-06-19.
@@ -67,7 +69,7 @@ the Picking gate before write workflows.
 | Plan | Status | Notes |
 | --- | --- | --- |
 | `V2-0003` | Baseline applied | Core identity/permission schema drafted, hardened, applied to staging, and DB-verified. |
-| `V2-0004` | Mapping drafted | Core V1 import mapping exists; dry run is complete under `V2-0015`; actual staging import is still pending. |
+| `V2-0004` | Complete | Core V1 import mapping exists; dry run complete under `V2-0015`; actual staging import completed 2026-06-20 (ADR `0011`). |
 | `V2-0005` | Complete | Dashboard app registry helper and fallback were added. |
 | `V2-0006` | Baseline applied | Picking pilot schema and V1 mapping drafted; staging schema applied and verified. |
 | `V2-0007` | Complete | Repeatable static migration preflight added. |

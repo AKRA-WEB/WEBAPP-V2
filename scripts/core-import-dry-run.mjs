@@ -6,6 +6,7 @@ import { createClient } from "@supabase/supabase-js";
 const root = process.cwd();
 const snapshotsDir = join(root, "import-snapshots");
 const reportsDir = join(root, "import-reports");
+const realDataDir = join(root, "import-data", "main");
 
 // Step 1: Ensure directories exist
 if (!existsSync(snapshotsDir)) {
@@ -20,6 +21,12 @@ const userFixturePath = join(snapshotsDir, "User.csv");
 const roleConfigFixturePath = join(snapshotsDir, "RoleConfig.csv");
 const permConfigFixturePath = join(snapshotsDir, "PermConfig.csv");
 const appConfigFixturePath = join(snapshotsDir, "AppConfig.csv");
+
+// Real V1 exports (gitignored, dropped by the user) take priority over synthetic fixtures.
+const realUserPath = join(realDataDir, "Main Menu - User.csv");
+const realRoleConfigPath = join(realDataDir, "Main Menu - RoleConfig.csv");
+const realPermConfigPath = join(realDataDir, "Main Menu - PermConfig.csv");
+const realAppConfigPath = join(realDataDir, "Main Menu - AppConfig.csv");
 
 if (!existsSync(userFixturePath)) {
   writeFileSync(
@@ -99,9 +106,18 @@ const v1ToV2PermissionMap = {
   "app-ret.QC_RET": "returns.write",
   "app-ret.MANAGE_CLM": "returns.write",
   "app-ret.AUDIT_TASK": "returns.write",
+  "app-ret.ADD_CLM": "returns.write",
+  "app-ret.WH_CLM": "returns.write",
+  "app-ret.AUDIT_CREATE": "returns.write",
+  "app-ret.AUDIT_REVIEW": "returns.write",
+  "app-ret.BATCH_RET": "returns.write",
+  "app-ret.TRACK_CUST": "returns.write",
   "app-kpi.adminDashboard": "kpi.write",
   "app-pick.createRequisition": "picking.write",
   "app-pick.readRequisition": "picking.read",
+  // app-akra.manageProducts intentionally left unmapped: it's catalog/product
+  // management (V2-0018 domain), not a clean fit for warehouse.write or any
+  // existing coarse permission. Flagged in the report for a product decision.
 };
 
 // CSV parsing helper
@@ -145,6 +161,30 @@ function parseCSV(text) {
   return { headers, rows };
 }
 
+// V1 source headers vary in casing/naming between the synthetic fixtures and
+// the real exported sheets (e.g. RoleConfig's role-key column is "val" in the
+// real export, "role" in the fixture). Resolve by case-insensitive lookup with
+// fallback candidate names instead of assuming one literal header string.
+function buildHeaderIndex(headers) {
+  const index = {};
+  headers.forEach((h) => {
+    index[h.toLowerCase()] = h;
+  });
+  return index;
+}
+
+function getField(row, headerIndex, ...candidates) {
+  for (const candidate of candidates) {
+    const actualHeader = headerIndex[candidate.toLowerCase()];
+    if (actualHeader !== undefined) return row[actualHeader] ?? "";
+  }
+  return "";
+}
+
+function hasField(headerIndex, ...candidates) {
+  return candidates.some((c) => headerIndex[c.toLowerCase()] !== undefined);
+}
+
 async function run() {
   console.log("=== AKRA V2 Core Import Dry Run ===");
 
@@ -183,13 +223,32 @@ async function run() {
   }
 
 
-  // Read V1 snapshots
+  // Read V1 snapshots: prefer real exports dropped under import-data/main/,
+  // fall back to the synthetic fixtures under import-snapshots/.
+  const realPathsExist = [realUserPath, realRoleConfigPath, realPermConfigPath, realAppConfigPath].every(
+    existsSync
+  );
+  const sourcePaths = {
+    User: existsSync(realUserPath) ? realUserPath : userFixturePath,
+    RoleConfig: existsSync(realRoleConfigPath) ? realRoleConfigPath : roleConfigFixturePath,
+    PermConfig: existsSync(realPermConfigPath) ? realPermConfigPath : permConfigFixturePath,
+    AppConfig: existsSync(realAppConfigPath) ? realAppConfigPath : appConfigFixturePath,
+  };
+  console.log(
+    realPathsExist
+      ? `Using REAL V1 export data from ${realDataDir}`
+      : `Using synthetic fixture data (real exports not found under ${realDataDir})`
+  );
+  for (const [key, p] of Object.entries(sourcePaths)) {
+    console.log(`- ${key}: ${p}`);
+  }
+
   let userSnapshot, roleConfigSnapshot, permConfigSnapshot, appConfigSnapshot;
   try {
-    userSnapshot = parseCSV(readFileSync(userFixturePath, "utf8"));
-    roleConfigSnapshot = parseCSV(readFileSync(roleConfigFixturePath, "utf8"));
-    permConfigSnapshot = parseCSV(readFileSync(permConfigFixturePath, "utf8"));
-    appConfigSnapshot = parseCSV(readFileSync(appConfigFixturePath, "utf8"));
+    userSnapshot = parseCSV(readFileSync(sourcePaths.User, "utf8"));
+    roleConfigSnapshot = parseCSV(readFileSync(sourcePaths.RoleConfig, "utf8"));
+    permConfigSnapshot = parseCSV(readFileSync(sourcePaths.PermConfig, "utf8"));
+    appConfigSnapshot = parseCSV(readFileSync(sourcePaths.AppConfig, "utf8"));
   } catch (err) {
     console.error(`Failed to read V1 snapshots: ${err.message}`);
     process.exit(1);
@@ -198,19 +257,25 @@ async function run() {
   const blockers = [];
   const warnings = [];
 
-  // Validate headers
-  const requiredHeaders = {
-    User: ["id", "name", "roles"],
-    RoleConfig: ["role"],
-    PermConfig: ["AppID", "PermKey"],
-    AppConfig: ["AppID"],
-  };
+  // Header indexes for case-insensitive / renamed-column lookup per source.
+  const userHeaderIndex = buildHeaderIndex(userSnapshot.headers);
+  const roleConfigHeaderIndex = buildHeaderIndex(roleConfigSnapshot.headers);
+  const permConfigHeaderIndex = buildHeaderIndex(permConfigSnapshot.headers);
+  const appConfigHeaderIndex = buildHeaderIndex(appConfigSnapshot.headers);
 
-  for (const [key, headers] of Object.entries(requiredHeaders)) {
-    const snap = key === "User" ? userSnapshot : key === "RoleConfig" ? roleConfigSnapshot : key === "PermConfig" ? permConfigSnapshot : appConfigSnapshot;
-    for (const h of headers) {
-      if (!snap.headers.includes(h)) {
-        blockers.push(`Missing header "${h}" in ${key}.csv`);
+  // Validate headers. RoleConfig's role-key column is named "val" in the real
+  // export and "role" in the synthetic fixture, so it has two candidates.
+  const requiredHeaderChecks = [
+    { key: "User", headerIndex: userHeaderIndex, candidates: [["id"], ["name"], ["roles"]] },
+    { key: "RoleConfig", headerIndex: roleConfigHeaderIndex, candidates: [["role", "val"]] },
+    { key: "PermConfig", headerIndex: permConfigHeaderIndex, candidates: [["AppID"], ["PermKey"]] },
+    { key: "AppConfig", headerIndex: appConfigHeaderIndex, candidates: [["AppID"]] },
+  ];
+
+  for (const { key, headerIndex, candidates } of requiredHeaderChecks) {
+    for (const candidateGroup of candidates) {
+      if (!hasField(headerIndex, ...candidateGroup)) {
+        blockers.push(`Missing header "${candidateGroup.join('"/"')}" in ${key}.csv`);
       }
     }
   }
@@ -224,13 +289,15 @@ async function run() {
   // 1. Process V1 Roles Catalog
   const v1Roles = new Set();
   roleConfigSnapshot.rows.forEach((r) => {
-    if (r.role) v1Roles.add(r.role.trim().toUpperCase());
+    const roleVal = getField(r, roleConfigHeaderIndex, "role", "val");
+    if (roleVal) v1Roles.add(roleVal.trim().toUpperCase());
   });
 
   // Extract roles found in users just in case
   userSnapshot.rows.forEach((u) => {
-    if (u.roles) {
-      u.roles.split(",").forEach((role) => {
+    const roles = getField(u, userHeaderIndex, "roles");
+    if (roles) {
+      roles.split(",").forEach((role) => {
         const cleaned = role.trim().toUpperCase();
         if (cleaned) v1Roles.add(cleaned);
       });
@@ -244,27 +311,31 @@ async function run() {
 
   userSnapshot.rows.forEach((u, idx) => {
     const lineNum = idx + 2;
-    if (!u.id) {
+    const id = getField(u, userHeaderIndex, "id");
+    const name = getField(u, userHeaderIndex, "name");
+    const roles = getField(u, userHeaderIndex, "roles");
+
+    if (!id) {
       blockers.push(`User line ${lineNum}: Missing "id"`);
       return;
     }
-    if (!u.name) {
-      blockers.push(`User line ${lineNum} (ID: ${u.id}): Missing "name"`);
+    if (!name) {
+      blockers.push(`User line ${lineNum} (ID: ${id}): Missing "name"`);
       return;
     }
 
-    if (userIds.has(u.id)) {
-      blockers.push(`User line ${lineNum}: Duplicate user ID "${u.id}"`);
+    if (userIds.has(id)) {
+      blockers.push(`User line ${lineNum}: Duplicate user ID "${id}"`);
     }
-    userIds.add(u.id);
+    userIds.add(id);
 
-    if (usernames.has(u.name.toLowerCase())) {
-      warnings.push(`User line ${lineNum}: Duplicate display name "${u.name}" (case-insensitive)`);
+    if (usernames.has(name.toLowerCase())) {
+      warnings.push(`User line ${lineNum}: Duplicate display name "${name}" (case-insensitive)`);
     }
-    usernames.add(u.name.toLowerCase());
+    usernames.add(name.toLowerCase());
 
-    const rolesList = u.roles
-      ? u.roles
+    const rolesList = roles
+      ? roles
           .split(",")
           .map((r) => r.trim().toUpperCase())
           .filter(Boolean)
@@ -272,18 +343,21 @@ async function run() {
 
     rolesList.forEach((r) => {
       if (!v1Roles.has(r)) {
-        warnings.push(`User "${u.name}": Assigned role "${r}" not listed in RoleConfig.csv`);
+        warnings.push(`User "${name}": Assigned role "${r}" not listed in RoleConfig.csv`);
       }
     });
 
-    // Propose synthetic email address
-    // Strip special characters and spaces, map to @akra-v2.test
-    const safeName = u.name.toLowerCase().replace(/[^a-z0-9_.-]/gi, "");
-    const syntheticEmail = `${safeName || "user_" + u.id}@akra-v2.test`;
+    // Propose synthetic email address, keyed on the V1 id (the real unique
+    // key) rather than display name alone, so two users sharing a display
+    // name (seen in both the fixture and the real export) don't collide into
+    // one auth account.
+    const safeName = name.toLowerCase().replace(/[^a-z0-9_.-]/gi, "") || "user";
+    const safeId = String(id).toLowerCase().replace(/[^a-z0-9_.-]/gi, "");
+    const syntheticEmail = `${safeName}.${safeId}@akra-v2.test`;
 
     importedUsers.push({
-      legacy_uid: u.id,
-      display_name: u.name,
+      legacy_uid: id,
+      display_name: name,
       synthetic_email: syntheticEmail,
       v1_roles: rolesList,
     });
@@ -295,14 +369,16 @@ async function run() {
   const unmappedV1Permissions = new Set();
 
   // Find role columns in PermConfig.csv (all columns except AppID and PermKey)
+  const appIdHeader = permConfigHeaderIndex["appid"];
+  const permKeyHeader = permConfigHeaderIndex["permkey"];
   const permRoleCols = permConfigSnapshot.headers.filter(
-    (h) => h !== "AppID" && h !== "PermKey"
+    (h) => h !== appIdHeader && h !== permKeyHeader
   );
 
   permConfigSnapshot.rows.forEach((p, idx) => {
     const lineNum = idx + 2;
-    const appId = p.AppID.trim();
-    const permKey = p.PermKey.trim();
+    const appId = getField(p, permConfigHeaderIndex, "AppID").trim();
+    const permKey = getField(p, permConfigHeaderIndex, "PermKey").trim();
     const compositeKey = `${appId}.${permKey}`;
 
     const v2Perm = v1ToV2PermissionMap[compositeKey];
