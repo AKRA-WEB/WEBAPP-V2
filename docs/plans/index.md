@@ -10,17 +10,19 @@ after `CONDUCTOR.md` when another agent needs to continue work.
 V2 is in Phase 3 preparation. The core schema, Picking pilot schema, shared
 catalog/warehouse baseline, and the real V1 core identity import (users,
 roles, role_permissions) are applied and verified in staging. The Picking gate
-(`V2-0010`), the read-only Picking pilot (`V2-0019`), and the create
-requisition write slice (`V2-0020`) are all complete and verified in staging:
-`/picking` list, `/picking/[id]` detail, and a guarded `/picking/new` create
-flow with a shared-catalog product bridge and an atomic
-`public.create_picking_requisition(...)` transaction. LINE send, in-app status
-transitions, and problem reporting remain deferred. `V2-0017` Main portal
-redesign is now complete (`/` is permission-filtered, Thai-first, with a
-signed-out portal state). `V2-0022` now records the full module-by-module
-timeline to reach V1 operational replacement and full parity closeout; per
-that plan's next-step chain, Picking status transitions are the recommended
-next slice.
+(`V2-0010`), the read-only Picking pilot (`V2-0019`), the create requisition
+write slice (`V2-0020`), and the status-transition slice (`V2-0023`) are all
+complete and verified in staging: `/picking` list, `/picking/[id]` detail
+(now with "Mark picked"/"Mark sent" actions), a guarded `/picking/new` create
+flow with a shared-catalog product bridge, an atomic
+`public.create_picking_requisition(...)` transaction, and an atomic
+`public.transition_picking_requisition_status(...)` transaction enforcing
+`pending -> picked -> sent` only. LINE send and problem reporting remain
+deferred. `V2-0017` Main portal redesign is now complete (`/` is
+permission-filtered, Thai-first, with a signed-out portal state). `V2-0022`
+now records the full module-by-module timeline to reach V1 operational
+replacement and full parity closeout; per that plan's next-step chain,
+problem reporting is the recommended next slice.
 
 ## Active Queue
 
@@ -32,12 +34,10 @@ next slice.
    - Status: In progress; steps 1-5 complete. Real V1 core import (the
      deferred part of step 4) completed 2026-06-20: see ADR `0011` and the
      2026-06-20 work-log entry. Step 6 (Picking read-only pilot, `V2-0019`)
-     completed 2026-06-20. The create requisition write slice (`V2-0020`)
-     completed 2026-06-20.
-   - Next action: pick the next Picking slice (LINE send, in-app status
-     buttons, or problem reporting), or switch to `V2-0017` Main portal
-     direction if the user prioritizes portal polish before more Picking
-     workflow.
+     completed 2026-06-20. The create requisition write slice (`V2-0020`) and
+     the status-transition slice (`V2-0023`) both completed 2026-06-20.
+   - Next action: problem reporting is the next Picking slice per `V2-0022`'s
+     chain (LINE send remains after that).
    - File: `docs/plans/V2-0009-next-execution-sequence.md`
 3. `V2-0014` - Deployment boundary and staging access
    - Status: Complete on 2026-06-19.
@@ -110,8 +110,8 @@ next slice.
      problem reporting, Picking LINE/failure recovery, Picking cutover package,
      PR/PO/GR foundation, PR, PO, GR, warehouse, Returnitem, KPI, and final
      hardening/cutover.
-   - Next action: execute Phase 1 Main portal (`V2-0017`) first unless the
-     user explicitly prioritizes Picking closeout instead.
+   - Next action: problem reporting is next (status transitions, `V2-0023`,
+     are complete).
    - File: `docs/plans/V2-0022-full-v1-parity-timeline.md`
 11. `V2-0017` - Main portal design direction
    - Status: Complete on 2026-06-20.
@@ -147,6 +147,22 @@ next slice.
      `docs/handoff/archive/work-log-2026-06-18-to-2026-06-19.md`, with read
      rules updated in `AGENTS.md`, `CONDUCTOR.md`, and `README.md`.
    - File: `docs/plans/V2-0021-handoff-work-log-archiving.md`
+15. `V2-0023` - Picking status transitions
+   - Status: Complete on 2026-06-20.
+   - Outcome: migration `0010` adds atomic
+     `public.transition_picking_requisition_status(...)` (service-role-only,
+     mirrors `0009`'s posture), enforcing `pending -> picked` and
+     `picked -> sent` only. Fixed a real PL/pgSQL column-ambiguity bug found
+     during smoke-testing (the function's `returns table (id, status)` clause
+     shadowed the table's own `id`/`status` columns). Added
+     `src/modules/picking/transition-action.ts` and "Mark picked"/"Mark sent"
+     buttons on `/picking/[id]`, gated by `picking.write`. Verified via direct
+     RPC smoke test (valid forward path, rejected `pending -> sent`, rejected
+     repeat transitions) and browser verification (`PICKING_READER` no
+     buttons, `PICKING_WRITER` full flow at 390px, `ADMIN` can transition, no
+     console errors) using a temporary local Playwright install (removed
+     after).
+   - File: `docs/plans/V2-0023-picking-status-transitions.md`
 
 ## Completed Or Baseline Plans
 

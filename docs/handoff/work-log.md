@@ -15,6 +15,96 @@ Resume order:
 
 Open an archive only when investigating a historical plan, decision, or verification detail.
 
+## 2026-06-20 - Picking Status Transitions (V2-0023)
+
+Context:
+
+- User sent `Go` (bare, no plan ID, no colon). `docs/handoff/current-state.md`
+  Next Action 5 was "Execute Picking closeout in this order: status
+  transitions (`pending -> picked -> sent`), problem reporting, LINE
+  notification/failure recovery, then Picking cutover package" — no plan file
+  existed yet for this slice, so drafted `V2-0023` as part of execution
+  (matching the `V2-0017`/`V2-0020` precedent of building the plan doc inline
+  for a bare `Go`).
+- Read `docs/migration/picking-v1-mapping.md` (V1 LINE postback rules: `pick`
+  maps `pending -> picked`; `ship` maps `picked -> sent`; `pending -> sent` is
+  blocked), the existing `src/modules/picking/read-model.ts` and
+  `/picking/[id]` detail page, and migrations `0004` (status check
+  constraint, existing `picked_*`/`sent_*` columns) and `0009` (the
+  `create_picking_requisition` atomic-RPC pattern to mirror) before building
+  anything.
+
+Changes:
+
+- Added `docs/plans/V2-0023-picking-status-transitions.md`.
+- Added `supabase/migrations/0010_picking_status_transitions.sql`: atomic
+  `public.transition_picking_requisition_status(p_requisition_id,
+  p_target_status, p_actor_profile_id, p_actor_name)`. Same posture as `0009`:
+  default `SECURITY INVOKER`, `EXECUTE` revoked from
+  `public`/`anon`/`authenticated`, granted only to `service_role`. Enforces
+  only `pending -> picked` and `picked -> sent`; any other target or
+  out-of-order call raises and writes nothing. Applied to staging
+  (`npm run db:apply-migrations -- 0010_picking_status_transitions.sql`).
+- Added `src/modules/picking/transition-action.ts`
+  (`transitionPickingRequisitionStatus`): `requirePermission({ permission:
+  "picking.write" })`, calls the new RPC via the existing
+  `createAdminClient()`, redirects back to `/picking/[id]` on success.
+  Denial/RPC error is a silent no-op in this slice (return type is `void` so
+  it type-checks as a bound `<form action={...}>` target without extra
+  plumbing); no user-facing error message yet for the rare race-condition
+  case.
+- Added "Mark picked"/"Mark sent" buttons to
+  `src/app/picking/[id]/page.tsx`, next to the status pill inside
+  `.workspace-header__actions`, shown only when
+  `can(guard.snapshot, "picking.write")` and the requisition is in the
+  matching predecessor status. Plain `<form
+  action={transitionPickingRequisitionStatus.bind(null, requisition.id,
+  "picked"|"sent")}>` server actions — no new client component needed.
+
+Verification:
+
+- `npm run check:migrations` and `npm run db:verify-staging-schema` both pass
+  after applying the migration.
+- Direct RPC smoke test against staging (throwaway requisition via
+  `create_picking_requisition`, deleted after): found and fixed a real bug —
+  the function's `returns table (id uuid, status text)` clause creates
+  implicit PL/pgSQL output variables named `id`/`status`, so bare references
+  to the `picking_requisitions` columns of the same names inside the function
+  body were ambiguous (`column reference "status" is ambiguous`, raised on
+  every call). Fixed by aliasing the table (`picking_requisitions pr`) and
+  qualifying every reference (`pr.status`, `pr.id`); re-applied the migration
+  and re-tested. After the fix: `pending -> picked -> sent` writes the
+  correct `picked_at`/`picked_by_name`/`sent_at`/`sent_by_name` columns and
+  exactly one lifecycle event per transition (`created`, `picked`, `sent`); a
+  `pending -> sent` call and a repeated `picked -> picked` call are both
+  rejected with a clear exception and write nothing.
+- `npm run lint`, `npm run typecheck`, `npm run build`, and `git diff --check`
+  all pass.
+- Browser-verified against staging using a temporary local Playwright install
+  (`npm install --no-save playwright` + `npx playwright install chromium`,
+  both removed after; user explicitly approved resetting three existing
+  synthetic staging test-account passwords via the service-role Admin API for
+  this verification session only — asked via `AskUserQuestion` first since
+  this mutates shared staging auth state — value not recorded in any
+  committed file, same pattern as `V2-0019`/`V2-0020`/`V2-0017`):
+  - `test-picker-reader@akra-v2.test` (`PICKING_READER`): sees the `Pending`
+    status pill on a fixture requisition but zero transition buttons.
+  - `test-picker-writer@akra-v2.test` (`PICKING_WRITER`): completed the full
+    `pending -> picked -> sent` flow in the browser; measured zero horizontal
+    overflow (`scrollWidth === clientWidth`) at a 390px viewport both before
+    and after the transitions.
+  - `test-admin@akra-v2.test` (`ADMIN`): transitioned a bill `pending ->
+    picked` successfully.
+  - No browser console errors in any of the above checks.
+  - All fixture requisitions created for the RPC smoke test and browser
+    checks were deleted afterward via the service-role client.
+  - Temporary scripts (`scripts/_tmp-reset-test-passwords.mjs`,
+    `scripts/_tmp-verify-status-transitions.mjs`) were deleted after the run,
+    matching the one-off-script-not-committed pattern from prior slices.
+- No V1 production apps, GAS deployments, Sheets, URLs, LINE tokens, or
+  production data were touched. Staging writes were limited to the migration
+  and the clearly-marked, all-deleted smoke/browser-test requisitions.
+
 ## 2026-06-20 - V2-0018 Completion Correction
 
 Context:

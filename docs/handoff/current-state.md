@@ -7,10 +7,11 @@ Last updated: 2026-06-20
 - Repository: `https://github.com/AKRA-WEB/WEBAPP-V2`
 - Local path: `C:\dev\AKRA-WEBAPP-V2`
 - Status: Phase 3 Picking pilot schema and mapping drafted, applied to staging,
-  DB-verified; read-only UI slice (`/picking`, `/picking/[id]`) and the create
-  requisition write slice (`/picking/new`) are both implemented and verified
-  against staging. Main portal redesign (`V2-0017`) is also complete and
-  verified against staging.
+  DB-verified; read-only UI slice (`/picking`, `/picking/[id]`), the create
+  requisition write slice (`/picking/new`), and the status-transition slice
+  (`pending -> picked -> sent` actions on `/picking/[id]`) are all implemented
+  and verified against staging. Main portal redesign (`V2-0017`) is also
+  complete and verified against staging.
 - Production impact: None
 - V1 reference path: `C:\dev\WEBAPP`
 
@@ -393,6 +394,51 @@ Status:
     Main now hides/disables their links by permission, but the routes
     themselves are still reachable by direct URL. Out of scope for this
     plan; worth a guard pass before any of those modules gets real content.
+- Executed `V2-0023` on 2026-06-20 (`Go`, no plan ID given; drafted the plan
+  as part of execution per the documented Next Action 5): Picking status
+  transitions.
+  - Migration `0010_picking_status_transitions.sql`: atomic
+    `public.transition_picking_requisition_status(p_requisition_id,
+    p_target_status, p_actor_profile_id, p_actor_name)`, mirroring `0009`'s
+    posture (default `SECURITY INVOKER`, `EXECUTE` revoked from
+    `anon`/`authenticated`, granted only to `service_role`). Enforces only
+    `pending -> picked` and `picked -> sent` (per
+    `docs/migration/picking-v1-mapping.md`'s V1 LINE-postback rule); any other
+    target or out-of-order call raises and writes nothing. Applied and
+    verified on staging (`npm run check:migrations`,
+    `npm run db:verify-staging-schema`).
+  - Found and fixed a real bug during direct RPC smoke-testing: the
+    function's `returns table (id uuid, status text)` clause creates implicit
+    PL/pgSQL variables named `id`/`status`, which made bare references to the
+    `picking_requisitions` columns of the same names ambiguous
+    (`column reference "status" is ambiguous`). Fixed by aliasing the table
+    (`picking_requisitions pr`) and qualifying every reference. Re-verified:
+    `pending -> picked -> sent` writes the right timestamp/actor columns and
+    exactly one event per transition; `pending -> sent` and a repeated
+    `picked -> picked` call are both rejected and write nothing.
+  - Added `src/modules/picking/transition-action.ts`
+    (`transitionPickingRequisitionStatus`, `requirePermission({ permission:
+    "picking.write" })`, calls the RPC via `createAdminClient()`, redirects
+    back to the same `/picking/[id]` on success; denial/RPC error is a silent
+    no-op in this minimal slice, no user-facing error message yet).
+  - Added "Mark picked"/"Mark sent" buttons to
+    `src/app/picking/[id]/page.tsx`, shown only when
+    `can(guard.snapshot, "picking.write")` and the requisition is in the
+    matching predecessor status; plain `<form action={...bind(...)}>` server
+    actions, no new client component.
+  - Browser-verified with a temporary local Playwright install (removed
+    after, same pattern as prior slices; user explicitly approved resetting
+    three existing synthetic staging test-account passwords via the
+    service-role Admin API for this verification session only, not recorded
+    in any committed file): `test-picker-reader@akra-v2.test`
+    (`PICKING_READER`) sees the `Pending` status pill but no transition
+    buttons; `test-picker-writer@akra-v2.test` (`PICKING_WRITER`) completed
+    the full `pending -> picked -> sent` flow in the browser with zero
+    horizontal overflow at a 390px viewport before and after; `ADMIN`
+    transitioned a bill too; no browser console errors in any check. All
+    smoke-test and browser-test requisitions were deleted after verification.
+  - `lint`, `typecheck`, `build`, and `git diff --check` all pass.
+  - No V1 production files changed.
 
 ## Next Actions
 
@@ -403,14 +449,15 @@ Status:
    shared-catalog bridge, transaction-safe daily bill number allocation,
    reference-data dry run/import, and `/picking/new`.~~ Done 2026-06-20.
 4. ~~Execute Phase 1 Main portal (`V2-0017`).~~ Done 2026-06-20.
-5. Execute Picking closeout in this order: status transitions
-   (`pending -> picked -> sent`), problem reporting, LINE notification/failure
+5. ~~Execute Picking status transitions (`pending -> picked -> sent`).~~ Done
+   2026-06-20 (`V2-0023`).
+6. Execute Picking problem reporting next, then LINE notification/failure
    recovery, then Picking cutover package (per `V2-0022`'s next-step chain).
-6. After Picking cutover package, plan PR/PO/GR foundation before implementing
+7. After Picking cutover package, plan PR/PO/GR foundation before implementing
    PR, PO, or GR UI.
-7. Keep `docs/plans/index.md` updated whenever a plan status or next action
+8. Keep `docs/plans/index.md` updated whenever a plan status or next action
    changes.
-8. Keep `docs/handoff/work-log.md` as the active recent log; archive older
+9. Keep `docs/handoff/work-log.md` as the active recent log; archive older
    entries under `docs/handoff/archive/` when it becomes long again.
 
 

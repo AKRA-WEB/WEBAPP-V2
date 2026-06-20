@@ -4,7 +4,9 @@ import { AppShell } from "@/components/app-shell";
 import { StatusPill } from "@/components/status-pill";
 import { AccessDenied } from "@/components/access-denied";
 import { requirePermission } from "@/modules/auth/guard";
+import { can } from "@/modules/auth/permissions";
 import { getRequisitionDetail } from "@/modules/picking/read-model";
+import { transitionPickingRequisitionStatus } from "@/modules/picking/transition-action";
 import {
   formatBillLabel,
   formatDateTime,
@@ -86,6 +88,7 @@ export default async function PickingRequisitionDetailPage({
   }
 
   const { requisition } = result;
+  const canTransition = can(guard.snapshot, "picking.write");
 
   return (
     <AppShell activeHref="/picking">
@@ -94,9 +97,29 @@ export default async function PickingRequisitionDetailPage({
           <p className="eyebrow">Picking</p>
           <h1>{formatBillLabel(requisition.billNo)}</h1>
         </div>
-        <StatusPill tone={pickingStatusTone(requisition.status)}>
-          {formatPickingStatusLabel(requisition.status)}
-        </StatusPill>
+        <div className="workspace-header__actions">
+          {canTransition && requisition.status === "pending" && (
+            <form
+              action={transitionPickingRequisitionStatus.bind(null, requisition.id, "picked")}
+            >
+              <button className="primary-button" type="submit">
+                Mark picked
+              </button>
+            </form>
+          )}
+          {canTransition && requisition.status === "picked" && (
+            <form
+              action={transitionPickingRequisitionStatus.bind(null, requisition.id, "sent")}
+            >
+              <button className="primary-button" type="submit">
+                Mark sent
+              </button>
+            </form>
+          )}
+          <StatusPill tone={pickingStatusTone(requisition.status)}>
+            {formatPickingStatusLabel(requisition.status)}
+          </StatusPill>
+        </div>
       </section>
 
       <section className="requisition-meta-grid" aria-label="Requisition metadata">
