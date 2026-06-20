@@ -1,6 +1,6 @@
 # Plan V2-0009: Next Execution Sequence
 
-Status: In progress — step 4 complete (steps 1, 2, 3, 4 done)
+Status: In progress — step 5 complete (steps 1, 2, 3, 4, 5 done)
 
 
 ## Goal
@@ -121,6 +121,9 @@ Files:
 
 ### 5. Server Permission Guard Pattern
 
+Status: Complete on 2026-06-19; corrected on 2026-06-20 to fail closed when a
+caller omits an explicit permission requirement.
+
 Create a reusable server-side guard wrapper around `getPermissionSnapshot()` and
 `can()` so routes and future actions fail closed consistently. Apply it to
 admin routes first, then use the same pattern for Picking routes/actions.
@@ -133,10 +136,11 @@ Expected files:
 
 Verification:
 
-- Admin user can access `/admin/permissions`
-- Non-admin user is denied
-- Missing Supabase env or missing session fails closed
-- `npm run lint`, `npm run typecheck`, `npm run build`
+- Admin user can access `/admin/permissions`.
+- Non-admin user is denied.
+- Missing Supabase env or missing session fails closed.
+- Empty guard calls fail closed instead of allowing all authenticated users.
+- `npm run lint`, `npm run typecheck`, `npm run build`.
 
 ### 6. Picking Pilot UI And Actions
 

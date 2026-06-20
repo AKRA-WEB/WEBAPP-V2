@@ -56,7 +56,8 @@ Current notes:
 
 - Next.js scaffold exists and builds.
 - Supabase helpers exist but real env values are not committed.
-- Vercel deployment has not been run from this repo yet.
+- Vercel deployment has run from this repo and has been verified for the current
+  V2 shell/admin route baseline.
 - Core schema and real permission model continue in Phase 2.
 
 ## Phase 2 - Core Identity And Permissions
@@ -82,12 +83,15 @@ Current notes:
   been applied to the staging Supabase project and DB-verified.
 - V1 core import mapping is drafted in
   `docs/migration/core-v1-import-mapping.md`.
-- End-to-end Supabase Auth and permission viewer verification is pending a
-  rotated server-only key and staging auth/user setup.
+- End-to-end Supabase Auth and `/admin/permissions` verification has passed
+  with staging accounts. A reusable server-side permission guard is implemented.
+- Core V1 import dry-run tooling exists; the actual staging core import is still
+  pending.
 
 ## Phase 3 - Pilot Module
 
-Status: Started (staging schema applied; no data/routes yet)
+Status: Started (staging schema applied; shared catalog data imported; no
+Picking workflow routes/actions yet)
 
 Recommended pilot: `Picking`
 
@@ -113,6 +117,8 @@ Current notes:
 - V1 Picking mapping is drafted in `docs/migration/picking-v1-mapping.md`.
 - No V1 Picking data has been exported/imported and no V2 Picking routes or
   actions have been implemented yet.
+- Shared catalog/warehouse schema and staging snapshot import are available for
+  the planned Picking catalog bridge.
 - V1 production Picking app, GAS deployment, Sheets, URLs, and LINE tokens were
   not changed.
 

@@ -12,8 +12,8 @@ validated module by module.
 - Production impact: None
 - Target stack: Next.js on Vercel, Supabase/Postgres, TypeScript
 - Migration style: Incremental module migration, no big-bang cutover
-- Current database baseline: Supabase draft migrations `0001`-`0006` applied to
-  staging; no V1 data imported yet
+- Current database baseline: Supabase draft migrations `0001`-`0008` applied to
+  staging; shared catalog/warehouse snapshot data imported to staging only
 
 ## Read First
 

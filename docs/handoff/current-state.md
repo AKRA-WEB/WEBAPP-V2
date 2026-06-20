@@ -1,6 +1,6 @@
 # Current State
 
-Last updated: 2026-06-19
+Last updated: 2026-06-20
 
 ## Project
 
@@ -48,6 +48,7 @@ Plan IDs:
 - `V2-0015` (`docs/plans/V2-0015-core-import-dry-run.md`)
 - `V2-0016` (`docs/plans/V2-0016-server-permission-guard-pattern.md`)
 - `V2-0017` (`docs/plans/V2-0017-main-portal-design-direction.md`)
+- `V2-0018` (`docs/plans/V2-0018-shared-catalog-warehouse-data-structure.md`)
 
 Goal: Finish the Phase 2 core schema baseline and draft the Phase 3 Picking
 pilot schema/mapping so the first module can be staged without touching V1
@@ -172,22 +173,42 @@ Status:
   proposes the hybrid decision: preserve V1 Main's workflow and module mental
   model, but redesign the V2 Main portal instead of copying the V1 visual shell
   or single-file implementation.
+- Added `V2-0018` as the shared catalog and warehouse data-structure plan after
+  the user uploaded fresh `import-data/` CSV snapshots. The plan records the
+  initial product-source findings: PO/GR ProductName is the broadest coded
+  source (4,793 codes), TRDAKRA Product and Returnitem usable codes are subsets,
+  W5 has 116 name-only stock rows with 21 exact-name unmatched rows, and
+  product scope should be modeled with aliases and scope memberships rather
+  than flat TRD/AKRA/W5 booleans. ADR `0009` records this proposed modeling
+  decision.
+- Added a Grill Review / Decision Gate to `V2-0018` covering the main blockers:
+  TRD/AKRA cannot be derived from Product master presence alone, W5 no-code rows
+  should not auto-create canonical products by default, units cannot be
+  aggregated before conversion rules, stock snapshots and movement histories may
+  not reconcile, raw location values must be preserved, product active status is
+  source-specific, Picking catalog bridging needs a decision, and catalog edit
+  permissions need an owner.
+- Completed Plan `V2-0018` profiling dry-runs and transformer previews: `scripts/product-catalog-import-dry-run.mjs` and `scripts/product-catalog-import-transformer.mjs` are implemented and successfully verified. Generated `import-reports/product-catalog-dry-run-report.md` and `import-reports/transformer-preview-report.md` with catalog mapping stats. Created draft SQL migration `supabase/migrations/0008_shared_catalog_schema.sql` and `docs/migration/product-catalog-v1-mapping.md`, and validated migration compliance.
+- Completed Plan `V2-0016` (Server permission guard pattern): implemented server-side guard `requirePermission()` in `src/modules/auth/guard.ts` supporting single permission, `anyOf`, and `allOf` checks with `ADMIN` bypass. Refactored `/admin/permissions` to use the guard, created reusable `AccessDenied` UI component, and added ADR `0010` to document the design decision. Corrected on 2026-06-20 so empty guard calls fail closed instead of allowing any authenticated user.
+- Applied `0008_shared_catalog_schema.sql` to staging database and successfully imported catalog and warehouse data using `scripts/product-catalog-import-apply.mjs`.
+- Corrected the V2-0018 import/transform rules on 2026-06-20: W1 is TRD; W2, W3, W4, W5, C1, and C2 are AKRA; TRDAKRA Product entries default to `akra_trd`; destructive staging scripts now require explicit confirmation flags.
+- Reimported the corrected catalog/warehouse staging data and verified aggregates: 4,793 products, 173 vendors, 11,433 aliases, 3,760 scope entries, 126 locations, 1,791 par configs, 116 balances, and 1,660 movements. All 1,791 TRDAKRA alias products are now `akra_trd`; `trd_alias_products_trd_only` is 0.
+- Added repeatable read-only verification command `npm run db:verify-catalog-import`
+  for catalog row counts, warehouse business-unit mapping, and TRDAKRA scope
+  classification.
 - No V1 production files changed.
 
 ## Next Actions
 
-1. Execute `V2-0016`: add a reusable server-side permission guard pattern
-   around `getPermissionSnapshot()` + `can()` and apply it before adding write
-   workflows.
-2. Prepare and run the actual V1 core import script (writing profiles/user_roles/role_permissions to staging) based on `scripts/core-import-dry-run.mjs` validation report.
-3. Use `V2-0010` as the gate for V2 Picking implementation: confirm MVP and
+1. Prepare and run the actual V1 core import script (writing profiles/user_roles/role_permissions to staging) based on `scripts/core-import-dry-run.mjs` validation report.
+2. Use `V2-0010` as the gate for V2 Picking implementation: confirm MVP and
    first slice, then start with a permission-gated read path, then create
    requisition server actions, then status/problem workflows and LINE
    integration.
-4. Confirm `V2-0017` Main portal direction before polishing `/` beyond the
+3. Confirm `V2-0017` Main portal direction before polishing `/` beyond the
    current migration dashboard. Recommended direction: redesign V2 Main while
    preserving V1 Main behavior and familiar module labels.
-5. Keep `docs/plans/index.md` updated whenever a plan status or next action
+4. Keep `docs/plans/index.md` updated whenever a plan status or next action
    changes.
 
 

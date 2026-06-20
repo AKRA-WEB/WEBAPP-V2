@@ -85,11 +85,31 @@ These workflows should be backed by database transactions or RPC functions:
 - V1 plaintext capability tokens must be hashed or omitted during import; token
   values must never be committed.
 
+## Shared Catalog And Warehouse Product Assumptions
+
+- Product master data should be modeled once in a shared catalog, but legacy app-specific product names must be preserved as aliases.
+- Product membership in TRD, AKRA, AKRA-TRD, W5, and app modules should be represented as scope/evidence rows, not as destructive overwrites on a single product row.
+- PO/GR `ProductName` is the best initial coded seed because it covers all currently observed TRDAKRA and Returnitem product codes in `import-data/`.
+- TRDAKRA `Floor`, `Location`, and `Par Level` are warehouse placement/par metadata, not canonical product fields.
+- W5 current stock has no product code, so W5 rows require exact-name, alias, or manual-review mapping before they can be trusted as canonical products.
+- Raw import rows, source file names, source row numbers, and import batch IDs should remain auditable during migration.
+- **Confirmed Business Rules (2026-06-19):**
+  - **Warehouse Affiliation:** W1 is TRD. W2, W3, W4, W5, C1, C2 are AKRA (where C1 is W4 cold room, C2 is W5 freezer).
+  - **Default TRDAKRA Scope:** Products from the TRDAKRA list without transaction evidence default to `akra_trd`.
+  - **W5 Unmatched Names:** Will remain as `manual_review` aliases and be manually mapped referencing AKRA products.
+  - **Display Names:** V2 product display names default to the canonical PO/GR product name for all departments.
+  - **Catalog Edit Authority:** Restricted to `core.admin` roles initially; custom roles will be planned later.
+  - **Picking Integration:** The Picking pilot will transition directly to using the new `catalog_products` and locations instead of keeping an isolated table.
+
 ## Staging Apply Status
 
-- Migrations `0001`-`0006` have been applied to the staging Supabase project.
+- Migrations `0001`-`0008` have been applied to the staging Supabase project.
 - `0006_core_grant_hardening.sql` corrects broad default grants discovered
   during staging verification after the initial `0001`-`0005` apply.
+- `0008_shared_catalog_schema.sql` adds the shared catalog and warehouse
+  baseline tables with RLS, explicit grants, and permission-gated reads.
 - Database verification passed for expected public tables, RLS, table grants,
   RLS policies, structural seeds, and private functions.
-- No V1 data has been imported yet.
+- Shared catalog and warehouse snapshot data from `import-data/` has been
+  imported into staging only. V1 core users, V1 Picking workflow data, and V1
+  production systems have not been imported or changed.

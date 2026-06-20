@@ -1,6 +1,14 @@
 # Plan V2-0016: Server Permission Guard Pattern
 
-Status: Draft
+Status: Complete after 2026-06-20 correction
+
+Correction note:
+
+- The original guard returned `allowed` for authenticated non-admin users when a
+  caller passed no `permission`, `anyOf`, or `allOf` requirement.
+- The corrected guard requires an explicit non-empty permission requirement and
+  fails closed for empty guard calls, while preserving the intended `ADMIN`
+  bypass for valid requirements.
 
 Architect command:
 

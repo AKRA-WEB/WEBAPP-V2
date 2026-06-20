@@ -2,10 +2,9 @@ import Link from "next/link";
 
 import { AppShell } from "@/components/app-shell";
 import { StatusPill } from "@/components/status-pill";
-import { hasPublicSupabaseEnv } from "@/lib/supabase/env";
+import { AccessDenied } from "@/components/access-denied";
 import { createClient } from "@/lib/supabase/server";
-import { can } from "@/modules/auth/permissions";
-import { getPermissionSnapshot } from "@/modules/auth/get-permission-snapshot";
+import { requirePermission } from "@/modules/auth/guard";
 
 type RoleRow = { key: string; name: string; description: string | null };
 type PermissionRow = { key: string; description: string | null };
@@ -24,46 +23,21 @@ export const metadata = {
   title: "Permissions · AKRA WEBAPP V2",
 };
 
-function Notice({ title, body }: { title: string; body: string }) {
-  return (
-    <AppShell activeHref="/admin/permissions">
-      <section className="workspace-header">
-        <div>
-          <p className="eyebrow">Core · Admin</p>
-          <h1>{title}</h1>
-        </div>
-      </section>
-      <p className="form-message">{body}</p>
-    </AppShell>
-  );
-}
-
 export default async function PermissionsViewerPage() {
-  if (!hasPublicSupabaseEnv()) {
-    return (
-      <Notice
-        title="Permissions"
-        body="Supabase environment is not configured. Add .env.local before using the permission viewer."
-      />
-    );
-  }
+  const guard = await requirePermission({ permission: "core.admin" });
 
-  const snapshot = await getPermissionSnapshot();
-
-  if (!snapshot) {
+  if (guard.status !== "allowed") {
     return (
-      <Notice
-        title="Sign in required"
-        body="You must be signed in to view permissions."
-      />
-    );
-  }
-
-  if (!can(snapshot, "core.admin")) {
-    return (
-      <Notice
-        title="Forbidden"
-        body="You need the core.admin permission to view this page."
+      <AccessDenied
+        reason={guard.reason}
+        activeHref="/admin/permissions"
+        eyebrow="Core · Admin"
+        title={guard.reason === "forbidden" ? "Forbidden" : undefined}
+        body={
+          guard.reason === "forbidden"
+            ? "You need the core.admin permission to view this page."
+            : undefined
+        }
       />
     );
   }

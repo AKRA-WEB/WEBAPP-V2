@@ -903,3 +903,191 @@ Verification:
 - Checked `git status` and ran static checks `npm run lint`, `npm run typecheck`, and `npm run check:migrations`. All passed.
 - Executed `node scripts/core-import-dry-run.mjs` and verified it successfully queries Supabase staging database via HTTP API (finding 4 roles and 13 permissions), parses CSVs correctly, and generates the expected Markdown report file without blockers.
 - No V1 production files, GAS deployments, or live DB writes were performed.
+
+## 2026-06-19 - Shared Catalog And Warehouse Data Structure Plan
+
+Plan: `V2-0018` (`docs/plans/V2-0018-shared-catalog-warehouse-data-structure.md`).
+
+Context:
+- User uploaded fresh legacy CSV snapshots under `import-data/` and asked for a
+  data-structure design that can distinguish TRD-only, AKRA-only, AKRA-TRD, and
+  W5 products while preserving different product names and warehouse/location
+  details per app.
+- Used the Supabase and Supabase Postgres best-practices skills because the
+  target model is intended for Supabase/Postgres.
+- Checked current official Supabase changelog/docs before planning. The April
+  28, 2026 Data API explicit-grant change remains relevant; current docs still
+  require RLS on exposed tables, explicit grants, least-privilege role access,
+  and fixed `search_path` for `security definer` functions.
+
+Findings:
+- `po-pr-gr/Trackingpo - webapp - ProductName.csv` is the broadest coded source:
+  4,793 rows and 4,793 product codes.
+- `returnitem/Returned item - ProductName.csv` has 5,265 rows but only 4,734
+  usable product codes; 531 rows have blank product codes and all rows contain
+  `#REF!` in vendor/location-derived columns.
+- `akra-trd/เบิกย้าย Request - Product.csv` has 1,791 coded products; all codes
+  and exact names are present in PO/GR and Returnitem.
+- `akra-w5/ประวัติคลังสินค้า W5 - W5.csv` has 116 name-only stock rows; 95
+  exact-match existing product names and 21 require alias/manual review.
+- TRDAKRA Product `Floor`/`Location`/`Par Level`, PO/GR warehouse values, GR
+  `Loc_IN`, and W5 stock balances have different meanings and should not be
+  merged into one flat product row.
+
+Changes:
+- Added plan `V2-0018` proposing shared `catalog_products`, source aliases,
+  product scope memberships, vendors, warehouses, locations, stock balances,
+  stock movements, and import traceability.
+- Added ADR `0009` proposing source aliases and scope memberships instead of
+  flat TRD/AKRA/W5 booleans.
+- Updated `docs/migration/database-strategy.md` with shared catalog/warehouse
+  assumptions.
+- Updated `docs/plans/index.md` and `docs/handoff/current-state.md` so future
+  agents see `V2-0018` as the next product-data design gate.
+
+Verification:
+- `git diff --check` passed with CRLF-to-LF warnings only for touched Markdown
+  files.
+- No V1 production apps, GAS deployments, Sheets, URLs, LINE tokens, Supabase
+  schema, runtime code, staging data, or production data were changed.
+
+## 2026-06-19 - V2-0018 Grill Review Gate
+
+Plan: `V2-0018` (`docs/plans/V2-0018-shared-catalog-warehouse-data-structure.md`).
+
+Context:
+- User asked `Architect: V2-0018 Grill ME`, interpreted as a plan-only
+  pressure test of the shared catalog and warehouse data-structure plan.
+- Re-read the conductor, plan index, current state, active V2-0018 plan, target
+  architecture, migration plan, module inventory, and V1 development context.
+- Used the Supabase and Supabase Postgres best-practices skills because the
+  plan will govern future Supabase/Postgres schema work.
+
+Changes:
+- Added a `Grill Review / Decision Gate` section to V2-0018.
+- The gate lists critical risks: TRD/AKRA scope cannot be inferred from product
+  master presence alone, W5 no-code rows should not auto-create canonical
+  products by default, units cannot be aggregated before conversion rules,
+  stock snapshots and movements may not reconcile, raw locations must be
+  preserved, product active status is source-specific, Picking catalog bridging
+  needs a decision, and catalog edit permissions need an owner.
+- Added explicit evidence-priority rules for product identity and business/
+  warehouse scope.
+- Added seven go/no-go questions that must be answered before a `Go:` execution
+  on catalog schema/import work.
+- Updated plan index and current-state next actions to point future agents at
+  the Grill Review gate.
+
+Verification:
+- `git diff --check` passed with CRLF-to-LF warnings only for touched Markdown
+  files.
+- No V1 production apps, GAS deployments, Sheets, URLs, LINE tokens, Supabase
+  schema, runtime code, staging data, or production data were changed.
+
+## 2026-06-19 - Shared Catalog And Warehouse Data Structure Execution (V2-0018)
+
+Context:
+- Executed plan `V2-0018` to analyze legacy catalog and warehouse snapshots, map schemas, and build dry-run validation/transformation tools.
+
+Changes:
+- Created profiling dry-run script `scripts/product-catalog-import-dry-run.mjs` to scan CSV snapshots under `import-data/` and check matches/anomalies.
+- Generated profiling report `import-reports/product-catalog-dry-run-report.md` showing data overlaps, 21 unmatched W5 stock names, and status tags (`[ยกเลิก]`) inside transaction files.
+- Created SQL migration `supabase/migrations/0008_shared_catalog_schema.sql` defining 10 public tables (`catalog_products`, `catalog_product_aliases`, `catalog_product_scopes`, `catalog_vendors`, `catalog_product_vendors`, `warehouse_warehouses`, `warehouse_locations`, `warehouse_product_locations`, `warehouse_inventory_balances`, `warehouse_stock_movements`), enabling Row Level Security, revoking broad access, and setting up explicit grants and permission-based read policies.
+- Created detailed mapping document `docs/migration/product-catalog-v1-mapping.md`.
+- Created transformer dry-run script `scripts/product-catalog-import-transformer.mjs` which validates the in-memory mapping from legacy data to V2 structures.
+- Generated transformer preview report `import-reports/transformer-preview-report.md` summarizing product classifications (1,644 trd_only, 6 akra_only, 206 akra_trd, 2,937 unassigned) and alias counts.
+- Accepted ADR 0009 (`docs/decisions/0009-shared-catalog-source-scoped-products.md`).
+- Updated plans index, `V2-0018` plan file, and current state documentation to Review.
+
+Verification:
+- Ran `npm run check:migrations` and verified it successfully passes with 27 public tables and 13 permissions.
+- Executed both dry-run scripts (`product-catalog-import-dry-run.mjs` and `product-catalog-import-transformer.mjs`) and verified they parse, match, and write reports successfully with no blockers.
+- No database writes were performed on staging or production.
+
+## 2026-06-19 - Database Migration Applied and Shared Catalog Imported to Staging
+
+Context:
+- User authorized proceeding with schema migrations and imports. Applied the catalog schema and successfully executed the real database import.
+
+Changes:
+- Configured `.env.local` to use the working direct connection string (`db.yqyoxtgrubuspzyfzija.supabase.co`) because the pooler hostname was returning a tenant-not-found error.
+- Applied `0008_shared_catalog_schema.sql` to staging database.
+- Created `scripts/check-locks.mjs` to terminate blocking orphan postgres backend connections.
+- Created and executed optimized `scripts/product-catalog-import-apply.mjs` which performs fast bulk batch inserts (in chunks of 500 records).
+- Successfully imported 4,793 canonical products, 173 vendors, 11,433 product aliases, 2,337 scope entries, 126 locations, 1,791 par configs, 116 balances, and 1,660 movements into the staging database in under 10 seconds.
+- Updated `docs/handoff/current-state.md` with updated next actions.
+
+- Verified that all imports completed without database constraints or trigger errors.
+
+## 2026-06-19 - Server Permission Guard Pattern (V2-0016)
+
+Plan: `V2-0016` (`docs/plans/V2-0016-server-permission-guard-pattern.md`).
+
+Context:
+- Executed plan `V2-0016` to add a reusable server-side permission guard pattern around `getPermissionSnapshot()` and `can()`, and refactored `/admin/permissions` to use it.
+
+Changes:
+- Created server-only guard helper `src/modules/auth/guard.ts` containing the `requirePermission` function which checks single permissions, anyOf, or allOf arrays with an ADMIN role bypass. Returns a typed `GuardResult` with descriptive status and reason.
+- Created reusable `AccessDenied` layout component in `src/components/access-denied.tsx` to handle forbidden, unauthenticated, and not_configured states uniformly with appropriate user-facing messages and sign-in links.
+- Refactored `src/app/admin/permissions/page.tsx` to use `requirePermission({ permission: "core.admin" })` and render the `AccessDenied` component on failure, removing redundant local Notice components and environment checks.
+- Added ADR 0010 (`docs/decisions/0010-reusable-server-permission-guard-pattern.md`) to document the design decision.
+- Added `import-data/` to `.gitignore` to prevent raw CSV files from being tracked.
+- Updated plans index (`docs/plans/index.md`) and workspace current state (`docs/handoff/current-state.md`) to mark V2-0016 as Complete.
+
+Verification:
+- Run `npm run check:migrations` and verified it passes successfully.
+- Run `npm run lint` and verified no linting errors are present.
+- Run `npm run typecheck` and verified there are no compiler errors.
+- Run `npm run build` and verified the application compiles successfully with the dynamic and static routes.
+- Run `git diff --check` and verified no trailing whitespace or check errors.
+
+## 2026-06-20 - V2-0018 Completion Correction
+
+Context:
+- User asked to check completed work and then requested the V2-0018 issues be
+  fixed.
+- Review found that the V2-0018 transformer/import did not apply the resolved
+  business rule that TRDAKRA Product entries default to `akra_trd`; W3/C1 were
+  still treated as TRD in the preview/mapping path.
+- Review also found two safety issues: destructive staging scripts lacked
+  explicit confirmation flags, and `requirePermission({})` allowed any
+  authenticated user when a caller omitted a requirement.
+
+Changes:
+- Updated `scripts/product-catalog-import-transformer.mjs` and
+  `scripts/product-catalog-import-apply.mjs` so W1 is TRD; W2, W3, W4, W5, C1,
+  and C2 are AKRA; TRDAKRA Product entries create both TRD and AKRA business
+  scopes.
+- Added `--confirm-staging-import` to the real catalog import script and
+  staging project checks before truncating/reloading catalog/warehouse tables.
+- Changed `scripts/check-locks.mjs` to dry-run by default and require
+  `--terminate --confirm-staging-lock-cleanup` before terminating sessions.
+- Added `scripts/verify-product-catalog-import.mjs` and
+  `npm run db:verify-catalog-import` for repeatable read-only validation of
+  catalog row counts, warehouse business units, and TRDAKRA scope classification.
+- Updated `requirePermission()` so callers must provide an explicit non-empty
+  permission requirement; empty guard calls now fail closed.
+- Updated stale plan, migration, mapping, README, and handoff docs to reflect
+  `0008` and the corrected staging catalog baseline.
+- Re-ran the corrected catalog import against staging.
+
+Verification:
+- Official Supabase docs/changelog were rechecked before touching the staging
+  Supabase baseline; current docs still require RLS on exposed tables and
+  explicit grants for Data API access.
+- `node scripts/product-catalog-import-transformer.mjs` now reports 45
+  `trd_only`, 36 `akra_only`, 1,791 `akra_trd`, and 2,921 `unassigned`.
+- `node scripts/product-catalog-import-apply.mjs` refuses to run without
+  `--confirm-staging-import`.
+- `node scripts/check-locks.mjs` lists sessions but does not terminate them by
+  default.
+- `node scripts/product-catalog-import-apply.mjs --confirm-staging-import`
+  successfully reloaded staging catalog/warehouse data.
+- `npm run db:verify-staging-schema` passed after the reimport.
+- `npm run db:verify-catalog-import` passed after the reimport.
+- Staging aggregate verification passed: 4,793 products, 173 vendors, 11,433
+  aliases, 3,760 scope entries, 126 locations, 1,791 par configs, 116 balances,
+  and 1,660 movements. All 1,791 TRDAKRA alias products are now `akra_trd`;
+  `trd_alias_products_trd_only` is 0.
+- No V1 production apps, GAS deployments, Sheets, URLs, LINE tokens, or V1
+  production data were changed.

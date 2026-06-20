@@ -8,6 +8,7 @@
     "check:migrations": "node scripts/check-migrations.mjs",
     "db:apply-migrations": "node scripts/apply-migrations.mjs",
     "db:verify-staging-schema": "node scripts/verify-staging-schema.mjs",
+    "db:verify-catalog-import": "node scripts/verify-product-catalog-import.mjs",
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit --incremental false"

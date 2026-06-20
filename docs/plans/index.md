@@ -1,16 +1,16 @@
 # V2 Plan Index
 
-Last updated: 2026-06-19
+Last updated: 2026-06-20
 
 This is the central plan board for AKRA WEBAPP V2. It is the first file to read
 after `CONDUCTOR.md` when another agent needs to continue work.
 
 ## Current Direction
 
-V2 is in Phase 3 preparation. The core schema and Picking pilot schema are
-applied and verified in staging. Navigation shell work has started, but the
-next implementation work should still follow the core access sequence before
-Picking write workflows.
+V2 is in Phase 3 preparation. The core schema, Picking pilot schema, and shared
+catalog/warehouse baseline are applied and verified in staging. The next
+implementation work should finish the actual V1 core import and then return to
+the Picking gate before write workflows.
 
 ## Active Queue
 
@@ -19,9 +19,9 @@ Picking write workflows.
    - Outcome: all local changes (navigation shell, landing pages, planning templates, decisions, conductor setup, and project init guide) are verified, committed, and pushed.
    - File: `docs/plans/V2-0013-local-baseline-closeout.md`
 2. `V2-0009` - Next execution sequence
-   - Status: In progress; step 1 navigation/module route shell is complete.
-   - Next action: use the focused follow-up plans `V2-0013` through `V2-0016`,
-     then return to the Picking pilot gate.
+   - Status: In progress; steps 1-5 are complete.
+   - Next action: prepare and run the actual V1 core import, then return to the
+     Picking pilot gate (`V2-0010`).
    - File: `docs/plans/V2-0009-next-execution-sequence.md`
 3. `V2-0014` - Deployment boundary and staging access
    - Status: Complete on 2026-06-19.
@@ -32,28 +32,31 @@ Picking write workflows.
    - Outcome: Built dry-run validation script `scripts/core-import-dry-run.mjs` checking V1 snapshots, normalizing roles/permissions, generating synthetic emails, and querying staging DB via HTTPS API.
    - File: `docs/plans/V2-0015-core-import-dry-run.md`
 
-5. `V2-0016` - Server permission guard pattern
-   - Status: Draft.
-   - Next action: add a reusable server guard around `getPermissionSnapshot()`
-     and `can()` before Picking routes/actions.
+5. `V2-0018` - Shared catalog and warehouse data structure
+   - Status: Complete after 2026-06-20 correction.
+   - Outcome: Ran profiling dry-run and transformer, applied SQL migration `0008_shared_catalog_schema.sql`, imported staging catalog/warehouse data, corrected business scope rules (W1=TRD; W2, W3, W4, W5, C1, C2=AKRA; TRDAKRA Product defaults to `akra_trd`), and verified staging aggregates.
+   - File: `docs/plans/V2-0018-shared-catalog-warehouse-data-structure.md`
+6. `V2-0016` - Server permission guard pattern
+   - Status: Complete on 2026-06-19.
+   - Outcome: implemented `requirePermission` helper in `src/modules/auth/guard.ts` supporting anyOf/allOf checks and admin bypass, refactored `/admin/permissions` to use the guard, and created reusable `AccessDenied` UI.
    - File: `docs/plans/V2-0016-server-permission-guard-pattern.md`
-6. `V2-0010` - Picking product scope and user-flow gate
+7. `V2-0010` - Picking product scope and user-flow gate
    - Status: Draft; required before implementing Picking UI or write actions.
    - Next action: revisit after `V2-0014` and `V2-0016`; confirm first Picking
      slice and open decisions before coding.
    - File: `docs/plans/V2-0010-picking-product-scope-and-flow.md`
-7. `V2-0017` - Main portal design direction
+8. `V2-0017` - Main portal design direction
    - Status: Draft.
    - Next action: confirm the hybrid direction: preserve V1 Main behavior and
      module mental model, but redesign the V2 Main portal instead of copying the
      V1 visual shell.
    - File: `docs/plans/V2-0017-main-portal-design-direction.md`
-8. `V2-0011` - Conductor planning index
+9. `V2-0011` - Conductor planning index
    - Status: Complete on 2026-06-19.
    - Outcome: root `CONDUCTOR.md` and this plan index now define the central
      resume/handoff workflow.
    - File: `docs/plans/V2-0011-conductor-planning-index.md`
-9. `V2-0012` - Architect command format
+10. `V2-0012` - Architect command format
    - Status: Complete on 2026-06-19.
    - Outcome: `Architect:` is now the standard plan-only command and a detailed
      template exists at `docs/plans/templates/architect-plan-template.md`.
@@ -63,8 +66,8 @@ Picking write workflows.
 
 | Plan | Status | Notes |
 | --- | --- | --- |
-| `V2-0003` | Baseline applied | Core identity/permission schema drafted, hardened, applied to staging, and DB-verified through `0006`. |
-| `V2-0004` | Mapping drafted | Core V1 import mapping exists; real import dry run is still pending under `V2-0009`. |
+| `V2-0003` | Baseline applied | Core identity/permission schema drafted, hardened, applied to staging, and DB-verified. |
+| `V2-0004` | Mapping drafted | Core V1 import mapping exists; dry run is complete under `V2-0015`; actual staging import is still pending. |
 | `V2-0005` | Complete | Dashboard app registry helper and fallback were added. |
 | `V2-0006` | Baseline applied | Picking pilot schema and V1 mapping drafted; staging schema applied and verified. |
 | `V2-0007` | Complete | Repeatable static migration preflight added. |
@@ -72,12 +75,8 @@ Picking write workflows.
 
 ## Open Decisions To Resolve Soon
 
-- Whether Vercel Production remains protected/no staging Supabase env by default
-  until module cutover.
 - Whether the current direct-to-`main` solo-dev workflow should continue for
   V2 closeout commits or switch to PRs.
-- Which non-admin staging roles/users should be created first for permission
-  checks.
 - Whether V1 users without email addresses receive synthetic staging emails or a
   different identity bridge.
 - Whether Picking implementation should start with read-only list/detail only or
