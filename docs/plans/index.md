@@ -17,7 +17,8 @@ flow with a shared-catalog product bridge and an atomic
 `public.create_picking_requisition(...)` transaction. LINE send, in-app status
 transitions, and problem reporting remain deferred — the next Picking slice is
 still an open choice. `V2-0017` Main portal polish remains the alternate UI
-track.
+track. `V2-0022` now records the full module-by-module timeline to reach V1
+operational replacement and full parity closeout.
 
 ## Active Queue
 
@@ -95,23 +96,38 @@ track.
      service-role-only) instead of `private`. LINE send, in-app status
      buttons, and problem reporting remain deferred — next slice still open.
    - File: `docs/plans/V2-0020-picking-create-requisition-write-slice.md`
-10. `V2-0017` - Main portal design direction
+10. `V2-0022` - Full V1 parity timeline
+   - Status: Draft.
+   - Outcome: records a dependency-ordered roadmap from the current Phase 3
+     baseline through Main/Core portal, Picking closeout, PR/PO/GR,
+     TRDAKRA/W5, Returnitem, KPITracker, and full hardening/cutover. The
+     planning estimate is 7-9 weeks for aggressive operational replacement or
+     10-12 weeks for safer full parity closeout, assuming one focused
+     implementation stream and fast UAT. The concrete next-step chain now
+     defaults to Main portal first, then Picking status transitions, Picking
+     problem reporting, Picking LINE/failure recovery, Picking cutover package,
+     PR/PO/GR foundation, PR, PO, GR, warehouse, Returnitem, KPI, and final
+     hardening/cutover.
+   - Next action: execute Phase 1 Main portal (`V2-0017`) first unless the
+     user explicitly prioritizes Picking closeout instead.
+   - File: `docs/plans/V2-0022-full-v1-parity-timeline.md`
+11. `V2-0017` - Main portal design direction
    - Status: Draft.
    - Next action: confirm the hybrid direction: preserve V1 Main behavior and
      module mental model, but redesign the V2 Main portal instead of copying the
      V1 visual shell.
    - File: `docs/plans/V2-0017-main-portal-design-direction.md`
-11. `V2-0011` - Conductor planning index
+12. `V2-0011` - Conductor planning index
    - Status: Complete on 2026-06-19.
    - Outcome: root `CONDUCTOR.md` and this plan index now define the central
      resume/handoff workflow.
    - File: `docs/plans/V2-0011-conductor-planning-index.md`
-12. `V2-0012` - Architect command format
+13. `V2-0012` - Architect command format
    - Status: Complete on 2026-06-19.
    - Outcome: `Architect:` is now the standard plan-only command and a detailed
      template exists at `docs/plans/templates/architect-plan-template.md`.
    - File: `docs/plans/V2-0012-architect-command-format.md`
-13. `V2-0021` - Handoff work-log archiving
+14. `V2-0021` - Handoff work-log archiving
    - Status: Complete on 2026-06-20.
    - Outcome: active `docs/handoff/work-log.md` now keeps recent entries only;
      2026-06-18 through 2026-06-19 entries were moved to
@@ -145,6 +161,8 @@ track.
   state with a Sign In action.
 - Whether queued modules should be visible to ordinary users during migration or
   only to admins/internal testers.
+- Whether every module requires full historical import before cutover, or some
+  V1 Sheets remain read-only archives after operational replacement.
 
 ## Update Rules
 

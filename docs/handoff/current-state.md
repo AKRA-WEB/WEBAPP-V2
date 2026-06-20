@@ -54,10 +54,12 @@ Plan IDs:
 - `V2-0019` (`docs/plans/V2-0019-picking-read-only-pilot.md`)
 - `V2-0020` (`docs/plans/V2-0020-picking-create-requisition-write-slice.md`)
 - `V2-0021` (`docs/plans/V2-0021-handoff-work-log-archiving.md`)
+- `V2-0022` (`docs/plans/V2-0022-full-v1-parity-timeline.md`)
 
-Goal: Continue Phase 3 by moving from the verified read-only Picking pilot to
-the first create requisition write slice, while keeping LINE/status/problem
-workflows deferred.
+Goal: Continue Phase 3 from the verified Picking read-only/create baseline
+toward a full V1 replacement roadmap. `V2-0022` now frames the remaining work
+as module waves: Main/Core portal, Picking closeout, PR/PO/GR, TRDAKRA/W5,
+Returnitem, KPITracker, and full hardening/cutover.
 
 Status:
 
@@ -342,6 +344,20 @@ Status:
     (`SUPABASE_SECRET_KEY` is already in Vercel; `DATABASE_URL` was never
     needed for this), but deployed-create itself is unproven.
   - No V1 production files changed.
+- Added `V2-0022` on 2026-06-20 as a full V1 parity timeline. ADR `0016`
+  records the dependency-ordered migration sequence: Main/Core portal,
+  Picking pilot closeout, PR/PO/GR, TRDAKRA/W5, Returnitem, KPITracker, and
+  full-system hardening/cutover. The plan estimates 7-9 weeks for aggressive
+  operational replacement or 10-12 weeks for safer full parity closeout,
+  assuming one focused implementation stream and fast UAT. This was a
+  documentation-only `Architect:` step; no runtime app code, schema, staging
+  data, V1 production files, GAS deployments, Sheets, URLs, LINE tokens, or
+  secrets were changed.
+- Updated `V2-0022` after the user asked to save what to do after each job:
+  default next action is Phase 1 Main portal (`V2-0017`), then Picking status
+  transitions, Picking problem reporting, Picking LINE/failure recovery,
+  Picking cutover package, PR/PO/GR foundation, PR, PO, GR, warehouse
+  (TRDAKRA/W5), Returnitem, KPITracker, and final hardening/cutover.
 
 ## Next Actions
 
@@ -351,15 +367,17 @@ Status:
 3. ~~Review or execute `V2-0020`: create requisition write slice with
    shared-catalog bridge, transaction-safe daily bill number allocation,
    reference-data dry run/import, and `/picking/new`.~~ Done 2026-06-20.
-4. Pick the next Picking slice: LINE send, in-app status transitions
-   (pending -> picked -> sent), or problem reporting. No recommendation locked
-   in yet — ask the user.
-5. Confirm `V2-0017` Main portal direction before polishing `/` beyond the
-   current migration dashboard. Recommended direction: redesign V2 Main while
-   preserving V1 Main behavior and familiar module labels.
-6. Keep `docs/plans/index.md` updated whenever a plan status or next action
+4. Execute Phase 1 Main portal (`V2-0017`) unless the user explicitly changes
+   priority. Recommended direction: redesign V2 Main while preserving V1 Main
+   behavior and familiar module labels.
+5. After Main portal is complete, execute Picking closeout in this order:
+   status transitions (`pending -> picked -> sent`), problem reporting, LINE
+   notification/failure recovery, then Picking cutover package.
+6. After Picking cutover package, plan PR/PO/GR foundation before implementing
+   PR, PO, or GR UI.
+7. Keep `docs/plans/index.md` updated whenever a plan status or next action
    changes.
-7. Keep `docs/handoff/work-log.md` as the active recent log; archive older
+8. Keep `docs/handoff/work-log.md` as the active recent log; archive older
    entries under `docs/handoff/archive/` when it becomes long again.
 
 
@@ -377,6 +395,8 @@ Status:
   with a Sign In action?
 - Should queued modules be visible to ordinary users during migration, or only
   to admins/internal testers?
+- Should every V1 module history be imported before cutover, or should some
+  V1 Sheets remain read-only archives after V2 operational replacement?
 
 ## Safety Notes
 

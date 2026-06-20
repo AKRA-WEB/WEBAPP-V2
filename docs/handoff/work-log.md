@@ -439,3 +439,53 @@ Verification:
   through a deployed Vercel Preview/Development build. This is in-scope per
   the plan (`SUPABASE_SECRET_KEY` is already configured there;
   `DATABASE_URL` was never needed), but deployed-create itself is unproven.
+
+## 2026-06-20 - Full V1 Parity Timeline Plan (V2-0022)
+
+Context:
+
+- User asked via `Architect:` for a timeline through the end of the V2 rewrite,
+  split by phase/app/module, until V2 can be used like V1.
+- Read the planning template, current plan index, current handoff state, active
+  work log, migration/module inventory, database strategy, Picking mapping, and
+  V1 development context/module status before drafting.
+
+Changes:
+
+- Added `docs/plans/V2-0022-full-v1-parity-timeline.md`.
+- Added ADR `docs/decisions/0016-module-by-module-v1-parity-sequence.md`.
+- Updated `docs/plans/index.md` and `docs/handoff/current-state.md` so the
+  timeline is discoverable from the normal resume path.
+- The plan sequences V1 parity as module waves: Main/Core portal, Picking
+  closeout, PR/PO/GR, TRDAKRA/W5, Returnitem, KPITracker, and final
+  hardening/cutover.
+- The plan records two estimate bands: 7-9 weeks for aggressive operational
+  replacement, or 10-12 weeks for safer full parity closeout, assuming one
+  focused implementation stream and fast UAT.
+
+Verification:
+
+- Planning/docs-only change in V2 repo.
+- No runtime app code, Supabase schema, staging data, V1 production apps, GAS
+  deployments, Sheets, URLs, LINE tokens, or secrets were changed.
+
+Follow-up (same session): user asked to save exactly what should be done after
+each job. Updated `V2-0022`, `docs/plans/index.md`, and
+`docs/handoff/current-state.md` with a concrete next-step chain:
+
+1. Phase 1 Main portal (`V2-0017`).
+2. Picking status transitions.
+3. Picking problem reporting.
+4. Picking LINE notification/failure recovery.
+5. Picking cutover package.
+6. PR/PO/GR foundation.
+7. PR, then PO, then GR.
+8. Warehouse/TRDAKRA, then AKRA W5.
+9. Returnitem.
+10. KPITracker/analytics.
+11. Full-system hardening, UAT, and cutover.
+
+Also added a per-step closeout checklist requiring relevant checks, browser and
+mobile verification, handoff updates, ADR updates when needed, a clear next
+action, and confirmation that V1 production was not changed unless explicitly
+approved.
