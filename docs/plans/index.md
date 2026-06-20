@@ -15,10 +15,12 @@ requisition write slice (`V2-0020`) are all complete and verified in staging:
 `/picking` list, `/picking/[id]` detail, and a guarded `/picking/new` create
 flow with a shared-catalog product bridge and an atomic
 `public.create_picking_requisition(...)` transaction. LINE send, in-app status
-transitions, and problem reporting remain deferred — the next Picking slice is
-still an open choice. `V2-0017` Main portal polish remains the alternate UI
-track. `V2-0022` now records the full module-by-module timeline to reach V1
-operational replacement and full parity closeout.
+transitions, and problem reporting remain deferred. `V2-0017` Main portal
+redesign is now complete (`/` is permission-filtered, Thai-first, with a
+signed-out portal state). `V2-0022` now records the full module-by-module
+timeline to reach V1 operational replacement and full parity closeout; per
+that plan's next-step chain, Picking status transitions are the recommended
+next slice.
 
 ## Active Queue
 
@@ -112,10 +114,21 @@ operational replacement and full parity closeout.
      user explicitly prioritizes Picking closeout instead.
    - File: `docs/plans/V2-0022-full-v1-parity-timeline.md`
 11. `V2-0017` - Main portal design direction
-   - Status: Draft.
-   - Next action: confirm the hybrid direction: preserve V1 Main behavior and
-     module mental model, but redesign the V2 Main portal instead of copying the
-     V1 visual shell.
+   - Status: Complete on 2026-06-20.
+   - Outcome: user confirmed the hybrid direction via `Go:` (build now,
+     Thai-first V1 labels, signed-out portal with Sign In CTA). `/` now
+     branches not-configured/signed-out/signed-in, filters the app registry
+     into allowed-vs-queued by permission (closing a pre-existing gap where
+     every module was a clickable link regardless of permission), shows Thai
+     one-line module descriptions, surfaces signed-in user/role and an admin
+     shortcut, and demotes the former dashboard stats to a secondary panel.
+     ADR `0008` accepted. Also added the plan's spec'd empty state (no
+     allowed modules) after an advisor review caught it was missing.
+     Verified against staging as signed-out, `GUEST` (empty state, 0 allowed
+     cards), `PICKING_READER` (1 allowed module, 6 permission-denied notes,
+     no admin shortcut), and `ADMIN` (7 allowed modules, admin shortcut
+     present); 390px viewport zero overflow; no console errors; screenshots
+     confirmed Thai text/layout render correctly.
    - File: `docs/plans/V2-0017-main-portal-design-direction.md`
 12. `V2-0011` - Conductor planning index
    - Status: Complete on 2026-06-19.

@@ -9,7 +9,8 @@ Last updated: 2026-06-20
 - Status: Phase 3 Picking pilot schema and mapping drafted, applied to staging,
   DB-verified; read-only UI slice (`/picking`, `/picking/[id]`) and the create
   requisition write slice (`/picking/new`) are both implemented and verified
-  against staging
+  against staging. Main portal redesign (`V2-0017`) is also complete and
+  verified against staging.
 - Production impact: None
 - V1 reference path: `C:\dev\WEBAPP`
 
@@ -358,6 +359,40 @@ Status:
   transitions, Picking problem reporting, Picking LINE/failure recovery,
   Picking cutover package, PR/PO/GR foundation, PR, PO, GR, warehouse
   (TRDAKRA/W5), Returnitem, KPITracker, and final hardening/cutover.
+- Executed `V2-0017` on 2026-06-20 (`Go:`, no plan ID): confirmed the Main
+  portal direction with the user first (track/labels/signed-out behavior),
+  since the plan was still `Draft`/ADR `0008` still `Proposed`. ADR `0008`
+  is now Accepted. `src/app/page.tsx` is rewritten as a server component that
+  branches not-configured / signed-out / signed-in: signed-out shows a hero
+  panel with a Sign In CTA and a disabled preview of the registry; signed-in
+  filters the app registry into allowed-vs-queued by permission (this closes
+  a pre-existing gap — Main previously rendered every module as a clickable
+  link with no permission check at all), shows Thai one-line module
+  descriptions (V1 proper-noun names kept as-is, e.g. "Picking", "TRDAKRA"),
+  surfaces the signed-in user's display name/roles, adds an admin-only
+  shortcut to `/admin/permissions`, and demotes the former "Migration
+  Control" stats panel into a quieter `secondary-panel` below the modules.
+  Added `.hero-panel`, `.workspace-header__user`, `.section-label`,
+  `.module-card__note`, and `.secondary-panel` to `src/app/globals.css`.
+  `npm run lint`/`typecheck`/`build` pass. Browser-verified against staging
+  with a temporary local Playwright install (removed after, same pattern as
+  prior slices): signed-out shows the hero + CTA;
+  `test-picker-reader@akra-v2.test` (`PICKING_READER`) sees 1 allowed
+  clickable module (Picking) and 6 "ต้องขอสิทธิ์เพิ่มเติม" denied notes, no
+  admin shortcut; `test-admin@akra-v2.test` (`ADMIN`) sees all 7 routed
+  modules as allowed plus the admin shortcut; 390px viewport measured zero
+  horizontal overflow; no console errors. Test account passwords were reset
+  to a temporary known value via the service-role Admin API for this
+  verification session only (user-approved; not recorded in any committed
+  file) — same synthetic staging-only accounts as prior slices. No V1
+  production files changed.
+  - Known gap carried forward (pre-existing, not introduced by this slice,
+    noted in the plan's own Screens/States section): the placeholder module
+    landing pages (`/purchasing`, `/receiving`, `/warehouse`, `/returns`,
+    `/kpi`, via `ModuleLandingPage`) have no server-side permission guard —
+    Main now hides/disables their links by permission, but the routes
+    themselves are still reachable by direct URL. Out of scope for this
+    plan; worth a guard pass before any of those modules gets real content.
 
 ## Next Actions
 
@@ -367,12 +402,10 @@ Status:
 3. ~~Review or execute `V2-0020`: create requisition write slice with
    shared-catalog bridge, transaction-safe daily bill number allocation,
    reference-data dry run/import, and `/picking/new`.~~ Done 2026-06-20.
-4. Execute Phase 1 Main portal (`V2-0017`) unless the user explicitly changes
-   priority. Recommended direction: redesign V2 Main while preserving V1 Main
-   behavior and familiar module labels.
-5. After Main portal is complete, execute Picking closeout in this order:
-   status transitions (`pending -> picked -> sent`), problem reporting, LINE
-   notification/failure recovery, then Picking cutover package.
+4. ~~Execute Phase 1 Main portal (`V2-0017`).~~ Done 2026-06-20.
+5. Execute Picking closeout in this order: status transitions
+   (`pending -> picked -> sent`), problem reporting, LINE notification/failure
+   recovery, then Picking cutover package (per `V2-0022`'s next-step chain).
 6. After Picking cutover package, plan PR/PO/GR foundation before implementing
    PR, PO, or GR UI.
 7. Keep `docs/plans/index.md` updated whenever a plan status or next action

@@ -1,6 +1,29 @@
 # Plan V2-0017: Main Portal Design Direction
 
-Status: Draft
+Status: Complete (2026-06-20)
+
+Direction confirmed by user on 2026-06-20 (`Go:`, no plan ID — see
+`docs/handoff/work-log.md`):
+
+- Track: build this plan now (not the next Picking slice).
+- Module labels: Thai-first, preserve V1 label wording (matches MVP rationale
+  above).
+- Signed-out `/`: show a signed-out Main portal state with a Sign In CTA, not
+  a redirect to `/login`.
+
+Outcome: implemented as the smallest UI-only slice on top of the existing
+`V2-0016` guard/`app-registry`. `src/app/page.tsx` now branches on
+not-configured / signed-out / signed-in, filters the app registry into
+allowed-vs-queued by permission (fixing a pre-existing gap where Main showed
+every module as a clickable link regardless of permission), shows Thai
+one-line descriptions per module (V1 proper-noun names kept as-is), surfaces
+the signed-in user's display name/roles and an admin shortcut to
+`/admin/permissions`, renders the spec'd empty state when a signed-in user has
+no allowed modules, and demotes the former "Migration Control" stats into a
+quieter `secondary-panel` below the modules. Verified against staging as
+signed-out, `GUEST` (empty state), `PICKING_READER` (1 allowed + 6 denied),
+and `ADMIN` (all 7 allowed + admin shortcut). See the 2026-06-20 work-log
+entry for verification detail.
 
 Architect command:
 
@@ -246,12 +269,12 @@ forward-fixed without affecting V1.
 
 ## 9. Open Questions
 
-- Should `/` require sign-in immediately, or show a signed-out portal with a
-  Sign In action?
-- Should Main module labels stay Thai-first like V1 or use English module names
-  with Thai descriptions?
+- ~~Should `/` require sign-in immediately, or show a signed-out portal with a
+  Sign In action?~~ Resolved 2026-06-20: signed-out portal with Sign In CTA.
+- ~~Should Main module labels stay Thai-first like V1 or use English module names
+  with Thai descriptions?~~ Resolved 2026-06-20: Thai-first, V1 wording.
 - Should queued modules be visible to ordinary users, or only to admins during
-  migration?
+  migration? (Plan default stands: visible to all with a disabled state.)
 - Should password change/account actions be part of V2 Main MVP, or wait until
   the auth migration path is clearer?
 - Should V2 Main later bridge to V1 app URLs during migration, or only route to

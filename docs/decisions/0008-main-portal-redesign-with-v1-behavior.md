@@ -4,7 +4,7 @@ Date: 2026-06-19
 
 ## Status
 
-Proposed
+Accepted (confirmed by user 2026-06-20 via `Go:`)
 
 ## Context
 
@@ -36,6 +36,13 @@ Do not copy from V1:
 - direct visual clone of the blue/orange gradient card shell;
 - client-side app-launch token pattern unless a future identity-bridge decision
   explicitly requires it.
+
+Confirmed implementation specifics (2026-06-20):
+
+- Module/UI labels are Thai-first, preserving V1 wording, to minimize operator
+  retraining.
+- `/` shows a signed-out Main portal state with a Sign In CTA rather than
+  redirecting to `/login`.
 
 ## Consequences
 

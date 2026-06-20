@@ -489,3 +489,155 @@ Also added a per-step closeout checklist requiring relevant checks, browser and
 mobile verification, handoff updates, ADR updates when needed, a clear next
 action, and confirmation that V1 production was not changed unless explicitly
 approved.
+
+## 2026-06-20 - CLAUDE.md Update
+
+Context:
+
+- User ran `/init` to refresh `CLAUDE.md`. Found it was missing the binding
+  `Architect:`/`Go:`/`Review:` command protocol defined in `CONDUCTOR.md` even
+  though `AGENTS.md`, `README.md`, and `CONDUCTOR.md` all list `CONDUCTOR.md`
+  and `docs/plans/index.md` as required reading.
+
+Changes:
+
+- Rewrote `CLAUDE.md`: added a "Command protocol" section summarizing
+  `Architect:`/`Go:`/`Review:` and plan-status lifecycle; fixed the required-
+  reading list to include `CONDUCTOR.md` and `docs/plans/index.md`; documented
+  the 4th Supabase client (`src/lib/supabase/admin.ts`, service-role,
+  `server-only`); documented the `--confirm-*` + staging-project-ref guard
+  pattern used by database-writing scripts under `scripts/`.
+- No runtime app code, schema, staging data, V1 production files, or secrets
+  were changed.
+
+Verification:
+
+- Documentation-only change. `git diff --check` passed.
+
+## 2026-06-20 - Main Portal Redesign Execution (V2-0017)
+
+Context:
+
+- User sent `Go:` with no plan ID. `docs/handoff/current-state.md` Next
+  Action 4 pointed at `V2-0017`, but the plan itself was still `Draft` and
+  ADR `0008` still `Proposed` — the plan's own Handoff Notes say "confirm
+  this direction, then execute" and list signed-out behavior/labels as
+  blockers, and `docs/plans/index.md` framed Main portal vs. the next Picking
+  slice as an open choice. Asked the user (via `AskUserQuestion`, advisor
+  consulted first) to confirm: (1) build `V2-0017` now vs. switch to a
+  Picking slice, (2) Thai-first V1 labels vs. English+Thai, (3) signed-out
+  `/` shows a portal+CTA vs. redirects to `/login`. User confirmed all three
+  recommended defaults. Updated the plan and ADR `0008` (now Accepted) with
+  the confirmed direction before implementing.
+
+Changes:
+
+- Rewrote `src/app/page.tsx` (server component, `export const dynamic =
+  "force-dynamic"`):
+  - Not-configured state (`!hasPublicSupabaseEnv()`): hero panel + disabled
+    registry preview, no Supabase calls (preserves the pre-existing
+    no-env-crash behavior; the rewrite originally called `createClient()`
+    unconditionally, which throws without env — caught and fixed before
+    verification).
+  - Signed-out state: hero panel with Thai copy and a Sign In CTA, plus a
+    disabled preview of the fallback registry.
+  - Signed-in state: fetches `getPermissionSnapshot()` and the user's
+    `profiles.display_name`/`email`; splits the app registry into
+    allowed (`module.route` and permission satisfied) vs. queued (no route,
+    or route exists but permission denied — tagged with a
+    "ต้องขอสิทธิ์เพิ่มเติม" note) instead of rendering every module as a
+    clickable link unconditionally, which is what the page did before this
+    change regardless of the signed-in user's actual permissions.
+  - Renders signed-in user display name + role list in the header, an
+    admin-only shortcut to `/admin/permissions` (`can(snapshot,
+    "core.admin")`), and the former dashboard stat panel demoted into a
+    `secondary-panel` below the modules.
+  - Module descriptions on Main are now Thai (`moduleDescriptionTh`),
+    keeping V1's proper-noun module names as-is per the confirmed direction.
+- Added `.hero-panel`, `.hero-panel__status`, `.workspace-header__user`,
+  `.section-label`, `.module-card__note`, `.secondary-panel` to
+  `src/app/globals.css`.
+- Updated `docs/plans/V2-0017-main-portal-design-direction.md` (Status:
+  Complete, confirmed direction + outcome recorded, two Open Questions
+  resolved) and `docs/decisions/0008-main-portal-redesign-with-v1-behavior.md`
+  (Status: Accepted, confirmed specifics added).
+- Updated `docs/plans/index.md` (`V2-0017` entry, Current Direction
+  paragraph) and `docs/handoff/current-state.md` (Status line, Next Actions,
+  detailed bullet) accordingly.
+
+Verification:
+
+- `npm run lint`: caught and fixed one real issue — `for (const module of
+  modules)` tripped `@next/next/no-assign-module-variable`; renamed the loop
+  variable to `appItem`. Clean after.
+- `npm run typecheck` and `npm run build` both pass (`/` still builds as
+  dynamic/server-rendered).
+- Browser-verified against staging using a temporary local Playwright
+  install (`npm install --no-save playwright` + `npx playwright install
+  chromium`, both removed after; user explicitly approved resetting two
+  existing synthetic staging test-account passwords via the service-role
+  Admin API for this verification session only, not recorded in any
+  committed file, same pattern as `V2-0019`/`V2-0020`):
+  - Signed-out `/`: hero heading "ระบบจัดการ AKRA แบบรวมศูนย์" + Sign In CTA
+    present.
+  - `test-picker-reader@akra-v2.test` (`PICKING_READER`, `picking.read`
+    only): exactly 1 allowed clickable module card (Picking), 6
+    "ต้องขอสิทธิ์เพิ่มเติม" denied notes (core, purchasing, receiving,
+    warehouse, returns, kpi), no admin shortcut link, user line shows
+    `test-picker-reader@akra-v2.test · PICKING_READER`.
+  - `test-admin@akra-v2.test` (`ADMIN`): all 7 routed modules render as
+    allowed clickable cards, admin shortcut link present.
+  - 390px viewport: zero horizontal overflow (`scrollWidth === clientWidth`)
+    on the `PICKING_READER` check.
+  - No browser console errors across any of the above.
+  - Temp verification scripts (`scripts/_tmp-reset-test-passwords.mjs`,
+    `scripts/_tmp-verify-main.mjs`) were deleted after the run, matching the
+    one-off-script-not-committed pattern from prior slices.
+- No V1 production apps, GAS deployments, Sheets, URLs, LINE tokens, or
+  production data were touched. Staging writes were limited to the two
+  temporary test-account password resets (synthetic, staging-only,
+  user-approved).
+- Known gap (pre-existing, not introduced here): placeholder module landing
+  pages (`/purchasing`, `/receiving`, `/warehouse`, `/returns`, `/kpi`) still
+  have no server-side permission guard, so hiding/disabling their Main links
+  by permission is a UX improvement, not an access-control fix. Flagged in
+  `current-state.md` as a follow-up before any of those modules gets real
+  content.
+
+Follow-up (same session, caught by advisor review before declaring done): the
+plan's own Screens/States spec (§4) requires an explicit "no assigned
+modules" empty state, and §7 requires verifying signed-in as guest too — both
+were missed in the first pass (`allowedModules.length === 0` rendered a bare
+empty grid, and only `PICKING_READER`/`ADMIN` were browser-checked).
+
+- Added the empty state to `src/app/page.tsx`: when `allowedModules.length
+  === 0`, render a `.module-detail` panel ("ยังไม่มีโมดูลที่คุณมีสิทธิ์ใช้งาน"
+  + "ติดต่อผู้ดูแลระบบเพื่อขอสิทธิ์เข้าถึงโมดูลที่ต้องใช้งาน") instead of the
+  modules grid.
+- Re-ran `lint`/`typecheck`/`build` (all pass).
+- Browser-verified `test-guest@akra-v2.test` (`GUEST`, no module
+  permissions) against staging with a second temporary local Playwright pass
+  (same install/removal pattern): empty-state heading/body render correctly,
+  zero allowed-module cards, all 7 queued cards show the
+  "ต้องขอสิทธิ์เพิ่มเติม" note, no admin shortcut, 390px viewport zero
+  overflow, no console errors. User separately approved resetting
+  `test-guest@akra-v2.test`'s password via the service-role Admin API for
+  this check (prior approval only named `test-admin`/`test-picker-reader`),
+  same not-recorded-anywhere pattern.
+- Took full-page screenshots (signed-out, `PICKING_READER`, `GUEST`) for
+  visual sanity beyond text/count assertions — Thai text renders correctly,
+  layout is coherent, the demoted `secondary-panel` stats read as secondary.
+  Screenshots and the temp verification/reset scripts were deleted after
+  review (not committed).
+- Checked one more divergence risk an advisor review raised: Main's registry
+  filter uses the single `requiredPermission` field (`picking.read` for
+  Picking), but the `/picking` route guard accepts `anyOf: ["picking.read",
+  "picking.write"]`. A user with `picking.write` but not `picking.read`
+  would see Picking locked on Main yet still reach the route directly. Confirmed
+  this isn't live: the seeded `PICKING_WRITER` role grants both
+  (`supabase/migrations/0007_test_roles.sql`), and the real V1 core import
+  never touched Picking permissions at all — `import-data/main/Main Menu -
+  PermConfig.csv` has no `app-pick.*` rows, only `AppConfig.csv` app-level
+  access (a separate V1 concept). No current staging account has write
+  without read. Noting as a theoretical Main-vs-route-guard mismatch for any
+  future role that grants `picking.write` alone, not an active bug.

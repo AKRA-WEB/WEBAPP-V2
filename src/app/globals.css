@@ -503,6 +503,64 @@ button {
   flex-wrap: wrap;
 }
 
+.workspace-header__user {
+  margin: 0.3rem 0 0;
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.hero-panel {
+  display: grid;
+  gap: 0.85rem;
+  max-inline-size: 560px;
+  padding: 1.75rem;
+  margin-block-end: 1.5rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.hero-panel h1 {
+  margin: 0;
+  font-size: clamp(1.5rem, 3cqi, 2rem);
+}
+
+.hero-panel p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.hero-panel .primary-button {
+  justify-self: start;
+}
+
+.hero-panel__status {
+  font-size: 0.82rem;
+}
+
+.section-label {
+  margin: 1.5rem 0 0.75rem;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.module-card__note {
+  margin: 0.35rem 0 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-style: italic;
+}
+
+.secondary-panel {
+  margin-block-start: 1.5rem;
+  opacity: 0.85;
+}
+
 .requisition-form {
   display: grid;
   gap: 1rem;
