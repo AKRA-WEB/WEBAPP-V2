@@ -72,8 +72,17 @@ For each module, capture:
   `/picking/new` (guarded by `picking.write`) creates real requisitions in
   staging. Staging requisitions are a mix of staging-only fixtures
   (`legacy_source = "v2_fixture"`) and real app-created rows
-  (`legacy_source = "v2_app"`), not V1 `Requisition` history. Status/problem
-  workflows and LINE integration remain.
+  (`legacy_source = "v2_app"`), not V1 `Requisition` history. Third UI/action
+  slice (plan `V2-0023`) is implemented and verified: writer/admin-only
+  `pending -> picked -> sent` transitions on `/picking/[id]` backed by
+  service-role-only `public.transition_picking_requisition_status(...)`.
+  Fourth UI/action slice (plan `V2-0025`) is implemented and verified:
+  writer/admin-only problem reporting on `/picking/[id]/problem` (with a
+  "Problem reports" read section on `/picking/[id]`) backed by
+  service-role-only `public.report_picking_problem(...)`, which records
+  per-line requested-vs-actual quantities without changing requisition
+  status (ADR `0018`). LINE integration/failure recovery and the Picking
+  cutover package remain.
 
 ## Notes From V1 Context
 

@@ -22,21 +22,46 @@ change.
 
 Before planning or editing, read:
 
-1. `README.md`
-2. `CONDUCTOR.md`
-3. `docs/plans/index.md`
-4. `docs/handoff/current-state.md`
-5. `docs/handoff/work-log.md` active recent entries only
-6. `docs/architecture/target-architecture.md`
-7. `docs/migration/migration-plan.md`
-8. `docs/migration/module-inventory.md`
-9. `C:\dev\WEBAPP\development_context.md` for V1 behavior and module status
+1. `AGENTS.md`
+2. `README.md`
+3. `CONDUCTOR.md`
+4. `docs/plans/index.md`
+5. `docs/handoff/current-state.md`
+6. `docs/handoff/work-log.md` active recent entries only
+7. Active plan files listed in `docs/plans/index.md`
+8. `docs/architecture/target-architecture.md`
+9. `docs/migration/migration-plan.md`
+10. `docs/migration/module-inventory.md`
+11. `C:\dev\WEBAPP\development_context.md` when V1 behavior is relevant
 
 Open `docs/handoff/archive/*` only when a current plan, ADR, bug investigation,
 or verification question requires older historical detail.
 
+Context budget rule: use `docs/plans/index.md` and
+`docs/handoff/current-state.md` as compact summaries. Do not read archive logs
+or paste long command output into handoff docs during normal resume. Keep the
+active work log to the latest 3-5 entries or roughly 400 lines, and archive
+older entries with dated pointers.
+
 If the task involves Supabase, also verify current Supabase docs/changelog
 before implementing schema, auth, RLS, or migration changes.
+
+## 2.1 Session Shortcut
+
+When the user says `Let's work`, treat it as a context-saving resume shortcut:
+
+- Read only the compact resume set first: `AGENTS.md`, `README.md`,
+  `CONDUCTOR.md`, `docs/plans/index.md`,
+  `docs/handoff/current-state.md`,
+  `docs/project-management/decision-board.md`, and active recent
+  `docs/handoff/work-log.md`.
+- Do not read archive logs unless a current plan, ADR, bug, or verification
+  question requires older detail.
+- Check `git status --short`.
+- Summarize current status, recommended next action, and decisions needed.
+- Do not edit runtime code from `Let's work` alone. If the message also
+  includes `Architect:`, `Go:`, or `Review:`, handle that command after the
+  resume step.
 
 ## 3. Handoff Discipline
 

@@ -63,3 +63,6 @@ Supabase schema, staging data, URLs, LINE tokens, or secrets are touched.
 - Future agents should read `current-state.md`, `plans/index.md`, and the
   active recent `work-log.md` first.
 - Archive files are for historical investigation only.
+- Keep the active work log to the latest 3-5 entries or roughly 400 lines. When
+  it grows beyond that, archive older entries with a dated pointer and keep
+  `current-state.md` as the compact continuity summary.

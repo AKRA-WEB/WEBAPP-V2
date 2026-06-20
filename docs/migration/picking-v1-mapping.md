@@ -43,8 +43,9 @@ V1 sheets:
 - LINE `pick` postback maps `pending -> picked`.
 - LINE `ship` postback maps `picked -> sent`; `pending -> sent` is blocked.
 - `problem.html` shortage report writes problem report rows. If status is
-  `pending`, V1 also marks the bill as `picked`; V2 should preserve that rule
-  unless a later decision changes it.
+  `pending`, V1 also marks the bill as `picked`; V2 intentionally diverges
+  from that behavior per ADR `0018`: a problem report does not mark a
+  `pending` requisition as `picked`.
 - Repeat taps and stray postbacks stay idempotent/no-op unless the UI later
   needs explicit feedback.
 
@@ -86,7 +87,14 @@ V2 additionally reserves:
 
 - Whether to keep V1 role-fallback permissions for the first V2 pilot or require
   strict `picking.read` / `picking.write` assignments from day one.
-- Whether V2 should preserve V1 behavior that marks a bill as `picked` when a
-  problem report is submitted for a `pending` bill.
 - Whether to support historical `billNo` gaps exactly or only preserve visible
   numbers on imported rows.
+
+## Resolved Decisions
+
+- Problem reporting does not change a `pending` requisition to `picked`
+  (ADR `0018`).
+- LINE staging starts with disabled send/dry-run behavior; real sends require
+  later explicit approval (ADR `0018`).
+- V1 Picking history remains a read-only archive for the first cutover package
+  rather than being imported into V2 (ADR `0018`).

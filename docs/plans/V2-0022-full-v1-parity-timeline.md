@@ -206,7 +206,9 @@ Deliverables already present:
 - Core auth/roles/permissions/app registry.
 - Real V1 core user/role import to staging.
 - Shared product catalog and warehouse baseline import to staging.
-- Picking read-only list/detail and create requisition write slice.
+- Main portal redesign.
+- Picking read-only list/detail, create requisition, and status-transition
+  slices.
 - Handoff, conductor, plan index, ADR discipline.
 
 Exit gate:
@@ -257,11 +259,13 @@ Scope:
 
 - Implement in-app status transitions: `pending -> picked -> sent`, including
   idempotency and audit events.
-- Implement problem reporting flow, preserving the V1 rule that a pending bill
-  can become picked when a problem report is submitted unless a later decision
-  changes it.
-- Implement LINE send/notification path server-side with staging-safe tests.
-- Import or deliberately archive V1 Picking requisition history.
+- Implement problem reporting flow. Per ADR `0018`, reporting a problem on a
+  `pending` requisition must not mark it as `picked`; status changes remain
+  explicit.
+- Implement LINE send/notification path server-side, starting with disabled
+  send/dry-run behavior per ADR `0018`.
+- Keep V1 Picking requisition history as a read-only archive for the first
+  cutover package per ADR `0018`.
 - Verify daily bill numbering, concurrent creates, problem reports, and LINE
   failure recovery.
 - Prepare Picking cutover checklist and rollback plan.
@@ -495,7 +499,7 @@ Exit gate:
 Use this as the default execution order unless the user explicitly changes
 priority.
 
-1. Execute Phase 1 Main Portal (`V2-0017`).
+1. Execute Phase 1 Main Portal (`V2-0017`) - complete on 2026-06-20.
    - Command to start: `Go: ทำ Phase 1 Main Portal ตาม V2-0017 และ V2-0022`
    - Finish when `/` is an operator-facing portal, allowed modules are visible
      by permission, signed-out/admin/writer/reader/guest states are verified,
@@ -504,7 +508,7 @@ priority.
      `docs/handoff/current-state.md`, and `docs/handoff/work-log.md`, then move
      to step 2.
 
-2. Execute Picking status transitions.
+2. Execute Picking status transitions - complete on 2026-06-20 (`V2-0023`).
    - New focused plan should be created if the slice is non-trivial, likely
      `V2-0023`.
    - Scope: server-side transition actions, `pending -> picked -> sent`
@@ -515,23 +519,24 @@ priority.
      still pass.
    - After finishing: move to step 3.
 
-3. Execute Picking problem reporting.
+3. Execute Picking problem reporting - next recommended slice.
    - Scope: problem report form, problem report tables/actions if needed,
-     preserve or explicitly revise V1's pending-bill behavior, detail/list
-     problem indicators, and audit events.
+     keep pending bills pending when a problem is reported, detail/list problem
+     indicators, and audit events.
    - Finish when a staging user can submit and review problem reports, and the
      workflow is role-verified on desktop and mobile.
    - After finishing: move to step 4.
 
 4. Execute Picking LINE notification and failure recovery.
    - Scope: server-side LINE send, no browser secrets, sent/failure state,
-     retry or recovery path, staging-safe test policy, and no leaking LINE
+     retry or recovery path, disabled send/dry-run first, and no leaking LINE
      identifiers to normal client reads.
-   - Finish when send success/failure paths are verified and documented.
+   - Finish when disabled-send success/failure paths are verified and
+     documented; real sends require later explicit approval.
    - After finishing: move to step 5.
 
 5. Prepare Picking cutover package.
-   - Scope: V1 Picking history import or archive decision, data reconciliation,
+   - Scope: V1 Picking history archive documentation, data reconciliation,
      UAT checklist, Vercel Preview/Development verification, production
      readiness checklist, rollback plan, and explicit user approval gate.
    - Finish when the user can decide whether V2 Picking is ready to replace V1
@@ -674,10 +679,10 @@ Future implementation phases must remain reversible by:
 
 - Should V2 Main be prioritized immediately before Picking closeout, or should
   Picking workflow completion stay first?
-- For full parity, should V1 historical data be imported into V2 for every
-  module, or should some history remain read-only in archived V1 Sheets?
-- Which modules require LINE notification parity before cutover versus after
-  operational replacement?
+- For non-Picking modules, should V1 historical data be imported into V2 for
+  every module, or should some history remain read-only in archived V1 Sheets?
+- For non-Picking modules, which LINE/vendor notifications require parity
+  before cutover versus after operational replacement?
 - Should PR/PO/GR be cut over as one grouped release, or can PR/PO go first
   while GR remains on V1 temporarily?
 - Should TRDAKRA and AKRA W5 share one warehouse cutover, or be released as
@@ -688,14 +693,12 @@ Future implementation phases must remain reversible by:
 
 ## 10. Handoff Notes
 
-- Next action: default to executing Phase 1 Main portal (`V2-0017`) first unless
-  the user explicitly prioritizes Picking closeout instead.
-- After Phase 1 Main portal: execute Picking closeout in this order: status
-  transitions, problem reporting, LINE notification/failure recovery, then
-  cutover package.
+- Next action: execute Picking problem reporting.
+- After problem reporting: execute Picking LINE notification/failure recovery,
+  then the Picking cutover package.
 - After Picking cutover package: plan PR/PO/GR foundation before implementing
   PR, PO, or GR UI.
-- Blockers: exact cutover dates, UAT availability, LINE staging policy, and
-  whether every module needs full historical import.
+- Blockers: exact cutover dates, UAT availability, and whether non-Picking
+  modules need full historical import.
 - Related plans: `V2-0009`, `V2-0017`, `V2-0018`, `V2-0019`, `V2-0020`.
-- Related ADRs: `0008`, `0013`, `0015`, `0016`.
+- Related ADRs: `0008`, `0013`, `0015`, `0016`, `0018`.

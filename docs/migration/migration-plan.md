@@ -91,9 +91,10 @@ Current notes:
 
 ## Phase 3 - Pilot Module
 
-Status: Started (staging schema applied; shared catalog data imported;
-read-only `/picking` list/detail routes implemented and verified against
-staging; no write workflow routes/actions yet)
+Status: Started (staging schema applied; shared catalog data imported; Main
+portal is operator-facing; Picking read-only list/detail, create requisition,
+and status-transition routes/actions are implemented and verified against
+staging)
 
 Recommended pilot: `Picking`
 
@@ -117,15 +118,20 @@ Current notes:
 - Draft migrations `0004`-`0005` define the Picking pilot schema and RLS and
   have been applied to the staging Supabase project.
 - V1 Picking mapping is drafted in `docs/migration/picking-v1-mapping.md`.
-- No V1 Picking data has been exported/imported. The first V2 Picking route
-  slice (`V2-0019`, ADR `0012`) is implemented and verified: permission-gated
-  read-only `/picking` list and `/picking/[id]` detail, reading staging
-  Supabase data through normal authenticated RLS. Current staging rows are
-  staging-only fixtures (`legacy_source = "v2_fixture"`), not V1 history.
-  Create requisition, status/problem workflows, and LINE integration are not
-  implemented yet.
+- No V1 Picking requisition history has been imported. The first V2 Picking
+  route slice (`V2-0019`, ADR `0012`) is implemented and verified:
+  permission-gated `/picking` list and `/picking/[id]` detail, reading staging
+  Supabase data through normal authenticated RLS. The create requisition slice
+  (`V2-0020`, ADR `0013`/`0015`) is implemented and verified:
+  `/picking/new`, shared-catalog bridge, real Picking product/staff reference
+  import, and atomic daily bill-number allocation. The status-transition slice
+  (`V2-0023`) is implemented and verified: writer/admin-only
+  `pending -> picked -> sent` actions backed by an atomic server-only RPC.
+  Current staging requisitions are staging-only fixtures and transient
+  app-created test rows, not V1 `Requisition` history. Problem reporting,
+  LINE integration/failure recovery, and a Picking cutover package remain.
 - Shared catalog/warehouse schema and staging snapshot import are available for
-  the planned Picking catalog bridge.
+  the Picking catalog bridge and later modules.
 - V1 production Picking app, GAS deployment, Sheets, URLs, and LINE tokens were
   not changed.
 

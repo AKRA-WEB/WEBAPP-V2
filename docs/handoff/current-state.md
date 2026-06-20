@@ -8,10 +8,12 @@ Last updated: 2026-06-20
 - Local path: `C:\dev\AKRA-WEBAPP-V2`
 - Status: Phase 3 Picking pilot schema and mapping drafted, applied to staging,
   DB-verified; read-only UI slice (`/picking`, `/picking/[id]`), the create
-  requisition write slice (`/picking/new`), and the status-transition slice
-  (`pending -> picked -> sent` actions on `/picking/[id]`) are all implemented
-  and verified against staging. Main portal redesign (`V2-0017`) is also
-  complete and verified against staging.
+  requisition write slice (`/picking/new`), the status-transition slice
+  (`pending -> picked -> sent` actions on `/picking/[id]`), and the problem-
+  reporting slice (`/picking/[id]/problem` + a "Problem reports" read section
+  on `/picking/[id]`, `V2-0025`) are all implemented and verified against
+  staging. Main portal redesign (`V2-0017`) is also complete and verified
+  against staging.
 - Production impact: None
 - V1 reference path: `C:\dev\WEBAPP`
 
@@ -57,6 +59,10 @@ Plan IDs:
 - `V2-0020` (`docs/plans/V2-0020-picking-create-requisition-write-slice.md`)
 - `V2-0021` (`docs/plans/V2-0021-handoff-work-log-archiving.md`)
 - `V2-0022` (`docs/plans/V2-0022-full-v1-parity-timeline.md`)
+- `V2-0023` (`docs/plans/V2-0023-picking-status-transitions.md`)
+- `V2-0024` (`docs/plans/V2-0024-project-management-operating-model.md`)
+- `V2-0025` (`docs/plans/V2-0025-picking-problem-reporting.md`)
+- `V2-0026` (`docs/plans/V2-0026-database-data-flow-html.md`)
 
 Goal: Continue Phase 3 from the verified Picking read-only/create baseline
 toward a full V1 replacement roadmap. `V2-0022` now frames the remaining work
@@ -439,6 +445,73 @@ Status:
     smoke-test and browser-test requisitions were deleted after verification.
   - `lint`, `typecheck`, `build`, and `git diff --check` all pass.
   - No V1 production files changed.
+- Completed `V2-0024` on 2026-06-20 as the project-management operating model:
+  synced agent/read-order/context-budget rules across `AGENTS.md`,
+  `README.md`, `CONDUCTOR.md`, and `CLAUDE.md`; added
+  `docs/project-management/operating-model.md` and
+  `docs/project-management/decision-board.md`; archived older active work-log
+  entries into
+  `docs/handoff/archive/work-log-2026-06-20-core-through-picking-create.md`;
+  and synced stale Picking status in `docs/migration/migration-plan.md`,
+  `docs/migration/module-inventory.md`, `V2-0009`, and `V2-0022`.
+  Documentation/process-only; no runtime code, Supabase schema, staging data,
+  V1 production files, GAS deployments, Sheets, URLs, LINE tokens, or secrets
+  changed.
+- User resolved three Picking decisions on 2026-06-20, recorded in ADR `0018`:
+  problem reporting on a `pending` requisition does not mark it as `picked`;
+  LINE staging starts with disabled send/dry-run behavior; V1 Picking history
+  stays as a read-only archive instead of being imported into V2 for the first
+  cutover package.
+- Added `docs/database/data-flow.html` on 2026-06-20 as a static HTML database
+  structure/data-flow reference by app/module (`V2-0026`). It covers
+  Main/Core, shared catalog/warehouse, Picking, PR/PO, GR, TRDAKRA/W5,
+  Returnitem, KPI, and Notifications, and labels local uncommitted Picking
+  problem-reporting files separately from the verified staging baseline.
+- Executed `V2-0025` on 2026-06-20 (bare `Go`, plan drafted inline per the
+  `V2-0017`/`V2-0023` precedent): Picking problem reporting.
+  - Migration `0011_picking_problem_reports.sql`: atomic
+    `public.report_picking_problem(p_requisition_id, p_actor_profile_id,
+    p_actor_name, p_lines)` (service-role-only, mirrors `0009`/`0010`'s
+    posture) writes a `picking_problem_reports` row, its
+    `picking_problem_report_lines`, the requisition's
+    `problem_by_name`/`problem_at` columns, and a `problem_reported` event in
+    one transaction; rejects the call once the requisition is `sent`; never
+    changes `status` (ADR `0018`'s explicit divergence from V1's
+    pending-promotes-to-picked side effect). No new tables — the
+    `picking_problem_reports`/`picking_problem_report_lines` tables and their
+    `picking.read`/`picking.write` select policies already existed from
+    `0004`/`0005`.
+  - Added `src/modules/picking/problem-action.ts`
+    (`reportPickingProblem`): `picking.write`-gated, validates submitted line
+    ids match the requisition's existing lines 1:1, builds the RPC payload
+    from server-side `product_name`/`requested_qty`/`unit` (not client
+    input) plus client `actual_qty`/`note`.
+  - Extended `src/modules/picking/read-model.ts`
+    (`getRequisitionDetail`) to also load problem reports + lines through the
+    normal RLS-enforced authenticated client.
+  - Added guarded `/picking/[id]/problem`
+    (`src/modules/picking/problem-report-form.tsx`, pre-fills actual qty with
+    the requested qty per line) and a writer/admin-only "Report problem" link
+    (hidden once `status === "sent"`) plus a "Problem reports" read section on
+    `/picking/[id]`.
+  - Found and fixed a real mobile-overflow regression during verification: a
+    long unbroken test-account email rendered inside a `white-space: nowrap`
+    class forced a 2px horizontal overflow at 390px on `/picking/[id]`; fixed
+    by adding a dedicated `.problem-report__meta` class
+    (`overflow-wrap: anywhere`) instead of reusing the nowrap qty class.
+  - Verified: direct RPC smoke test (status unchanged on report on
+    `pending`/`picked`, rejected on `sent`, resubmission is additive not an
+    overwrite) plus full browser verification with a temporary local
+    Playwright install (removed after; user approved a temporary
+    `test-picker-writer`/`test-picker-reader` password reset via
+    `AskUserQuestion`, same not-recorded pattern as prior slices):
+    `PICKING_WRITER` full create -> report -> redirect -> rendered-report
+    flow, link hides once `sent`; `PICKING_READER` can read the report's
+    lines (confirms the `0005` RLS policy works for `picking.read`, not just
+    in theory) but is denied on the write form; zero overflow at 390px on
+    both routes after the fix; no console errors. `lint`/`typecheck`/`build`/
+    `git diff --check`/`check:migrations`/`db:verify-staging-schema` all
+    pass. No V1 production files changed.
 
 ## Next Actions
 
@@ -451,14 +524,17 @@ Status:
 4. ~~Execute Phase 1 Main portal (`V2-0017`).~~ Done 2026-06-20.
 5. ~~Execute Picking status transitions (`pending -> picked -> sent`).~~ Done
    2026-06-20 (`V2-0023`).
-6. Execute Picking problem reporting next, then LINE notification/failure
-   recovery, then Picking cutover package (per `V2-0022`'s next-step chain).
-7. After Picking cutover package, plan PR/PO/GR foundation before implementing
+6. ~~Execute Picking problem reporting.~~ Done 2026-06-20 (`V2-0025`).
+7. Execute Picking LINE notification/failure recovery next, then Picking
+   cutover package (per `V2-0022`'s next-step chain). See
+   `docs/project-management/decision-board.md` for the current decision pack
+   and resolved Picking defaults.
+8. After Picking cutover package, plan PR/PO/GR foundation before implementing
    PR, PO, or GR UI.
-8. Keep `docs/plans/index.md` updated whenever a plan status or next action
+9. Keep `docs/plans/index.md` updated whenever a plan status or next action
    changes.
-9. Keep `docs/handoff/work-log.md` as the active recent log; archive older
-   entries under `docs/handoff/archive/` when it becomes long again.
+10. Keep `docs/handoff/work-log.md` as the active recent log; archive older
+    entries under `docs/handoff/archive/` when it becomes long again.
 
 
 ## Open Questions
@@ -471,12 +547,8 @@ Status:
 - How should V1 users without email addresses be represented in Supabase Auth?
 - Will V1 Sheets remain read-only archives after each module cutover, or should
   there be a temporary sync window?
-- Should V2 Main require sign-in immediately, or show a signed-out portal state
-  with a Sign In action?
-- Should queued modules be visible to ordinary users during migration, or only
-  to admins/internal testers?
-- Should every V1 module history be imported before cutover, or should some
-  V1 Sheets remain read-only archives after V2 operational replacement?
+- Should every non-Picking module history be imported before cutover, or should
+  some V1 Sheets remain read-only archives after V2 operational replacement?
 
 ## Safety Notes
 

@@ -17,12 +17,23 @@ complete and verified in staging: `/picking` list, `/picking/[id]` detail
 flow with a shared-catalog product bridge, an atomic
 `public.create_picking_requisition(...)` transaction, and an atomic
 `public.transition_picking_requisition_status(...)` transaction enforcing
-`pending -> picked -> sent` only. LINE send and problem reporting remain
-deferred. `V2-0017` Main portal redesign is now complete (`/` is
-permission-filtered, Thai-first, with a signed-out portal state). `V2-0022`
+`pending -> picked -> sent` only. Picking problem reporting (`V2-0025`) is
+also complete: an atomic `public.report_picking_problem(...)` transaction
+records per-line requested-vs-actual quantities without changing requisition
+status (ADR `0018`), surfaced via a guarded `/picking/[id]/problem` form and a
+"Problem reports" read section on `/picking/[id]`. LINE notification/failure
+recovery remains deferred. `V2-0017` Main portal redesign is now complete (`/`
+is permission-filtered, Thai-first, with a signed-out portal state). `V2-0022`
 now records the full module-by-module timeline to reach V1 operational
-replacement and full parity closeout; per that plan's next-step chain,
-problem reporting is the recommended next slice.
+replacement and full parity closeout; per that plan's next-step chain, LINE
+notification/failure recovery is the recommended next slice.
+Project management has also been standardized in `V2-0024`: active status
+belongs in this index and `docs/handoff/current-state.md`, the active work log
+is capped to recent entries, and `docs/project-management/decision-board.md`
+tracks recommendations for user review.
+`V2-0026` adds a static HTML database/data-flow reference for the current
+implemented schema, local in-progress Picking problem-reporting objects, and
+planned app/module flows.
 
 ## Active Queue
 
@@ -36,8 +47,8 @@ problem reporting is the recommended next slice.
      2026-06-20 work-log entry. Step 6 (Picking read-only pilot, `V2-0019`)
      completed 2026-06-20. The create requisition write slice (`V2-0020`) and
      the status-transition slice (`V2-0023`) both completed 2026-06-20.
-   - Next action: problem reporting is the next Picking slice per `V2-0022`'s
-     chain (LINE send remains after that).
+   - Next action: LINE notification/failure recovery is the next Picking
+     slice per `V2-0022`'s chain (problem reporting, `V2-0025`, is complete).
    - File: `docs/plans/V2-0009-next-execution-sequence.md`
 3. `V2-0014` - Deployment boundary and staging access
    - Status: Complete on 2026-06-19.
@@ -110,8 +121,8 @@ problem reporting is the recommended next slice.
      problem reporting, Picking LINE/failure recovery, Picking cutover package,
      PR/PO/GR foundation, PR, PO, GR, warehouse, Returnitem, KPI, and final
      hardening/cutover.
-   - Next action: problem reporting is next (status transitions, `V2-0023`,
-     are complete).
+   - Next action: LINE notification/failure recovery is next (status
+     transitions `V2-0023` and problem reporting `V2-0025` are complete).
    - File: `docs/plans/V2-0022-full-v1-parity-timeline.md`
 11. `V2-0017` - Main portal design direction
    - Status: Complete on 2026-06-20.
@@ -163,6 +174,51 @@ problem reporting is the recommended next slice.
      console errors) using a temporary local Playwright install (removed
      after).
    - File: `docs/plans/V2-0023-picking-status-transitions.md`
+16. `V2-0024` - Project management operating model
+   - Status: Complete on 2026-06-20.
+   - Outcome: standardized source-of-truth hierarchy, context-budget rules,
+     active work-log archiving, decision board, definition of done, and
+     project-management operating cadence. Added
+     `docs/project-management/operating-model.md` and
+     `docs/project-management/decision-board.md`; archived older active-log
+     entries into
+     `docs/handoff/archive/work-log-2026-06-20-core-through-picking-create.md`.
+   - Next action: use the decision board for proposed next moves; current
+     recommendation is LINE notification/failure recovery (problem reporting,
+     `V2-0025`, is complete).
+   - File: `docs/plans/V2-0024-project-management-operating-model.md`
+17. `V2-0026` - Database structure data-flow HTML
+   - Status: Complete on 2026-06-20.
+   - Outcome: added `docs/database/data-flow.html`, a static HTML reference
+     showing database structure and data flow by app/module. It distinguishes
+     verified/staging baseline objects, local uncommitted Picking
+     problem-reporting work, and planned future PR/PO/GR, warehouse,
+     Returnitem, KPI, and notification schemas.
+   - File: `docs/plans/V2-0026-database-data-flow-html.md`
+18. `V2-0025` - Picking problem reporting
+   - Status: Complete on 2026-06-20.
+   - Outcome: migration `0011` adds atomic
+     `public.report_picking_problem(...)` (service-role-only, mirrors
+     `0009`/`0010`'s posture), writing a `picking_problem_reports` row, its
+     `picking_problem_report_lines`, the requisition's
+     `problem_by_name`/`problem_at` columns, and a `problem_reported`
+     lifecycle event in one transaction — without changing requisition status
+     (ADR `0018`); rejects the call once the requisition is `sent`. Added
+     `src/modules/picking/problem-action.ts` (`reportPickingProblem`,
+     `picking.write`-gated, server-validated line ownership, DB-sourced
+     product/qty/unit so only `actual_qty`/`note` are client-trusted),
+     extended `read-model.ts` to load problem reports through the normal
+     RLS-enforced client, added a guarded `/picking/[id]/problem` form and a
+     writer/admin-only "Report problem" link + "Problem reports" read
+     section on `/picking/[id]`. Verified via direct RPC smoke test (status
+     unchanged on `pending`/`picked`, rejected on `sent`, resubmission is
+     additive) and full browser verification (`PICKING_WRITER` submit ->
+     redirect -> rendered report -> link hides once `sent`;
+     `PICKING_READER` can read the report's lines via RLS but is denied on
+     the write form; zero overflow at 390px; no console errors). Found and
+     fixed a real 2px mobile-overflow regression caused by a long unbroken
+     test-account email inside a `white-space: nowrap` class.
+   - File: `docs/plans/V2-0025-picking-problem-reporting.md`
 
 ## Completed Or Baseline Plans
 
@@ -186,12 +242,10 @@ problem reporting is the recommended next slice.
 - Whether Vercel Preview/Development should receive a server-only `DATABASE_URL`
   for transactional create verification, or create testing stays local until a
   private RPC/transaction path is added.
-- Whether V2 Main should require sign-in immediately or show a signed-out portal
-  state with a Sign In action.
-- Whether queued modules should be visible to ordinary users during migration or
-  only to admins/internal testers.
 - Whether every module requires full historical import before cutover, or some
   V1 Sheets remain read-only archives after operational replacement.
+- For non-Picking modules, which notification paths require parity before
+  cutover versus after operational replacement.
 
 ## Update Rules
 

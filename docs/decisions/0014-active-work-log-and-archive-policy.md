@@ -29,7 +29,9 @@ Agents should:
 - open archive files only when a current plan, ADR, bug investigation, or
   verification question requires historical detail;
 - append new entries to the active work log;
-- archive old active-log entries periodically when the file becomes long again.
+- archive old active-log entries periodically when the file becomes long again;
+- target the active work log to the latest 3-5 entries or roughly 400 lines,
+  with details preserved in dated archive files.
 
 ## Consequences
 

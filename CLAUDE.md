@@ -4,16 +4,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Read this first
 
-`AGENTS.md` holds the binding operating rules for this repo; `CONDUCTOR.md` is the planning/command entry point. The points below are the ones easiest to violate:
+`AGENTS.md` holds the binding operating rules for this repo; `CONDUCTOR.md` is the planning/command entry point. If this file ever conflicts with `AGENTS.md`, `CONDUCTOR.md`, `docs/plans/index.md`, or `docs/handoff/current-state.md`, follow those files and update this file. The points below are the ones easiest to violate:
 
 - **V2 is an isolated rewrite.** Never modify V1 production from here: `C:\dev\WEBAPP` repos, Google Apps Script deployments, Google Sheets schemas, V1 GitHub Pages, live GAS URLs, or LINE tokens. V1 is reference only unless the user explicitly approves a cutover.
 - **Handoff discipline is mandatory.** Every non-trivial change must, before the final response, update `docs/handoff/current-state.md`, append a dated entry to `docs/handoff/work-log.md`, add a `docs/decisions/` record if a decision was made, update `docs/migration/module-inventory.md` if a module changed phase, and update plan status in `docs/plans/index.md`. Handoff records are written in English so a future agent can resume after context is cleared; user-facing summaries may be Thai.
-- **Required reading before planning/editing:** `README.md`, `CONDUCTOR.md`, `docs/plans/index.md`, `docs/handoff/current-state.md`, `docs/handoff/work-log.md` (active entries only — older entries are archived under `docs/handoff/archive/`), `docs/architecture/target-architecture.md`, `docs/migration/migration-plan.md`, `docs/migration/module-inventory.md`, and `C:\dev\WEBAPP\development_context.md` for V1 behavior.
+- **Required reading before planning/editing:** `AGENTS.md`, `README.md`, `CONDUCTOR.md`, `docs/plans/index.md`, `docs/handoff/current-state.md`, `docs/handoff/work-log.md` (active entries only — older entries are archived under `docs/handoff/archive/`), active plan files listed in the plan index, `docs/architecture/target-architecture.md`, `docs/migration/migration-plan.md`, `docs/migration/module-inventory.md`, and `C:\dev\WEBAPP\development_context.md` when V1 behavior is relevant.
+- **Context budget matters.** Use `docs/plans/index.md` and `docs/handoff/current-state.md` as compact summaries. Keep `docs/handoff/work-log.md` to the latest 3-5 entries or roughly 400 lines, archive older detail with dated pointers, and do not read archive logs unless a current plan/ADR/bug/verification question requires it.
 
 ## Command protocol
 
 The user drives work with explicit prefixes (defined in `CONDUCTOR.md`); honor them rather than defaulting to "just implement it":
 
+- **`Let's work`** — context-saving resume bootstrap. Read the compact source-of-truth docs (`AGENTS.md`, `README.md`, `CONDUCTOR.md`, `docs/plans/index.md`, `docs/handoff/current-state.md`, `docs/project-management/decision-board.md`, active `docs/handoff/work-log.md`), skip archives unless a current plan/ADR/bug/verification question requires them, check `git status --short`, then summarize status and recommended next action. It is not an implementation command by itself.
 - **`Architect: ...`** — plan only. Create/update a plan file under `docs/plans/` (use `docs/plans/templates/architect-plan-template.md`), update `docs/plans/index.md` and the handoff docs. Do not touch runtime code, schema, migrations, deployment config, or secrets.
 - **`Go: ...`** — execute an approved/selected plan: read the plan, check `git status`, implement the smallest safe slice, verify it.
 - **`Review: ...`** — review code/docs/a plan; lead with findings, risks, and file/line references.

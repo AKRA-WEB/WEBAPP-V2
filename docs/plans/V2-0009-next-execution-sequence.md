@@ -1,6 +1,7 @@
 # Plan V2-0009: Next Execution Sequence
 
-Status: In progress - step 6 read-only complete; next write slice drafted
+Status: In progress - Main portal, Picking read-only, create requisition, and
+status transitions complete; problem reporting is next
 
 
 ## Goal
@@ -150,10 +151,11 @@ then status transitions and problem reporting. LINE notification integration
 should remain server-side and can be introduced after the data flow is proven.
 
 `V2-0010` is complete as the product-scope gate. `V2-0019` (permission-gated
-read-only list/detail) and `V2-0020` (create requisition, shared-catalog
-bridge for lines, transaction-safe bill number allocation) are both complete
-as of 2026-06-20. Status transitions, problem reporting, and LINE notification
-remain the next open Picking slice.
+read-only list/detail), `V2-0020` (create requisition, shared-catalog bridge
+for lines, transaction-safe bill number allocation), and `V2-0023`
+(writer/admin-only `pending -> picked -> sent` status transitions) are
+complete as of 2026-06-20. Problem reporting is the next open Picking slice;
+LINE notification/failure recovery follows after that per `V2-0022`.
 
 Expected files:
 
@@ -181,8 +183,9 @@ Verification:
    or must we preserve real login identifiers from day one?
 5. Should the first Picking screen be read-only history/list or new requisition
    creation? Resolved on 2026-06-20: read-only list/detail first (`V2-0019`).
-6. Should LINE integration wait until after DB create/list works? Current
-   direction: wait until the read-only and create flows are proven.
+6. Should LINE integration wait until after DB create/list/status works?
+   Current direction: yes. Problem reporting comes next, then LINE
+   notification/failure recovery.
 
 ## Rollback / No-Production-Impact Note
 

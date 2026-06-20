@@ -28,6 +28,12 @@ is cleared, and hand off work to another agent without relying on memory.
 Open `docs/handoff/archive/*` only when a current plan, ADR, bug investigation,
 or verification question requires older historical detail.
 
+Context budget rule: treat `docs/plans/index.md` and
+`docs/handoff/current-state.md` as the compact source of truth. The active work
+log should contain only recent entries (target: latest 3-5 entries or roughly
+400 lines). Archive older detail under `docs/handoff/archive/` and leave a
+pointer; do not reread archives during routine resume.
+
 If the task touches Supabase schema, auth, RLS, grants, migrations, or
 privileged database access, verify current official Supabase docs/changelog
 before implementation.
@@ -49,6 +55,26 @@ Do not depend on chat history as the source of truth.
 ## User Commands
 
 Use these command prefixes consistently:
+
+### `Let's work`
+
+Context-saving session bootstrap. When the user sends exactly `Let's work` or
+starts a message with `Let's work`, do this before any planning or editing:
+
+1. Read `AGENTS.md`, `README.md`, `CONDUCTOR.md`, `docs/plans/index.md`,
+   `docs/handoff/current-state.md`,
+   `docs/project-management/decision-board.md`, and active recent
+   `docs/handoff/work-log.md`.
+2. Do not read `docs/handoff/archive/*` unless a current plan, ADR, bug, or
+   verification question requires it.
+3. Check `git status --short`.
+4. Reply with a concise status, the recommended next action, and any decision
+   needed from the user.
+5. If the same message also includes `Architect:`, `Go:`, or `Review:`, handle
+   that command after the bootstrap. Otherwise, wait for the user's next
+   command.
+
+`Let's work` is not an implementation command by itself.
 
 ### `Architect:`
 
@@ -136,6 +162,8 @@ When continuing work:
 - Append a dated entry to the active `docs/handoff/work-log.md`.
 - Archive older work-log entries under `docs/handoff/archive/` when the active
   log grows long enough to slow routine resume.
+- Keep new handoff entries concise: summarize commands/results instead of
+  pasting long logs, and point to plan/ADR/import-report files for details.
 - Add or update an ADR under `docs/decisions/` when a decision changes future
   behavior or implementation sequence.
 - Update `docs/migration/module-inventory.md` when a module moves phase.

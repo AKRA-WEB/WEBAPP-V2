@@ -32,6 +32,23 @@ export type PickingRequisitionEvent = {
   createdAt: string;
 };
 
+export type PickingProblemReportLine = {
+  id: string;
+  lineId: string | null;
+  productName: string;
+  requestedQty: number;
+  actualQty: number;
+  unit: string;
+  note: string | null;
+};
+
+export type PickingProblemReport = {
+  id: string;
+  reportedByName: string;
+  reportedAt: string;
+  lines: PickingProblemReportLine[];
+};
+
 export type PickingRequisitionDetail = {
   id: string;
   billNo: number | null;
@@ -49,6 +66,7 @@ export type PickingRequisitionDetail = {
   problemAt: string | null;
   lines: PickingRequisitionLine[];
   events: PickingRequisitionEvent[];
+  problemReports: PickingProblemReport[];
 };
 
 type RequisitionListRow = {
@@ -94,6 +112,23 @@ type RequisitionEventRow = {
   event_type: string;
   actor_name: string | null;
   created_at: string;
+};
+
+type ProblemReportLineRow = {
+  id: string;
+  line_id: string | null;
+  product_name: string;
+  requested_qty: number;
+  actual_qty: number;
+  unit: string;
+  note: string | null;
+};
+
+type ProblemReportRow = {
+  id: string;
+  reported_by_name: string;
+  reported_at: string;
+  picking_problem_report_lines: ProblemReportLineRow[];
 };
 
 const RECENT_LIST_LIMIT = 50;
@@ -151,7 +186,7 @@ export type PickingDetailResult =
 export async function getRequisitionDetail(id: string): Promise<PickingDetailResult> {
   const supabase = await createClient();
 
-  const [requisitionResult, linesResult, eventsResult] = await Promise.all([
+  const [requisitionResult, linesResult, eventsResult, problemReportsResult] = await Promise.all([
     supabase
       .from("picking_requisitions")
       .select(
@@ -169,9 +204,16 @@ export async function getRequisitionDetail(id: string): Promise<PickingDetailRes
       .select("id, event_type, actor_name, created_at")
       .eq("requisition_id", id)
       .order("created_at", { ascending: true }),
+    supabase
+      .from("picking_problem_reports")
+      .select(
+        "id, reported_by_name, reported_at, picking_problem_report_lines(id, line_id, product_name, requested_qty, actual_qty, unit, note)",
+      )
+      .eq("requisition_id", id)
+      .order("reported_at", { ascending: false }),
   ]);
 
-  if (requisitionResult.error || linesResult.error || eventsResult.error) {
+  if (requisitionResult.error || linesResult.error || eventsResult.error || problemReportsResult.error) {
     return { status: "error" };
   }
 
@@ -182,6 +224,7 @@ export async function getRequisitionDetail(id: string): Promise<PickingDetailRes
   const requisition = requisitionResult.data as unknown as RequisitionDetailRow;
   const lines = (linesResult.data ?? []) as unknown as RequisitionLineRow[];
   const events = (eventsResult.data ?? []) as unknown as RequisitionEventRow[];
+  const problemReports = (problemReportsResult.data ?? []) as unknown as ProblemReportRow[];
 
   return {
     status: "ok",
@@ -213,6 +256,20 @@ export async function getRequisitionDetail(id: string): Promise<PickingDetailRes
         eventType: event.event_type,
         actorName: event.actor_name,
         createdAt: event.created_at,
+      })),
+      problemReports: problemReports.map((report) => ({
+        id: report.id,
+        reportedByName: report.reported_by_name,
+        reportedAt: report.reported_at,
+        lines: (report.picking_problem_report_lines ?? []).map((line) => ({
+          id: line.id,
+          lineId: line.line_id,
+          productName: line.product_name,
+          requestedQty: Number(line.requested_qty),
+          actualQty: Number(line.actual_qty),
+          unit: line.unit,
+          note: line.note,
+        })),
       })),
     },
   };

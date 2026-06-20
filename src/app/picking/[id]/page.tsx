@@ -116,6 +116,11 @@ export default async function PickingRequisitionDetailPage({
               </button>
             </form>
           )}
+          {canTransition && requisition.status !== "sent" && (
+            <Link className="secondary-button" href={`/picking/${requisition.id}/problem`}>
+              Report problem
+            </Link>
+          )}
           <StatusPill tone={pickingStatusTone(requisition.status)}>
             {formatPickingStatusLabel(requisition.status)}
           </StatusPill>
@@ -200,6 +205,40 @@ export default async function PickingRequisitionDetailPage({
           ))}
         </ul>
       </section>
+
+      {requisition.problemReports.length > 0 && (
+        <section className="module-detail" aria-label="Problem reports">
+          <h2>Problem reports ({requisition.problemReports.length})</h2>
+          {requisition.problemReports.map((report) => (
+            <div key={report.id} className="line-row">
+              <p className="problem-report__meta">
+                {formatDateTime(report.reportedAt)} · {report.reportedByName}
+              </p>
+              <ul className="requisition-lines">
+                {report.lines.map((line) => {
+                  const isShort = line.actualQty < line.requestedQty;
+                  return (
+                    <li className="requisition-line" key={line.id}>
+                      <span className="requisition-line__name">
+                        {line.productName}
+                        {isShort && (
+                          <StatusPill tone="blue">
+                            short {formatQuantity(line.requestedQty - line.actualQty, line.unit)}
+                          </StatusPill>
+                        )}
+                      </span>
+                      <span className="requisition-line__qty">
+                        {formatQuantity(line.actualQty, line.unit)} / {formatQuantity(line.requestedQty, line.unit)}
+                      </span>
+                      {line.note && <p className="module-card__note">{line.note}</p>}
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ))}
+        </section>
+      )}
 
       <p>
         <Link href="/picking">← Back to recent requisitions</Link>

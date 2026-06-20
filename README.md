@@ -8,34 +8,57 @@ validated module by module.
 
 ## Current Status
 
-- Status: Phase 3 Picking pilot schema applied and verified in staging
+- Status: Phase 3 Picking pilot in staging; Main portal redesign, Picking
+  read-only list/detail, create requisition, and status transitions are
+  implemented and verified
 - Production impact: None
 - Target stack: Next.js on Vercel, Supabase/Postgres, TypeScript
 - Migration style: Incremental module migration, no big-bang cutover
-- Current database baseline: Supabase draft migrations `0001`-`0008` applied to
-  staging; shared catalog/warehouse snapshot data imported to staging only
+- Current database baseline: Supabase draft migrations `0001`-`0010` applied to
+  staging; shared catalog/warehouse snapshot data and Picking reference data
+  imported to staging only
+- Next action: Picking problem reporting, then LINE notification/failure
+  recovery, then Picking cutover package
 
 ## Read First
 
 Every agent or developer must read these files before changing anything:
 
 1. `AGENTS.md`
-2. `CONDUCTOR.md`
-3. `docs/plans/index.md`
-4. `docs/handoff/current-state.md`
-5. `docs/handoff/work-log.md` active recent entries
-6. `docs/architecture/target-architecture.md`
-7. `docs/migration/migration-plan.md`
+2. `README.md`
+3. `CONDUCTOR.md`
+4. `docs/plans/index.md`
+5. `docs/handoff/current-state.md`
+6. `docs/handoff/work-log.md` active recent entries only
+7. Active plan files listed in `docs/plans/index.md`
+8. `docs/architecture/target-architecture.md`
+9. `docs/migration/migration-plan.md`
+10. `docs/migration/module-inventory.md`
+11. `C:\dev\WEBAPP\development_context.md` when V1 behavior is relevant
 
 Older work-log entries live under `docs/handoff/archive/`. Open them only when
 you need historical verification detail for a specific plan, ADR, bug, or
 handoff question.
 
-For context about the existing production apps, read:
+Context budget rule:
 
-- `C:\dev\WEBAPP\development_context.md`
+- Treat `docs/plans/index.md` and `docs/handoff/current-state.md` as compact
+  source-of-truth summaries.
+- Keep `docs/handoff/work-log.md` to recent entries only. Archive older details
+  under `docs/handoff/archive/` instead of forcing every agent to reread them.
 
 ## Planning Commands
+
+Use `Let's work` to resume with the compact context set before choosing work:
+
+```text
+Let's work
+```
+
+The agent should read the compact source-of-truth docs, skip archives unless
+needed, check `git status --short`, then summarize the current state and
+recommended next action. `Let's work` does not by itself authorize runtime code
+changes.
 
 Use `Architect:` to request a detailed plan before implementation. The agent
 must draft or update a plan file, update `docs/plans/index.md`, and wait for an

@@ -1,0 +1,1167 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AKRA WEBAPP V2 Database Structure & Data Flow</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7f8fa;
+      --surface: #ffffff;
+      --surface-soft: #eef3f6;
+      --text: #172026;
+      --muted: #5b6871;
+      --line: #d8e0e5;
+      --accent: #0f766e;
+      --accent-strong: #115e59;
+      --blue: #2563eb;
+      --amber: #b45309;
+      --green: #15803d;
+      --red: #b91c1c;
+      --shadow: 0 8px 24px rgba(23, 32, 38, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Arial, "Noto Sans Thai", sans-serif;
+      line-height: 1.55;
+    }
+
+    a {
+      color: var(--accent-strong);
+    }
+
+    code {
+      border-radius: 4px;
+      background: #e8eef2;
+      padding: 0.1rem 0.3rem;
+      font-size: 0.95em;
+    }
+
+    .skip-link {
+      position: absolute;
+      inset-block-start: 0.75rem;
+      inset-inline-start: 0.75rem;
+      transform: translateY(-200%);
+      border-radius: 6px;
+      background: var(--text);
+      color: #fff;
+      padding: 0.65rem 0.85rem;
+      z-index: 20;
+    }
+
+    .skip-link:focus {
+      transform: translateY(0);
+    }
+
+    .page-header {
+      border-block-end: 1px solid var(--line);
+      background: linear-gradient(135deg, #ffffff 0%, #edf7f5 100%);
+      padding: clamp(1.5rem, 4vw, 3rem);
+    }
+
+    .page-header__inner,
+    .page-nav,
+    main,
+    .page-footer {
+      width: min(1180px, calc(100% - 2rem));
+      margin-inline: auto;
+    }
+
+    .eyebrow {
+      margin: 0 0 0.5rem;
+      color: var(--accent-strong);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    h1,
+    h2,
+    h3 {
+      line-height: 1.2;
+      margin-block: 0 0.75rem;
+    }
+
+    h1 {
+      max-width: 920px;
+      font-size: clamp(2rem, 5vw, 3.5rem);
+    }
+
+    h2 {
+      font-size: clamp(1.45rem, 3vw, 2.15rem);
+    }
+
+    h3 {
+      font-size: 1.15rem;
+    }
+
+    .lead {
+      max-width: 900px;
+      margin: 0;
+      color: var(--muted);
+      font-size: 1.05rem;
+    }
+
+    .meta-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap: 0.75rem;
+      margin-block-start: 1.4rem;
+    }
+
+    .meta-grid div {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.72);
+      padding: 0.8rem;
+    }
+
+    .meta-grid dt {
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .meta-grid dd {
+      margin: 0.2rem 0 0;
+      font-weight: 700;
+    }
+
+    .page-nav {
+      position: sticky;
+      inset-block-start: 0;
+      z-index: 10;
+      display: flex;
+      gap: 0.5rem;
+      overflow-x: auto;
+      border-block-end: 1px solid var(--line);
+      background: rgba(247, 248, 250, 0.95);
+      padding: 0.75rem 0;
+      scrollbar-gutter: stable;
+    }
+
+    .page-nav a {
+      flex: 0 0 auto;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--surface);
+      padding: 0.45rem 0.75rem;
+      color: var(--text);
+      font-size: 0.9rem;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    main {
+      display: grid;
+      gap: 1.25rem;
+      padding-block: 1.25rem 3rem;
+    }
+
+    section,
+    article.card,
+    .module {
+      min-inline-size: 0;
+    }
+
+    .panel,
+    .module,
+    .card,
+    .note,
+    details {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+
+    .panel,
+    .module {
+      padding: clamp(1rem, 3vw, 1.5rem);
+    }
+
+    .section-intro {
+      max-width: 900px;
+      margin-block: 0 1rem;
+      color: var(--muted);
+    }
+
+    .status-row,
+    .legend,
+    .tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .status-row {
+      margin-block: 0.2rem 1rem;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 0.25rem 0.55rem;
+      font-size: 0.78rem;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+
+    .tag.implemented {
+      background: #dcfce7;
+      color: var(--green);
+    }
+
+    .tag.local {
+      background: #fef3c7;
+      color: var(--amber);
+    }
+
+    .tag.planned {
+      background: #dbeafe;
+      color: var(--blue);
+    }
+
+    .tag.server {
+      background: #fee2e2;
+      color: var(--red);
+    }
+
+    .tag.rls {
+      background: #ccfbf1;
+      color: var(--accent-strong);
+    }
+
+    .system-grid,
+    .module-grid,
+    .table-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 0.85rem;
+    }
+
+    .card {
+      padding: 1rem;
+    }
+
+    .card h3 {
+      margin-block-end: 0.45rem;
+    }
+
+    .card p,
+    .module p,
+    .note p {
+      margin-block: 0 0.7rem;
+    }
+
+    .card p:last-child,
+    .module p:last-child,
+    .note p:last-child {
+      margin-block-end: 0;
+    }
+
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 0.75rem;
+      margin: 1rem 0;
+      padding: 0;
+      list-style: none;
+      counter-reset: flow;
+    }
+
+    .flow li {
+      position: relative;
+      min-inline-size: 0;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface-soft);
+      padding: 0.85rem;
+      counter-increment: flow;
+    }
+
+    .flow li::before {
+      content: counter(flow);
+      display: inline-grid;
+      place-items: center;
+      inline-size: 1.55rem;
+      block-size: 1.55rem;
+      border-radius: 999px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 0.78rem;
+      font-weight: 700;
+      margin-block-end: 0.45rem;
+    }
+
+    .flow li strong {
+      display: block;
+      margin-block-end: 0.35rem;
+    }
+
+    .flow li p {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .relationship {
+      overflow-x: auto;
+      scrollbar-gutter: stable;
+    }
+
+    table {
+      width: 100%;
+      min-width: 720px;
+      border-collapse: collapse;
+      border: 1px solid var(--line);
+      background: var(--surface);
+      font-size: 0.92rem;
+    }
+
+    th,
+    td {
+      border-block-end: 1px solid var(--line);
+      padding: 0.7rem;
+      text-align: start;
+      vertical-align: top;
+    }
+
+    th {
+      background: #edf3f6;
+      font-size: 0.78rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    tr:last-child td {
+      border-block-end: 0;
+    }
+
+    .note {
+      border-color: #f2d08b;
+      background: #fff8e7;
+      box-shadow: none;
+      padding: 1rem;
+    }
+
+    details {
+      box-shadow: none;
+      padding: 0.8rem 1rem;
+    }
+
+    summary {
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    details > div {
+      margin-block-start: 0.8rem;
+    }
+
+    .module + .module {
+      margin-block-start: 1rem;
+    }
+
+    .module-header {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-block-end: 0.75rem;
+    }
+
+    .module-header h2 {
+      margin: 0;
+    }
+
+    .data-list {
+      display: grid;
+      gap: 0.55rem;
+      margin: 0;
+    }
+
+    .data-list div {
+      display: grid;
+      grid-template-columns: minmax(130px, 0.7fr) minmax(0, 1.3fr);
+      gap: 0.75rem;
+      border-block-end: 1px solid var(--line);
+      padding-block: 0.55rem;
+    }
+
+    .data-list div:last-child {
+      border-block-end: 0;
+    }
+
+    .data-list dt {
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .data-list dd {
+      margin: 0;
+      min-inline-size: 0;
+    }
+
+    .page-footer {
+      border-block-start: 1px solid var(--line);
+      color: var(--muted);
+      padding-block: 1.5rem 2rem;
+    }
+
+    @media (max-width: 720px) {
+      .data-list div {
+        grid-template-columns: 1fr;
+      }
+
+      table {
+        min-width: 640px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#content">Skip to content</a>
+
+  <header class="page-header">
+    <div class="page-header__inner">
+      <p class="eyebrow">AKRA WEBAPP V2</p>
+      <h1>Database Structure & Data Flow ตามแอพ</h1>
+      <p class="lead">
+        เอกสารนี้สรุปโครงสร้างฐานข้อมูลและ data flow ของแต่ละแอพใน V2 โดยอิงจาก
+        migration SQL, migration docs, module inventory, และ workspace ปัจจุบัน วันที่ 2026-06-20.
+      </p>
+      <dl class="meta-grid" aria-label="Document metadata">
+        <div>
+          <dt>Scope</dt>
+          <dd>V2 database + planned module flows</dd>
+        </div>
+        <div>
+          <dt>Production impact</dt>
+          <dd>None, documentation only</dd>
+        </div>
+        <div>
+          <dt>Current source</dt>
+          <dd><code>supabase/migrations/0001-0011</code></dd>
+        </div>
+        <div>
+          <dt>Important note</dt>
+          <dd><code>0011</code> problem flow is local/uncommitted in this workspace</dd>
+        </div>
+      </dl>
+    </div>
+  </header>
+
+  <nav class="page-nav" aria-label="Page sections">
+    <a href="#overview">Overview</a>
+    <a href="#schema">Schema Map</a>
+    <a href="#core">Main/Core</a>
+    <a href="#catalog">Catalog/Warehouse</a>
+    <a href="#picking">Picking</a>
+    <a href="#purchasing">PR/PO</a>
+    <a href="#receiving">GR</a>
+    <a href="#warehouse">TRDAKRA/W5</a>
+    <a href="#returns">Returnitem</a>
+    <a href="#kpi">KPI</a>
+    <a href="#notifications">Notifications</a>
+  </nav>
+
+  <main id="content">
+    <section id="overview" class="panel">
+      <h2>ภาพรวมสถานะ</h2>
+      <p class="section-intro">
+        ตอนนี้ V2 มีฐานข้อมูลจริงสำหรับ core/auth, shared catalog/warehouse baseline,
+        และ Picking pilot แล้ว ส่วน PR/PO/GR, warehouse workflow เต็ม, Returnitem,
+        KPI และ Notifications ยังเป็น planned schema/workflow ที่จะออกแบบตามลำดับ phase.
+      </p>
+      <div class="legend" aria-label="Status legend">
+        <span class="tag implemented">Implemented / staging baseline</span>
+        <span class="tag local">Local in progress / uncommitted</span>
+        <span class="tag planned">Planned</span>
+        <span class="tag rls">RLS-gated read</span>
+        <span class="tag server">Server-only write or secret</span>
+      </div>
+      <div class="system-grid" style="margin-block-start: 1rem;">
+        <article class="card">
+          <h3>Core/Auth</h3>
+          <p>Supabase Auth + profiles + roles + permissions เป็นรากของทุกแอพ</p>
+          <p><code>private.has_permission()</code> ใช้ทั้ง server guard และ RLS policies</p>
+        </article>
+        <article class="card">
+          <h3>Shared Master Data</h3>
+          <p>Product, alias, vendor, warehouse, location, stock snapshot และ movement ledger ใช้ร่วมกัน</p>
+          <p>Picking bridge ใช้ <code>catalog_products</code> และ <code>catalog_product_aliases</code> แล้ว</p>
+        </article>
+        <article class="card">
+          <h3>Workflow Modules</h3>
+          <p>Picking มี tables/RPC จริงแล้ว ส่วน PR/PO/GR/Returnitem/KPI จะทยอยเพิ่ม workflow tables</p>
+          <p>Mutation ที่ต้อง transaction ใช้ server action + service-role-only RPC</p>
+        </article>
+        <article class="card">
+          <h3>Notifications</h3>
+          <p>LINE และ delivery hooks ต้องอยู่ฝั่ง server เท่านั้น</p>
+          <p>สถานะแรกที่ตกลงไว้คือ disabled send / dry-run ก่อนส่งจริง</p>
+        </article>
+      </div>
+      <aside class="note" style="margin-block-start: 1rem;">
+        <p>
+          Note: ใน workspace นี้มีไฟล์ Picking problem reporting อยู่แบบ local/untracked
+          (<code>0011_picking_problem_reports.sql</code>, route/action/form) แต่ handoff/index หลักยังบอกว่า
+          problem reporting เป็น next slice. เอกสารนี้จึงติดป้าย flow นั้นเป็น local in progress
+          จนกว่าจะ verify และ sync handoff เสร็จ.
+        </p>
+      </aside>
+    </section>
+
+    <section id="schema" class="panel">
+      <h2>Current Schema Map</h2>
+      <p class="section-intro">
+        ตารางด้านล่างคือ object หลักที่มีใน migrations ปัจจุบัน แยกตาม boundary ของระบบ.
+      </p>
+      <div class="relationship">
+        <table>
+          <thead>
+            <tr>
+              <th>Boundary</th>
+              <th>Tables / Functions</th>
+              <th>Relationship / Purpose</th>
+              <th>Access model</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Core/Auth</td>
+              <td>
+                <code>profiles</code>, <code>roles</code>, <code>permissions</code>,
+                <code>user_roles</code>, <code>role_permissions</code>,
+                <code>apps</code>, <code>audit_logs</code>
+              </td>
+              <td>
+                <code>auth.users</code> 1:1 <code>profiles</code>;
+                users M:N roles; roles M:N permissions; apps point to required permission.
+              </td>
+              <td><span class="tag rls">RLS</span> reads for authenticated users, writes server-side.</td>
+            </tr>
+            <tr>
+              <td>Private helpers</td>
+              <td>
+                <code>private.handle_new_user()</code>, <code>private.is_admin()</code>,
+                <code>private.has_permission()</code>, <code>private.next_picking_bill_no()</code>
+              </td>
+              <td>
+                Trigger provisioning, permission evaluation, and Picking bill number allocation.
+              </td>
+              <td><span class="tag server">private schema</span> direct Data API access is not exposed.</td>
+            </tr>
+            <tr>
+              <td>Shared catalog</td>
+              <td>
+                <code>catalog_products</code>, <code>catalog_product_aliases</code>,
+                <code>catalog_product_scopes</code>, <code>catalog_vendors</code>,
+                <code>catalog_product_vendors</code>
+              </td>
+              <td>
+                Canonical product + app-specific aliases + business/module/warehouse scope + vendor relationship.
+              </td>
+              <td><span class="tag rls">RLS</span> read via module permissions; write/import server-side.</td>
+            </tr>
+            <tr>
+              <td>Warehouse baseline</td>
+              <td>
+                <code>warehouse_warehouses</code>, <code>warehouse_locations</code>,
+                <code>warehouse_product_locations</code>, <code>warehouse_inventory_balances</code>,
+                <code>warehouse_stock_movements</code>
+              </td>
+              <td>
+                Warehouse dimensions, raw/normalized locations, par placement, W5 stock snapshot,
+                and imported movement history.
+              </td>
+              <td><span class="tag rls">RLS</span> read via warehouse/purchasing/receiving/returns/picking permissions.</td>
+            </tr>
+            <tr>
+              <td>Picking</td>
+              <td>
+                <code>picking_staff</code>, <code>picking_staff_line_accounts</code>,
+                <code>picking_requisitions</code>, <code>picking_requisition_lines</code>,
+                <code>picking_requisition_secrets</code>, <code>picking_problem_reports</code>,
+                <code>picking_problem_report_lines</code>, <code>picking_requisition_events</code>,
+                <code>picking_daily_sequences</code>
+              </td>
+              <td>
+                Requisition header, lines, lifecycle, problem detail, staff and server-only token/contact data.
+              </td>
+              <td><span class="tag rls">RLS</span> operational reads; <span class="tag server">server-only</span> mutations/secrets.</td>
+            </tr>
+            <tr>
+              <td>Public RPCs</td>
+              <td>
+                <code>create_picking_requisition()</code>,
+                <code>transition_picking_requisition_status()</code>,
+                <code>report_picking_problem()</code>
+              </td>
+              <td>
+                Transaction-safe workflow writes reachable by server code through Supabase RPC.
+              </td>
+              <td><span class="tag server">EXECUTE service_role only</span>; default <code>SECURITY INVOKER</code>.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="core" class="module">
+      <div class="module-header">
+        <div>
+          <p class="eyebrow">App 1</p>
+          <h2>Main / SSO / Core Admin</h2>
+        </div>
+        <div class="tag-row">
+          <span class="tag implemented">Implemented</span>
+          <span class="tag rls">RLS</span>
+        </div>
+      </div>
+      <p>
+        Core เป็นฐานร่วมของทุกแอพ: login, profile, role, permission, app registry,
+        และ audit trail. V1 core import นำผู้ใช้/roles/permissions เข้าสตaging แล้ว.
+      </p>
+      <ol class="flow" aria-label="Main and core data flow">
+        <li>
+          <strong>V1 core snapshots</strong>
+          <p><code>User</code>, <code>RoleConfig</code>, <code>PermConfig</code> ใช้เป็น reference/import source.</p>
+        </li>
+        <li>
+          <strong>Supabase Auth</strong>
+          <p>สร้าง <code>auth.users</code>; trigger <code>private.handle_new_user()</code> สร้าง <code>profiles</code>.</p>
+        </li>
+        <li>
+          <strong>Role mapping</strong>
+          <p><code>profiles</code> -> <code>user_roles</code> -> <code>roles</code>.</p>
+        </li>
+        <li>
+          <strong>Permission mapping</strong>
+          <p><code>roles</code> -> <code>role_permissions</code> -> <code>permissions</code>.</p>
+        </li>
+        <li>
+          <strong>App registry</strong>
+          <p><code>apps.required_permission</code> กำหนดว่าหน้า Main แสดง/ล็อก module ใด.</p>
+        </li>
+        <li>
+          <strong>Guards and RLS</strong>
+          <p><code>requirePermission()</code> และ <code>private.has_permission()</code> ใช้ enforce สิทธิ์.</p>
+        </li>
+      </ol>
+      <dl class="data-list">
+        <div>
+          <dt>Primary tables</dt>
+          <dd><code>profiles</code>, <code>roles</code>, <code>permissions</code>, <code>user_roles</code>, <code>role_permissions</code>, <code>apps</code>, <code>audit_logs</code></dd>
+        </div>
+        <div>
+          <dt>App routes</dt>
+          <dd><code>/</code>, <code>/login</code>, <code>/admin/permissions</code></dd>
+        </div>
+        <div>
+          <dt>Key rule</dt>
+          <dd>ห้าม authorize จาก user-editable metadata; permission ต้องมาจาก DB-backed roles/permissions.</dd>
+        </div>
+      </dl>
+    </section>
+
+    <section id="catalog" class="module">
+      <div class="module-header">
+        <div>
+          <p class="eyebrow">Shared Module</p>
+          <h2>Shared Catalog / Warehouse Baseline</h2>
+        </div>
+        <div class="tag-row">
+          <span class="tag implemented">Implemented</span>
+          <span class="tag rls">RLS</span>
+        </div>
+      </div>
+      <p>
+        Catalog/warehouse เป็น shared data layer สำหรับ Picking, PR/PO/GR,
+        TRDAKRA/W5, Returnitem และ reporting ในอนาคต. Product canonical row
+        แยกจาก source alias เพื่อไม่เสียชื่อ/หน่วย/รหัสจาก V1.
+      </p>
+      <ol class="flow" aria-label="Catalog and warehouse data flow">
+        <li>
+          <strong>CSV snapshots</strong>
+          <p>PO/GR ProductName, Returnitem ProductName, TRDAKRA Product, W5 stock/history.</p>
+        </li>
+        <li>
+          <strong>Import transform</strong>
+          <p>Normalize product code/name, vendor, warehouse, location, stock snapshot, movement history.</p>
+        </li>
+        <li>
+          <strong>Canonical product</strong>
+          <p><code>catalog_products</code> stores shared identity and default display name.</p>
+        </li>
+        <li>
+          <strong>Source aliases</strong>
+          <p><code>catalog_product_aliases</code> preserves app-specific product names and match status.</p>
+        </li>
+        <li>
+          <strong>Scopes</strong>
+          <p><code>catalog_product_scopes</code> answers TRD/AKRA/W5/module membership.</p>
+        </li>
+        <li>
+          <strong>Consumers</strong>
+          <p>Picking create uses matched aliases now; future modules reuse the same catalog.</p>
+        </li>
+      </ol>
+      <details>
+        <summary>Relationship detail</summary>
+        <div class="relationship">
+          <table>
+            <thead>
+              <tr>
+                <th>Entity</th>
+                <th>Links to</th>
+                <th>Meaning</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>catalog_products</code></td>
+                <td><code>catalog_product_aliases.product_id</code>, <code>catalog_product_scopes.product_id</code></td>
+                <td>One canonical product can have many source names and many scopes.</td>
+              </tr>
+              <tr>
+                <td><code>catalog_vendors</code></td>
+                <td><code>catalog_product_vendors.vendor_id</code></td>
+                <td>Vendor master and product-vendor relationship for PR/PO/GR.</td>
+              </tr>
+              <tr>
+                <td><code>warehouse_warehouses</code></td>
+                <td><code>warehouse_locations</code>, <code>warehouse_inventory_balances</code>, <code>warehouse_stock_movements</code></td>
+                <td>Warehouse/site dimension. W1=TRD; W2/W3/W4/W5/C1/C2=AKRA.</td>
+              </tr>
+              <tr>
+                <td><code>warehouse_product_locations</code></td>
+                <td><code>catalog_products</code> + <code>warehouse_warehouses</code> + optional <code>warehouse_locations</code></td>
+                <td>Placement/par data, especially TRDAKRA floor/location/par.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+    </section>
+
+    <section id="picking" class="module">
+      <div class="module-header">
+        <div>
+          <p class="eyebrow">App 2</p>
+          <h2>Picking</h2>
+        </div>
+        <div class="tag-row">
+          <span class="tag implemented">List/create/status implemented</span>
+          <span class="tag local">Problem flow local</span>
+          <span class="tag server">Server-only writes</span>
+        </div>
+      </div>
+      <p>
+        Picking เป็น pilot ที่มี data flow สมบูรณ์ที่สุดในตอนนี้:
+        read-only list/detail, create requisition, status transition และ local problem-reporting flow.
+      </p>
+      <h3>Create requisition flow</h3>
+      <ol class="flow" aria-label="Picking create requisition data flow">
+        <li>
+          <strong><code>/picking/new</code></strong>
+          <p>Writer/admin เลือก staff, bill type, และ product alias หรือ free text.</p>
+        </li>
+        <li>
+          <strong>Server action</strong>
+          <p><code>createPickingRequisition()</code> checks <code>picking.write</code>.</p>
+        </li>
+        <li>
+          <strong>Service-role RPC</strong>
+          <p><code>public.create_picking_requisition()</code> runs as service role only.</p>
+        </li>
+        <li>
+          <strong>Bill number</strong>
+          <p><code>private.next_picking_bill_no()</code> updates <code>picking_daily_sequences</code>.</p>
+        </li>
+        <li>
+          <strong>Write rows</strong>
+          <p>Insert <code>picking_requisitions</code>, <code>picking_requisition_lines</code>, and <code>created</code> event.</p>
+        </li>
+      </ol>
+
+      <h3>Status and problem flow</h3>
+      <ol class="flow" aria-label="Picking status and problem data flow">
+        <li>
+          <strong>Detail page</strong>
+          <p><code>/picking/[id]</code> reads requisition, lines, events, and problem reports through RLS.</p>
+        </li>
+        <li>
+          <strong>Status action</strong>
+          <p><code>transition_picking_requisition_status()</code> allows only <code>pending -> picked -> sent</code>.</p>
+        </li>
+        <li>
+          <strong>Problem action</strong>
+          <p><code>report_picking_problem()</code> writes report + lines + event, status unchanged.</p>
+        </li>
+        <li>
+          <strong>Review</strong>
+          <p>Detail page shows lifecycle and problem report history for readers/writers.</p>
+        </li>
+      </ol>
+
+      <dl class="data-list">
+        <div>
+          <dt>Primary tables</dt>
+          <dd><code>picking_requisitions</code>, <code>picking_requisition_lines</code>, <code>picking_requisition_events</code>, <code>picking_problem_reports</code>, <code>picking_problem_report_lines</code></dd>
+        </div>
+        <div>
+          <dt>Reference/secret tables</dt>
+          <dd><code>picking_staff</code>, <code>picking_staff_line_accounts</code>, <code>picking_requisition_secrets</code>, <code>picking_daily_sequences</code></dd>
+        </div>
+        <div>
+          <dt>Catalog bridge</dt>
+          <dd><code>picking_requisition_lines.catalog_product_id</code> -> <code>catalog_products.id</code>; <code>catalog_alias_id</code> -> <code>catalog_product_aliases.id</code></dd>
+        </div>
+        <div>
+          <dt>Next confirmed dependency</dt>
+          <dd>LINE notification/failure recovery should start with disabled send/dry-run behavior.</dd>
+        </div>
+      </dl>
+    </section>
+
+    <section id="purchasing" class="module">
+      <div class="module-header">
+        <div>
+          <p class="eyebrow">Apps 3-4</p>
+          <h2>PR / PO Purchasing</h2>
+        </div>
+        <div class="tag-row">
+          <span class="tag planned">Planned</span>
+          <span class="tag rls">Future RLS</span>
+        </div>
+      </div>
+      <p>
+        PR/PO ยังไม่มี workflow tables ใน migration ปัจจุบัน. Roadmap กำหนดให้วาง foundation
+        ร่วมกับ GR ก่อน เพราะ Direct PO identity, vendor lead time, receiving และ matching ผูกกันแน่น.
+      </p>
+      <ol class="flow" aria-label="PR and PO planned data flow">
+        <li>
+          <strong>PR request</strong>
+          <p>Future <code>purchasing_requests</code> + lines ใช้ catalog product/vendor/warehouse.</p>
+        </li>
+        <li>
+          <strong>Approval</strong>
+          <p>Server-side guard maps requester/approver permissions from core roles.</p>
+        </li>
+        <li>
+          <strong>PO creation</strong>
+          <p>Future PO header/lines must preserve direct PO identity and legacy fallback grouping.</p>
+        </li>
+        <li>
+          <strong>Vendor tracking</strong>
+          <p>Expected date, confirmation, close/APV, and lead-time insight use catalog vendor data.</p>
+        </li>
+        <li>
+          <strong>Handoff to GR</strong>
+          <p>Open PO lines become receiving input; matching must stay transaction-safe.</p>
+        </li>
+      </ol>
+      <dl class="data-list">
+        <div>
+          <dt>Existing shared inputs</dt>
+          <dd><code>catalog_products</code>, <code>catalog_vendors</code>, <code>catalog_product_vendors</code>, <code>warehouse_warehouses</code></dd>
+        </div>
+        <div>
+          <dt>Future table family</dt>
+          <dd>PR headers/lines, PO headers/lines, direct identity records, vendor confirmations, close/APV events.</dd>
+        </div>
+        <div>
+          <dt>Open decision</dt>
+          <dd>PR/PO/GR grouped cutover vs staged release.</dd>
+        </div>
+      </dl>
+    </section>
+
+    <section id="receiving" class="module">
+      <div class="module-header">
+        <div>
+          <p class="eyebrow">App 5</p>
+          <h2>GR Receiving</h2>
+        </div>
+        <div class="tag-row">
+          <span class="tag planned">Planned</span>
+        </div>
+      </div>
+      <p>
+        GR จะต่อจาก PO โดยต้องรองรับ receive, edit, reset/recall, split storage,
+        extra items, remark/lift fee และ receiving events.
+      </p>
+      <ol class="flow" aria-label="GR planned data flow">
+        <li>
+          <strong>Open PO lines</strong>
+          <p>GR reads PO lines that are ready to receive.</p>
+        </li>
+        <li>
+          <strong>Receiving action</strong>
+          <p>Server transaction writes GR header/lines and receive event.</p>
+        </li>
+        <li>
+          <strong>Location split</strong>
+          <p>Split storage uses <code>warehouse_locations</code> and raw location preservation.</p>
+        </li>
+        <li>
+          <strong>PO matching</strong>
+          <p>Received quantities update PO matching/closed status in a controlled workflow.</p>
+        </li>
+        <li>
+          <strong>Warehouse impact</strong>
+          <p>Future integration can create stock movements once warehouse policy is confirmed.</p>
+        </li>
+      </ol>
+      <dl class="data-list">
+        <div>
+          <dt>Existing shared inputs</dt>
+          <dd><code>catalog_products</code>, <code>warehouse_locations</code>, <code>warehouse_stock_movements</code> as future ledger target.</dd>
+        </div>
+        <div>
+          <dt>Future table family</dt>
+          <dd>GR headers, GR lines, receiving events, reset/recall snapshots, split location rows.</dd>
+        </div>
+      </dl>
+    </section>
+
+    <section id="warehouse" class="module">
+      <div class="module-header">
+        <div>
+          <p class="eyebrow">Apps 6-7</p>
+          <h2>TRDAKRA / AKRA W5 Warehouse</h2>
+        </div>
+        <div class="tag-row">
+          <span class="tag implemented">Baseline imported</span>
+          <span class="tag planned">Workflow planned</span>
+        </div>
+      </div>
+      <p>
+        Warehouse มี master/baseline tables แล้ว แต่ operational request/dispatch/survey/adjustment UI
+        ยัง planned. Current W5 stock และบาง movement history ถูกเก็บเป็น baseline data.
+      </p>
+      <ol class="flow" aria-label="Warehouse data flow">
+        <li>
+          <strong>Warehouse master</strong>
+          <p><code>warehouse_warehouses</code> defines W1, W2, W3, W4, W5, C1, C2.</p>
+        </li>
+        <li>
+          <strong>Placement and par</strong>
+          <p><code>warehouse_product_locations</code> stores TRDAKRA location/par config.</p>
+        </li>
+        <li>
+          <strong>Stock snapshot</strong>
+          <p><code>warehouse_inventory_balances</code> stores W5 current stock snapshot.</p>
+        </li>
+        <li>
+          <strong>Movement history</strong>
+          <p><code>warehouse_stock_movements</code> stores imported W5/TRDAKRA historical movement evidence.</p>
+        </li>
+        <li>
+          <strong>Future operations</strong>
+          <p>Request, dispatch, adjustment, stock check and survey workflows will write transactions and events.</p>
+        </li>
+      </ol>
+      <dl class="data-list">
+        <div>
+          <dt>Current tables</dt>
+          <dd><code>warehouse_warehouses</code>, <code>warehouse_locations</code>, <code>warehouse_product_locations</code>, <code>warehouse_inventory_balances</code>, <code>warehouse_stock_movements</code></dd>
+        </div>
+        <div>
+          <dt>Future table family</dt>
+          <dd>Warehouse requests, dispatches, pick lists, stock adjustments, surveys, stock check sessions, workflow events.</dd>
+        </div>
+        <div>
+          <dt>Key rule</dt>
+          <dd>Raw location and source units must be preserved; do not aggregate stock across units until conversion policy exists.</dd>
+        </div>
+      </dl>
+    </section>
+
+    <section id="returns" class="module">
+      <div class="module-header">
+        <div>
+          <p class="eyebrow">App 8</p>
+          <h2>Returnitem</h2>
+        </div>
+        <div class="tag-row">
+          <span class="tag planned">Planned</span>
+        </div>
+      </div>
+      <p>
+        Returnitem ยังไม่มี V2 workflow schema. Shared catalog มี Returnitem aliases/scopes
+        เป็น reference แล้ว และ core import ได้ map สิทธิ์ <code>app-ret.*</code> บางส่วนไว้.
+      </p>
+      <ol class="flow" aria-label="Returnitem planned data flow">
+        <li>
+          <strong>Return intake</strong>
+          <p>Future return headers/lines keep source route, product, customer, and condition.</p>
+        </li>
+        <li>
+          <strong>QC and holding</strong>
+          <p>Damaged goods holding/triage must be explicit workflow states.</p>
+        </li>
+        <li>
+          <strong>Claim pipeline</strong>
+          <p>Vendor claim, vendor response, and customer closure become separate events.</p>
+        </li>
+        <li>
+          <strong>Warehouse link</strong>
+          <p>Stock impact should flow through warehouse movement policy when confirmed.</p>
+        </li>
+        <li>
+          <strong>Audit and print</strong>
+          <p>Print/reprint and status changes should be auditable.</p>
+        </li>
+      </ol>
+      <dl class="data-list">
+        <div>
+          <dt>Existing shared inputs</dt>
+          <dd><code>catalog_products</code>, <code>catalog_product_aliases</code> with <code>source_app = 'returnitem'</code>, future warehouse movement ledger.</dd>
+        </div>
+        <div>
+          <dt>Future table family</dt>
+          <dd>Return records, return lines, claim lines, damaged goods holding, vendor responses, customer closure events.</dd>
+        </div>
+      </dl>
+    </section>
+
+    <section id="kpi" class="module">
+      <div class="module-header">
+        <div>
+          <p class="eyebrow">App 9</p>
+          <h2>KPITracker / Analytics</h2>
+        </div>
+        <div class="tag-row">
+          <span class="tag planned">Planned</span>
+          <span class="tag rls">Secured views later</span>
+        </div>
+      </div>
+      <p>
+        KPI ควรรอให้ operational tables เสถียรก่อน แล้วจึงตัดสินใจว่าจะอ่านจาก live workflow tables
+        หรือ curated reporting snapshots.
+      </p>
+      <ol class="flow" aria-label="KPI and analytics planned data flow">
+        <li>
+          <strong>KPI entry</strong>
+          <p>Future KPI daily records and definitions are written by permitted users.</p>
+        </li>
+        <li>
+          <strong>Operational sources</strong>
+          <p>Picking, PR/PO/GR, warehouse, returns feed report metrics after cutover.</p>
+        </li>
+        <li>
+          <strong>Curated snapshots</strong>
+          <p>Report snapshots avoid heavy joins and preserve period-close numbers.</p>
+        </li>
+        <li>
+          <strong>Dashboards</strong>
+          <p>Secured views or server-side reporting queries enforce role visibility.</p>
+        </li>
+      </ol>
+      <dl class="data-list">
+        <div>
+          <dt>Future table family</dt>
+          <dd>KPI definitions, daily KPI records, report snapshots, secured analytics views.</dd>
+        </div>
+        <div>
+          <dt>Security note</dt>
+          <dd>Views must be RLS-aware or not exposed directly; avoid view owner bypass issues.</dd>
+        </div>
+      </dl>
+    </section>
+
+    <section id="notifications" class="module">
+      <div class="module-header">
+        <div>
+          <p class="eyebrow">Cross-cutting</p>
+          <h2>Notifications / LINE</h2>
+        </div>
+        <div class="tag-row">
+          <span class="tag planned">Planned</span>
+          <span class="tag server">Server-only</span>
+        </div>
+      </div>
+      <p>
+        Notifications เป็น cross-cutting app/service ไม่ใช่ตาราง workflow หลักในตอนนี้.
+        การส่ง LINE ต้องทำฝั่ง server เท่านั้น และ stage แรกต้องเป็น disabled send/dry-run.
+      </p>
+      <ol class="flow" aria-label="Notification planned data flow">
+        <li>
+          <strong>Workflow event</strong>
+          <p>Picking/PO/GR/returns writes an event that may require notification.</p>
+        </li>
+        <li>
+          <strong>Server job/action</strong>
+          <p>Server code reads secret/contact data and builds payload.</p>
+        </li>
+        <li>
+          <strong>Dry-run result</strong>
+          <p>First phase records intended send/result without calling external LINE.</p>
+        </li>
+        <li>
+          <strong>Failure recovery</strong>
+          <p>Later flow records failure state and supports retry/recovery.</p>
+        </li>
+      </ol>
+      <dl class="data-list">
+        <div>
+          <dt>Current Picking secret/contact tables</dt>
+          <dd><code>picking_staff_line_accounts</code>, <code>picking_requisition_secrets</code></dd>
+        </div>
+        <div>
+          <dt>Future table family</dt>
+          <dd>Notification jobs, attempts, delivery status, payload metadata, retry records.</dd>
+        </div>
+        <div>
+          <dt>Key rule</dt>
+          <dd>No LINE token or service-role key may be exposed to browser code or committed files.</dd>
+        </div>
+      </dl>
+    </section>
+
+    <section class="panel" aria-labelledby="read-this-next">
+      <h2 id="read-this-next">How To Read This With The Current Repo</h2>
+      <div class="table-grid">
+        <article class="card">
+          <h3>Committed/staging source of truth</h3>
+          <p>Use <code>docs/plans/index.md</code>, <code>docs/handoff/current-state.md</code>, and migrations through <code>0010</code> for the verified baseline described in handoff.</p>
+        </article>
+        <article class="card">
+          <h3>Local problem-reporting work</h3>
+          <p>Files for <code>V2-0025</code> and migration <code>0011</code> are present locally but untracked. Verify and sync before treating as complete.</p>
+        </article>
+        <article class="card">
+          <h3>Next architectural decision</h3>
+          <p>After Picking closeout, decide PR/PO/GR release shape before schema work begins.</p>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer class="page-footer">
+    <p>
+      Generated as V2 documentation. This file changes no runtime code, Supabase schema, staging data,
+      V1 production apps, Google Apps Script deployments, Sheets, URLs, LINE tokens, or secrets.
+    </p>
+  </footer>
+</body>
+</html>
