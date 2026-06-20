@@ -1,12 +1,21 @@
 # Plan V2-0010: Picking Product Scope And User Flow
 
-Status: Draft - required before implementing Picking UI or write actions
+Status: Complete on 2026-06-20 - first implementation slice selected
 
 ## Goal
 
 Define the first usable Picking pilot slice before writing production-facing UI
 or server actions, so V2 implements the right workflow in a small, testable
 shape instead of expanding scope during coding.
+
+Completion note:
+
+- The first implementation slice is read-only list/detail only.
+- Create requisition, daily bill number allocation, problem reporting, status
+  actions, and LINE integration are deferred.
+- Execution plan: `docs/plans/V2-0019-picking-read-only-pilot.md`.
+- Next write-slice plan: `docs/plans/V2-0020-picking-create-requisition-write-slice.md`.
+- Decision record: `docs/decisions/0012-picking-read-only-first-slice.md`.
 
 ## Problem And Users
 
@@ -174,12 +183,14 @@ render list
 
 1. Confirm deployment boundary and staging role matrix from `V2-0009`.
 2. Add reusable server permission guard pattern.
-3. Build `/picking` read-only list.
-4. Build `/picking/[id]` detail view.
-5. Build `/picking/new` form without LINE integration.
-6. Add server action for create requisition and lifecycle event write.
+3. Build `/picking` read-only list under `V2-0019`.
+4. Build `/picking/[id]` detail view under `V2-0019`.
+5. After read-only behavior is verified, plan `/picking/new` without LINE
+   integration. Drafted as `V2-0020` on 2026-06-20.
+6. Add server action for create requisition and lifecycle event write in a
+   later slice.
 7. Verify mobile and permission behavior.
-8. Decide next slice: LINE notification, in-app status actions, or problem
+8. Decide next slice: create requisition, LINE notification, in-app status actions, or problem
    reporting.
 
 ## Files Expected To Change
@@ -222,13 +233,14 @@ This plan only adds V2 planning documentation. It does not change application
 runtime behavior, staging data, V1 production apps, GAS deployments, Sheets,
 GitHub Pages deployments, live URLs, LINE tokens, or Supabase secrets.
 
-## Open Decisions
+## Resolved And Deferred Decisions
 
-- Should the first live UI slice include create requisition, or should it stop at
-  read-only list/detail until staging data is imported?
-- Which non-admin staging roles should be created first: Picking writer,
-  Picking reader, and denied user are the minimum recommended set.
+- First live UI slice: stop at read-only list/detail. Create requisition is a
+  later slice.
+- Non-admin staging roles: use the existing Picking writer, Picking reader, and
+  denied/guest test users created under `V2-0014` for verification.
 - Should V2 preserve V1 behavior where a pending bill with a problem report is
-  also treated as picked?
+  also treated as picked? Deferred until the problem workflow slice.
 - Should LINE notification be the immediate next slice after create, or should
-  in-app status buttons come first for easier staging verification?
+  in-app status buttons come first for easier staging verification? Deferred
+  until after read-only and create flows are verified.

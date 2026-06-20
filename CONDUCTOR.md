@@ -18,12 +18,15 @@ is cleared, and hand off work to another agent without relying on memory.
 3. `CONDUCTOR.md`
 4. `docs/plans/index.md`
 5. `docs/handoff/current-state.md`
-6. `docs/handoff/work-log.md`
+6. `docs/handoff/work-log.md` active recent entries only
 7. The active plan files listed in `docs/plans/index.md`
 8. `docs/architecture/target-architecture.md`
 9. `docs/migration/migration-plan.md`
 10. `docs/migration/module-inventory.md`
 11. `C:\dev\WEBAPP\development_context.md` when V1 behavior is relevant
+
+Open `docs/handoff/archive/*` only when a current plan, ADR, bug investigation,
+or verification question requires older historical detail.
 
 If the task touches Supabase schema, auth, RLS, grants, migrations, or
 privileged database access, verify current official Supabase docs/changelog
@@ -118,17 +121,21 @@ When continuing work:
 
 1. Read `docs/plans/index.md`.
 2. Read the active plan file and any plan it depends on.
-3. Check `git status --short`.
-4. Identify existing uncommitted changes and do not revert work you did not make.
-5. Execute the smallest next step that matches the active plan.
-6. Run the relevant verification.
-7. Update the plan status, `docs/plans/index.md`, `docs/handoff/current-state.md`,
+3. Read the active recent entries in `docs/handoff/work-log.md`.
+4. Open archive logs only if the current plan or investigation points there.
+5. Check `git status --short`.
+6. Identify existing uncommitted changes and do not revert work you did not make.
+7. Execute the smallest next step that matches the active plan.
+8. Run the relevant verification.
+9. Update the plan status, `docs/plans/index.md`, `docs/handoff/current-state.md`,
    and `docs/handoff/work-log.md`.
 
 ## Handoff Rules
 
 - Update `docs/handoff/current-state.md` with the current status and next action.
-- Append a dated entry to `docs/handoff/work-log.md`.
+- Append a dated entry to the active `docs/handoff/work-log.md`.
+- Archive older work-log entries under `docs/handoff/archive/` when the active
+  log grows long enough to slow routine resume.
 - Add or update an ADR under `docs/decisions/` when a decision changes future
   behavior or implementation sequence.
 - Update `docs/migration/module-inventory.md` when a module moves phase.

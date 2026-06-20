@@ -31,6 +31,19 @@
 - Keep security-definer functions in private schemas.
 - Revoke direct execute access for trigger-only helper functions that should not
   be callable through the Data API.
+- **The `private` schema is not exposed through the Data API at all** (verified
+  empirically against staging on 2026-06-20: PostgREST returns `PGRST106`,
+  "Only the following schemas are exposed: public, graphql_public", for any
+  `private.*` RPC call, qualified or not). A function that must be callable via
+  `supabase.rpc()` from app server code therefore has to live in `public`,
+  declared `SECURITY INVOKER` (the default — omit `SECURITY DEFINER`), with
+  `EXECUTE` revoked from `public`/`anon`/`authenticated` and granted only to
+  `service_role`. It does not need privilege escalation because it only ever
+  runs as `service_role` (which already has `BYPASSRLS` plus table grants and
+  its own `EXECUTE` grants on any `private.*` helper it calls internally). Keep
+  `private.*` reserved for helpers called only from other SQL (RLS policies,
+  triggers, other functions) or a direct Postgres connection
+  (`DATABASE_URL`/`pg`, local scripts only). See ADR `0015`.
 
 ## Initial Domain Schemas
 
@@ -84,6 +97,20 @@ These workflows should be backed by database transactions or RPC functions:
   `next_picking_bill_no(date)` function, not by counting existing rows.
 - V1 plaintext capability tokens must be hashed or omitted during import; token
   values must never be committed.
+- The create-requisition transaction (`V2-0020`) is one atomic
+  `public.create_picking_requisition(...)` RPC function (migration `0009`)
+  that allocates the bill number via `private.next_picking_bill_no(date)` and
+  inserts the requisition, lines, and `created` event in a single function
+  call. The Next.js server action calls it through `createAdminClient()`
+  (service-role key) only after `requirePermission({ permission:
+  "picking.write" })` allows the request. See ADR `0015` for why this
+  function lives in `public` instead of `private`.
+- Picking lines bridge to the shared catalog (`V2-0018`) via nullable
+  `catalog_product_id`/`catalog_alias_id` columns on
+  `picking_requisition_lines` (migration `0009`); the legacy `product_id` ->
+  `picking_products` column is kept for compatibility but unused by the new
+  create flow. Picking-source product aliases live in
+  `catalog_product_aliases` with `source_app = 'picking'`.
 
 ## Shared Catalog And Warehouse Product Assumptions
 
@@ -103,7 +130,9 @@ These workflows should be backed by database transactions or RPC functions:
 
 ## Staging Apply Status
 
-- Migrations `0001`-`0008` have been applied to the staging Supabase project.
+- Migrations `0001`-`0009` have been applied to the staging Supabase project.
+- `0009_picking_catalog_bridge.sql` adds the Picking-to-catalog nullable bridge
+  columns and `public.create_picking_requisition(...)`.
 - `0006_core_grant_hardening.sql` corrects broad default grants discovered
   during staging verification after the initial `0001`-`0005` apply.
 - `0008_shared_catalog_schema.sql` adds the shared catalog and warehouse

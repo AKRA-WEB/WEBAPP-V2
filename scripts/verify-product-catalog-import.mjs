@@ -25,6 +25,8 @@ if (!databaseUrl) {
 const expectedCounts = new Map([
   ["catalog_products", 4793],
   ["catalog_vendors", 173],
+  // Excludes source_app='picking': those aliases come from the separate,
+  // re-runnable V2-0020 Picking reference import, not this V2-0018 import.
   ["catalog_product_aliases", 11433],
   ["catalog_product_scopes", 3760],
   ["warehouse_locations", 126],
@@ -50,7 +52,7 @@ try {
   const countsResult = await client.query(`
     select 'catalog_products' as table_name, count(*)::int as count from public.catalog_products
     union all select 'catalog_vendors', count(*)::int from public.catalog_vendors
-    union all select 'catalog_product_aliases', count(*)::int from public.catalog_product_aliases
+    union all select 'catalog_product_aliases', count(*)::int from public.catalog_product_aliases where source_app <> 'picking'
     union all select 'catalog_product_scopes', count(*)::int from public.catalog_product_scopes
     union all select 'warehouse_locations', count(*)::int from public.warehouse_locations
     union all select 'warehouse_product_locations', count(*)::int from public.warehouse_product_locations

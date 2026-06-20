@@ -9,6 +9,9 @@
     "db:apply-migrations": "node scripts/apply-migrations.mjs",
     "db:verify-staging-schema": "node scripts/verify-staging-schema.mjs",
     "db:verify-catalog-import": "node scripts/verify-product-catalog-import.mjs",
+    "picking:seed-staging-fixtures": "node scripts/picking-seed-staging-fixtures.mjs",
+    "picking:reference-import-dry-run": "node scripts/picking-reference-import-dry-run.mjs",
+    "picking:reference-import-apply": "node scripts/picking-reference-import-apply.mjs",
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit --incremental false"

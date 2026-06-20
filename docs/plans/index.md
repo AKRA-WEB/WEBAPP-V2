@@ -9,9 +9,15 @@ after `CONDUCTOR.md` when another agent needs to continue work.
 
 V2 is in Phase 3 preparation. The core schema, Picking pilot schema, shared
 catalog/warehouse baseline, and the real V1 core identity import (users,
-roles, role_permissions) are applied and verified in staging. The next
-implementation work should return to the Picking gate (`V2-0010`) before
-write workflows.
+roles, role_permissions) are applied and verified in staging. The Picking gate
+(`V2-0010`), the read-only Picking pilot (`V2-0019`), and the create
+requisition write slice (`V2-0020`) are all complete and verified in staging:
+`/picking` list, `/picking/[id]` detail, and a guarded `/picking/new` create
+flow with a shared-catalog product bridge and an atomic
+`public.create_picking_requisition(...)` transaction. LINE send, in-app status
+transitions, and problem reporting remain deferred — the next Picking slice is
+still an open choice. `V2-0017` Main portal polish remains the alternate UI
+track.
 
 ## Active Queue
 
@@ -22,8 +28,13 @@ write workflows.
 2. `V2-0009` - Next execution sequence
    - Status: In progress; steps 1-5 complete. Real V1 core import (the
      deferred part of step 4) completed 2026-06-20: see ADR `0011` and the
-     2026-06-20 work-log entry.
-   - Next action: return to the Picking pilot gate (`V2-0010`) for step 6.
+     2026-06-20 work-log entry. Step 6 (Picking read-only pilot, `V2-0019`)
+     completed 2026-06-20. The create requisition write slice (`V2-0020`)
+     completed 2026-06-20.
+   - Next action: pick the next Picking slice (LINE send, in-app status
+     buttons, or problem reporting), or switch to `V2-0017` Main portal
+     direction if the user prioritizes portal polish before more Picking
+     workflow.
    - File: `docs/plans/V2-0009-next-execution-sequence.md`
 3. `V2-0014` - Deployment boundary and staging access
    - Status: Complete on 2026-06-19.
@@ -43,26 +54,70 @@ write workflows.
    - Outcome: implemented `requirePermission` helper in `src/modules/auth/guard.ts` supporting anyOf/allOf checks and admin bypass, refactored `/admin/permissions` to use the guard, and created reusable `AccessDenied` UI.
    - File: `docs/plans/V2-0016-server-permission-guard-pattern.md`
 7. `V2-0010` - Picking product scope and user-flow gate
-   - Status: Draft; required before implementing Picking UI or write actions.
-   - Next action: revisit after `V2-0014` and `V2-0016`; confirm first Picking
-     slice and open decisions before coding.
+   - Status: Complete on 2026-06-20 for the first implementation slice.
+   - Outcome: first Picking UI slice is read-only list/detail; create,
+     problem/status workflows, and LINE integration are deferred.
    - File: `docs/plans/V2-0010-picking-product-scope-and-flow.md`
-8. `V2-0017` - Main portal design direction
+8. `V2-0019` - Picking read-only pilot
+   - Status: Complete on 2026-06-20.
+   - Outcome: permission-gated `/picking` list and `/picking/[id]` detail
+     implemented against staging Supabase (`src/modules/picking/read-model.ts`,
+     `format.ts`). Staging had zero Picking requisitions, so
+     `scripts/picking-seed-staging-fixtures.mjs` (gated, project-ref checked,
+     `legacy_source="v2_fixture"`) seeded 4 staging-only fixture requisitions
+     covering pending/picked/sent/line_push_failed+problem states. Verified
+     with a temporary local Playwright install against staging: ADMIN,
+     PICKING_WRITER, PICKING_READER allowed; GUEST denied; signed-out shows
+     sign-in required; no console errors. Found and fixed a pre-existing
+     `.sidebar` mobile CSS bug (missing `min-inline-size: 0` let the nav strip
+     blow out page width at narrow viewports); 390px list/detail now render
+     with zero horizontal overflow. Playwright was removed after verification.
+   - File: `docs/plans/V2-0019-picking-read-only-pilot.md`
+9. `V2-0020` - Picking create requisition write slice
+   - Status: Complete on 2026-06-20.
+   - Outcome: migration `0009` (nullable catalog bridge on
+     `picking_requisition_lines` + atomic `public.create_picking_requisition(...)`
+     RPC, service-role-only) applied and verified on staging. Reference-data
+     import (`scripts/picking-reference-import-{dry-run,apply}.mjs`) loaded
+     4,761 Picking-source `catalog_product_aliases` (4,758 `matched_code`, 3
+     `manual_review`) and 1 `picking_staff` row ("Chen") + LINE account row.
+     `/picking/new` (guarded by `picking.write`) and a writer/admin-only "New
+     requisition" link on `/picking` are implemented, calling
+     `createPickingRequisition` (`src/modules/picking/create-action.ts`) via a
+     new server-only admin client (`src/lib/supabase/admin.ts`). Verified on
+     staging: atomic write (1 requisition + N lines + 1 `created` event), 5
+     concurrent creates got 5 distinct `bill_no` values, and full role/mobile
+     browser verification (signed-out, `GUEST`, `PICKING_READER`,
+     `PICKING_WRITER`, `ADMIN`; 390px no overflow; no console errors) using a
+     temporary local Playwright install (removed after). ADR `0015` records
+     that `private` schema functions are not reachable via the Data API, so
+     the atomic create function lives in `public` (SECURITY INVOKER,
+     service-role-only) instead of `private`. LINE send, in-app status
+     buttons, and problem reporting remain deferred — next slice still open.
+   - File: `docs/plans/V2-0020-picking-create-requisition-write-slice.md`
+10. `V2-0017` - Main portal design direction
    - Status: Draft.
    - Next action: confirm the hybrid direction: preserve V1 Main behavior and
      module mental model, but redesign the V2 Main portal instead of copying the
      V1 visual shell.
    - File: `docs/plans/V2-0017-main-portal-design-direction.md`
-9. `V2-0011` - Conductor planning index
+11. `V2-0011` - Conductor planning index
    - Status: Complete on 2026-06-19.
    - Outcome: root `CONDUCTOR.md` and this plan index now define the central
      resume/handoff workflow.
    - File: `docs/plans/V2-0011-conductor-planning-index.md`
-10. `V2-0012` - Architect command format
+12. `V2-0012` - Architect command format
    - Status: Complete on 2026-06-19.
    - Outcome: `Architect:` is now the standard plan-only command and a detailed
      template exists at `docs/plans/templates/architect-plan-template.md`.
    - File: `docs/plans/V2-0012-architect-command-format.md`
+13. `V2-0021` - Handoff work-log archiving
+   - Status: Complete on 2026-06-20.
+   - Outcome: active `docs/handoff/work-log.md` now keeps recent entries only;
+     2026-06-18 through 2026-06-19 entries were moved to
+     `docs/handoff/archive/work-log-2026-06-18-to-2026-06-19.md`, with read
+     rules updated in `AGENTS.md`, `CONDUCTOR.md`, and `README.md`.
+   - File: `docs/plans/V2-0021-handoff-work-log-archiving.md`
 
 ## Completed Or Baseline Plans
 
@@ -81,10 +136,11 @@ write workflows.
   V2 closeout commits or switch to PRs.
 - Whether V1 users without email addresses receive synthetic staging emails or a
   different identity bridge.
-- Whether Picking implementation should start with read-only list/detail only or
-  include create requisition in the first coded slice.
 - Whether LINE notification follows create requisition immediately or waits
   until in-app status/problem flows are proven.
+- Whether Vercel Preview/Development should receive a server-only `DATABASE_URL`
+  for transactional create verification, or create testing stays local until a
+  private RPC/transaction path is added.
 - Whether V2 Main should require sign-in immediately or show a signed-out portal
   state with a Sign In action.
 - Whether queued modules should be visible to ordinary users during migration or
@@ -95,6 +151,8 @@ write workflows.
 - Update this index whenever a plan is added, completed, blocked, superseded, or
   its next action changes.
 - Keep detailed work history in `docs/handoff/work-log.md`, not in this index.
+- Keep `docs/handoff/work-log.md` short; move older detailed history to
+  `docs/handoff/archive/` and leave pointers in the active work log.
 - Keep current operational status in `docs/handoff/current-state.md`.
 - Do not remove historical plans unless they were created in error and have not
   been referenced by handoff docs.

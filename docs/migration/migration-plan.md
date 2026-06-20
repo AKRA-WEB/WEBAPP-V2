@@ -85,13 +85,15 @@ Current notes:
   `docs/migration/core-v1-import-mapping.md`.
 - End-to-end Supabase Auth and `/admin/permissions` verification has passed
   with staging accounts. A reusable server-side permission guard is implemented.
-- Core V1 import dry-run tooling exists; the actual staging core import is still
-  pending.
+- Core V1 import dry-run and apply tooling exists; the actual staging core
+  import completed on 2026-06-20 for 15 V1 users, 5 roles, and mapped
+  role-permission grants.
 
 ## Phase 3 - Pilot Module
 
-Status: Started (staging schema applied; shared catalog data imported; no
-Picking workflow routes/actions yet)
+Status: Started (staging schema applied; shared catalog data imported;
+read-only `/picking` list/detail routes implemented and verified against
+staging; no write workflow routes/actions yet)
 
 Recommended pilot: `Picking`
 
@@ -115,8 +117,13 @@ Current notes:
 - Draft migrations `0004`-`0005` define the Picking pilot schema and RLS and
   have been applied to the staging Supabase project.
 - V1 Picking mapping is drafted in `docs/migration/picking-v1-mapping.md`.
-- No V1 Picking data has been exported/imported and no V2 Picking routes or
-  actions have been implemented yet.
+- No V1 Picking data has been exported/imported. The first V2 Picking route
+  slice (`V2-0019`, ADR `0012`) is implemented and verified: permission-gated
+  read-only `/picking` list and `/picking/[id]` detail, reading staging
+  Supabase data through normal authenticated RLS. Current staging rows are
+  staging-only fixtures (`legacy_source = "v2_fixture"`), not V1 history.
+  Create requisition, status/problem workflows, and LINE integration are not
+  implemented yet.
 - Shared catalog/warehouse schema and staging snapshot import are available for
   the planned Picking catalog bridge.
 - V1 production Picking app, GAS deployment, Sheets, URLs, and LINE tokens were

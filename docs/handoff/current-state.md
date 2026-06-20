@@ -7,7 +7,9 @@ Last updated: 2026-06-20
 - Repository: `https://github.com/AKRA-WEB/WEBAPP-V2`
 - Local path: `C:\dev\AKRA-WEBAPP-V2`
 - Status: Phase 3 Picking pilot schema and mapping drafted, applied to staging,
-  and DB-verified
+  DB-verified; read-only UI slice (`/picking`, `/picking/[id]`) and the create
+  requisition write slice (`/picking/new`) are both implemented and verified
+  against staging
 - Production impact: None
 - V1 reference path: `C:\dev\WEBAPP`
 
@@ -49,10 +51,13 @@ Plan IDs:
 - `V2-0016` (`docs/plans/V2-0016-server-permission-guard-pattern.md`)
 - `V2-0017` (`docs/plans/V2-0017-main-portal-design-direction.md`)
 - `V2-0018` (`docs/plans/V2-0018-shared-catalog-warehouse-data-structure.md`)
+- `V2-0019` (`docs/plans/V2-0019-picking-read-only-pilot.md`)
+- `V2-0020` (`docs/plans/V2-0020-picking-create-requisition-write-slice.md`)
+- `V2-0021` (`docs/plans/V2-0021-handoff-work-log-archiving.md`)
 
-Goal: Finish the Phase 2 core schema baseline and draft the Phase 3 Picking
-pilot schema/mapping so the first module can be staged without touching V1
-production systems.
+Goal: Continue Phase 3 by moving from the verified read-only Picking pilot to
+the first create requisition write slice, while keeping LINE/status/problem
+workflows deferred.
 
 Status:
 
@@ -216,19 +221,146 @@ Status:
   set) + `user_roles`. Verified via `npm run db:verify-staging-schema` and a
   targeted staging query. `lint`/`typecheck` pass.
 - No V1 production files changed.
+- Locked the first Picking UI execution slice on 2026-06-20: `V2-0010` is
+  complete as the product/user-flow gate, ADR `0012` records read-only
+  list/detail first, and `V2-0019` is the execution plan. Create requisition,
+  status/problem workflows, and LINE integration are deferred until the
+  read-only path is verified.
+- Executed `V2-0019` on 2026-06-20: implemented the permission-gated Picking
+  read-only pilot.
+  - Added `src/modules/picking/read-model.ts` (server-only:
+    `listRecentRequisitions`, `getRequisitionDetail`, reading
+    `picking_requisitions`/`picking_requisition_lines`/`picking_requisition_events`
+    through the normal authenticated Supabase client so RLS stays in the
+    verification path) and `src/modules/picking/format.ts` (bill label/status
+    tone/date/quantity formatters).
+  - Replaced the `/picking` placeholder with a guarded list
+    (`requirePermission({ anyOf: ["picking.read", "picking.write"] })`,
+    `AccessDenied` on denial, status-count summary, recent requisition rows
+    linking to detail, empty state) and added `/picking/[id]` guarded detail
+    (header, metadata grid including picked/sent/problem timestamps, lines,
+    lifecycle timeline, not-found state).
+  - Staging had zero Picking requisitions (`picking_requisitions` count was
+    0), so added `scripts/picking-seed-staging-fixtures.mjs` (new
+    `npm run picking:seed-staging-fixtures`), gated on
+    `--confirm-picking-fixtures` plus a staging project-ref check, idempotent
+    via `upsert` on `legacy_uid`. Seeded 4 fixture requisitions
+    (`legacy_source = "v2_fixture"`, names prefixed "Fixture …") covering
+    pending/picked/sent/line_push_failed(+problem_reported) states, with
+    lines and lifecycle events, and synced `picking_daily_sequences` for
+    today's `bill_date` so future real bill numbers will not collide.
+  - Verified end to end against staging using a temporary local Playwright
+    install (`npm install --no-save playwright` + `npx playwright install
+    chromium`, both removed after the run, matching the pattern used for the
+    `/admin/permissions` check on 2026-06-19): signed-out shows "Sign In
+    Required"; `test-guest@akra-v2.test` (GUEST) sees "Access Denied" on
+    `/picking`; `test-admin@akra-v2.test` (ADMIN), `test-picker-writer@akra-v2.test`
+    (PICKING_WRITER), and `test-picker-reader@akra-v2.test` (PICKING_READER)
+    all see the requisition list and can open detail; no browser console
+    errors. Test account passwords were reset to a temporary known value via
+    the service-role Admin API for this verification session only (not
+    recorded in any committed file); these are synthetic staging-only
+    accounts with no production use.
+  - Found and fixed a pre-existing mobile layout bug in the shared
+    `AppShell`: `.sidebar` (in the `@media (max-width: 820px)` rule in
+    `src/app/globals.css`) had no `min-inline-size: 0`, so the horizontally
+    scrollable `.side-nav` strip forced the whole document wider than the
+    viewport at narrow widths (measured `scrollWidth` 1143px at a 390px
+    viewport). Added `min-inline-size: 0` to `.sidebar` in that rule; `/picking`
+    and `/picking/[id]` now measure zero horizontal overflow at 390px (and
+    this also benefits every other page using `AppShell`).
+  - `lint`, `typecheck`, `build`, and `git diff --check` all pass.
+- Drafted `V2-0020` on 2026-06-20 as the next recommended Picking slice:
+  create requisition before LINE/status/problem workflows. ADR `0013` records
+  the sequencing decision and the shared-catalog bridge direction. The plan
+  starts with a small nullable catalog bridge on Picking lines and a gated
+  Picking reference-data dry run/import (`ProductName` aliases and `Staff`)
+  before implementing `/picking/new`.
+- Completed `V2-0021` on 2026-06-20: split old work-log entries into
+  `docs/handoff/archive/work-log-2026-06-18-to-2026-06-19.md`, kept 2026-06-20
+  recent entries in the active `docs/handoff/work-log.md`, and updated
+  `AGENTS.md`, `CONDUCTOR.md`, and `README.md` so future agents read archive
+  logs only when historical detail is needed. ADR `0014` records the policy.
+- Executed `V2-0020` on 2026-06-20 (`Go:`): the Picking create requisition
+  write slice.
+  - Migration `0009_picking_catalog_bridge.sql`: nullable
+    `catalog_product_id`/`catalog_alias_id` on `picking_requisition_lines`
+    plus an atomic `public.create_picking_requisition(...)` function (bill
+    number allocation + requisition + lines + `created` event in one call).
+    Applied and verified on staging (`npm run check:migrations`,
+    `npm run db:verify-staging-schema`).
+  - Empirically confirmed `private` schema functions are not reachable via
+    the Supabase Data API at all (`PGRST106`), so the new atomic function
+    lives in `public`, `SECURITY INVOKER` (not `DEFINER`), `EXECUTE` revoked
+    from `anon`/`authenticated` and granted only to `service_role`. ADR
+    `0015` records this and why no `DATABASE_URL`/Vercel env change was
+    needed: the existing `SUPABASE_SECRET_KEY` (already in Vercel
+    Preview/Development) is sufficient.
+  - Added `scripts/picking-reference-import-dry-run.mjs` and
+    `scripts/picking-reference-import-apply.mjs` (gated on
+    `--confirm-picking-reference-import` + staging project-ref check). Ran
+    both: imported real V1 `Picking - ProductName.csv` (4,761 rows -> 4,758
+    `matched_code` + 3 `manual_review` `catalog_product_aliases` rows,
+    `source_app = "picking"`) and `Picking - Staff.csv` (1 real row, "Chen",
+    `legacy_source = "picking_v1"`) plus her LINE account row.
+  - Added `src/lib/supabase/admin.ts` (server-only service-role client),
+    `src/modules/picking/reference-data.ts` (active staff +
+    capped/matched-only product alias suggestions), and
+    `src/modules/picking/create-action.ts` (`createPickingRequisition`
+    server action: `requirePermission({ permission: "picking.write" })`,
+    server-side validation, calls the new RPC, redirects to
+    `/picking/[id]`).
+  - Added guarded `/picking/new` (`src/app/picking/new/page.tsx` +
+    `src/modules/picking/new-requisition-form.tsx`, client component with
+    add/remove line rows, catalog-product-or-free-text per line) and a
+    writer/admin-only "New requisition" link on `/picking`.
+  - Verified on staging: a single create writes exactly 1 requisition + N
+    lines + 1 `created` event and advances `picking_daily_sequences`; 5
+    concurrent RPC calls got 5 distinct `bill_no` values (atomic allocation
+    confirmed under concurrency); all test/smoke rows were deleted after
+    verification.
+  - Browser-verified with a temporary local Playwright install (removed
+    after, same pattern as `V2-0019`): signed-out shows sign-in required;
+    `GUEST` denied on both `/picking` and `/picking/new`;
+    `PICKING_READER` sees no "New requisition" link and is denied on
+    `/picking/new`; `PICKING_WRITER` and `ADMIN` see the link, and the
+    writer completed a full create -> redirect-to-detail flow in the
+    browser; `/picking` and `/picking/new` measured zero horizontal
+    overflow at 390px; no console errors. Test account passwords were
+    reset to a temporary known value via the service-role Admin API for
+    this verification session only (user-approved; not recorded in any
+    committed file) — same synthetic staging-only accounts as `V2-0019`.
+  - `lint`, `typecheck`, `build`, and `git diff --check` all pass.
+  - Fixed a regression caught via advisor review: the V2-0018 catalog
+    verification script (`scripts/verify-product-catalog-import.mjs`) had a
+    hardcoded `catalog_product_aliases` count that the new picking-source
+    aliases broke; scoped it to exclude `source_app = 'picking'` and
+    re-verified green.
+  - Caveat: the create flow is verified locally against staging (direct RPC
+    calls + local dev browser checks), not yet exercised through a deployed
+    Vercel Preview/Development build. In scope per the plan
+    (`SUPABASE_SECRET_KEY` is already in Vercel; `DATABASE_URL` was never
+    needed for this), but deployed-create itself is unproven.
+  - No V1 production files changed.
 
 ## Next Actions
 
 1. ~~Prepare and run the actual V1 core import script (writing profiles/user_roles/role_permissions to staging) based on `scripts/core-import-dry-run.mjs` validation report.~~ Done 2026-06-20.
-2. Use `V2-0010` as the gate for V2 Picking implementation: confirm MVP and
-   first slice, then start with a permission-gated read path, then create
-   requisition server actions, then status/problem workflows and LINE
-   integration.
-3. Confirm `V2-0017` Main portal direction before polishing `/` beyond the
+2. ~~Execute `V2-0019`: implement permission-gated Picking read-only list/detail
+   (`/picking` and `/picking/[id]`) against staging Supabase.~~ Done 2026-06-20.
+3. ~~Review or execute `V2-0020`: create requisition write slice with
+   shared-catalog bridge, transaction-safe daily bill number allocation,
+   reference-data dry run/import, and `/picking/new`.~~ Done 2026-06-20.
+4. Pick the next Picking slice: LINE send, in-app status transitions
+   (pending -> picked -> sent), or problem reporting. No recommendation locked
+   in yet — ask the user.
+5. Confirm `V2-0017` Main portal direction before polishing `/` beyond the
    current migration dashboard. Recommended direction: redesign V2 Main while
    preserving V1 Main behavior and familiar module labels.
-4. Keep `docs/plans/index.md` updated whenever a plan status or next action
+6. Keep `docs/plans/index.md` updated whenever a plan status or next action
    changes.
+7. Keep `docs/handoff/work-log.md` as the active recent log; archive older
+   entries under `docs/handoff/archive/` when it becomes long again.
 
 
 ## Open Questions

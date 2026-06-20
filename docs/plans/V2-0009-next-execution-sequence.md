@@ -1,6 +1,6 @@
 # Plan V2-0009: Next Execution Sequence
 
-Status: In progress — step 5 complete (steps 1, 2, 3, 4, 5 done)
+Status: In progress - step 6 read-only complete; next write slice drafted
 
 
 ## Goal
@@ -145,13 +145,15 @@ Verification:
 ### 6. Picking Pilot UI And Actions
 
 Implement the smallest useful V2 Picking pilot after core access is stable:
-read-only requisition list first, then create requisition server action, then
-status transitions and problem reporting. LINE notification integration should
-remain server-side and can be introduced after the data flow is proven.
+read-only requisition list/detail first, then create requisition server action,
+then status transitions and problem reporting. LINE notification integration
+should remain server-side and can be introduced after the data flow is proven.
 
-Before implementation begins, use `V2-0010` to confirm the product scope and
-user-flow gate: MVP, nice-to-have items, out-of-scope items, screen notes,
-system logic, data/integration points, task breakdown, and verification.
+`V2-0010` is complete as the product-scope gate. `V2-0019` (permission-gated
+read-only list/detail) and `V2-0020` (create requisition, shared-catalog
+bridge for lines, transaction-safe bill number allocation) are both complete
+as of 2026-06-20. Status transitions, problem reporting, and LINE notification
+remain the next open Picking slice.
 
 Expected files:
 
@@ -178,9 +180,9 @@ Verification:
 4. Are V1 users without email addresses allowed to get synthetic staging emails,
    or must we preserve real login identifiers from day one?
 5. Should the first Picking screen be read-only history/list or new requisition
-   creation? Read-only is safer; creation proves the workflow faster.
-6. Should LINE integration wait until after DB create/list works? Waiting keeps
-   token handling and notification failures out of the first UI slice.
+   creation? Resolved on 2026-06-20: read-only list/detail first (`V2-0019`).
+6. Should LINE integration wait until after DB create/list works? Current
+   direction: wait until the read-only and create flows are proven.
 
 ## Rollback / No-Production-Impact Note
 

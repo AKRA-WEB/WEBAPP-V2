@@ -188,7 +188,7 @@ try {
     from pg_proc p
     join pg_namespace n on n.oid = p.pronamespace
     where (n.nspname = 'private' and p.proname in ('is_admin', 'has_permission', 'handle_new_user', 'next_picking_bill_no'))
-       or (n.nspname = 'public' and p.proname = 'set_updated_at')
+       or (n.nspname = 'public' and p.proname in ('set_updated_at', 'create_picking_requisition'))
     order by n.nspname, p.proname
   `);
 
@@ -200,8 +200,37 @@ try {
     "private.has_permission",
     "private.is_admin",
     "private.next_picking_bill_no",
+    "public.create_picking_requisition",
     "public.set_updated_at",
   ]);
+
+  // public.create_picking_requisition is reachable via the Data API (unlike
+  // private.* functions, which PGRST106 confirms are not exposed at all), so
+  // it must stay SECURITY INVOKER and execute-only-as-service_role: it relies
+  // on the caller already being service_role (RLS bypass + grants), not on
+  // privilege escalation.
+  const createRequisitionFn = functionResult.rows.find(
+    (row) => row.schema_name === "public" && row.function_name === "create_picking_requisition",
+  );
+  if (createRequisitionFn?.security_definer) {
+    fail("public.create_picking_requisition must not be SECURITY DEFINER.");
+  }
+
+  const createRequisitionGrants = await client.query(`
+    select grantee, privilege_type
+    from information_schema.routine_privileges
+    where routine_schema = 'public' and routine_name = 'create_picking_requisition'
+  `);
+  // The function owner (the migration role, e.g. "postgres") always appears
+  // here implicitly and is never reachable via PostgREST/Data API roles, so
+  // only anon/authenticated must be absent and service_role must be present.
+  const createRequisitionGrantees = new Set(createRequisitionGrants.rows.map((row) => row.grantee));
+  if (createRequisitionGrantees.has("anon") || createRequisitionGrantees.has("authenticated")) {
+    fail("public.create_picking_requisition must not grant EXECUTE to anon or authenticated.");
+  }
+  if (!createRequisitionGrantees.has("service_role")) {
+    fail("public.create_picking_requisition must grant EXECUTE to service_role.");
+  }
 
   for (const row of functionResult.rows) {
     if (row.schema_name === "private" && !row.security_definer) {

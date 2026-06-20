@@ -23,8 +23,13 @@ Every agent or developer must read these files before changing anything:
 2. `CONDUCTOR.md`
 3. `docs/plans/index.md`
 4. `docs/handoff/current-state.md`
-5. `docs/architecture/target-architecture.md`
-6. `docs/migration/migration-plan.md`
+5. `docs/handoff/work-log.md` active recent entries
+6. `docs/architecture/target-architecture.md`
+7. `docs/migration/migration-plan.md`
+
+Older work-log entries live under `docs/handoff/archive/`. Open them only when
+you need historical verification detail for a specific plan, ADR, bug, or
+handoff question.
 
 For context about the existing production apps, read:
 

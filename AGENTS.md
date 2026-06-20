@@ -26,11 +26,14 @@ Before planning or editing, read:
 2. `CONDUCTOR.md`
 3. `docs/plans/index.md`
 4. `docs/handoff/current-state.md`
-5. `docs/handoff/work-log.md`
+5. `docs/handoff/work-log.md` active recent entries only
 6. `docs/architecture/target-architecture.md`
 7. `docs/migration/migration-plan.md`
 8. `docs/migration/module-inventory.md`
 9. `C:\dev\WEBAPP\development_context.md` for V1 behavior and module status
+
+Open `docs/handoff/archive/*` only when a current plan, ADR, bug investigation,
+or verification question requires older historical detail.
 
 If the task involves Supabase, also verify current Supabase docs/changelog
 before implementing schema, auth, RLS, or migration changes.
@@ -40,7 +43,9 @@ before implementing schema, auth, RLS, or migration changes.
 Every non-trivial change must update handoff files before final response:
 
 - Update `docs/handoff/current-state.md` with current status and next action.
-- Append a dated entry to `docs/handoff/work-log.md`.
+- Append a dated entry to the active `docs/handoff/work-log.md`.
+- When `docs/handoff/work-log.md` grows long, move older entries to
+  `docs/handoff/archive/` and leave archive pointers in the active log.
 - If a decision was made, add or update a file under `docs/decisions/`.
 - If a module moved phase, update `docs/migration/module-inventory.md`.
 

@@ -289,6 +289,128 @@ button {
   color: var(--muted);
 }
 
+.requisition-list {
+  display: grid;
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.requisition-row {
+  display: grid;
+  gap: 0.4rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  color: inherit;
+  text-decoration: none;
+}
+
+.requisition-row:hover {
+  border-color: rgb(29 111 216 / 40%);
+}
+
+.requisition-row__main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.requisition-row__bill {
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+
+.requisition-row__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.requisition-row__footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.4rem;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.requisition-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.75rem;
+  margin-block-end: 1rem;
+}
+
+.requisition-lines,
+.requisition-timeline {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.requisition-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-muted);
+}
+
+.requisition-line__no {
+  min-inline-size: 1.5rem;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.requisition-line__name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1 1 auto;
+  min-inline-size: 0;
+}
+
+.requisition-line__qty {
+  color: var(--muted);
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.requisition-timeline__item {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-inline-start: 3px solid var(--blue-soft);
+  background: var(--surface-muted);
+  border-radius: 0 8px 8px 0;
+}
+
+.requisition-timeline__type {
+  font-weight: 700;
+}
+
+.requisition-timeline__meta {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
 .auth-page {
   display: grid;
   place-items: center;
@@ -323,7 +445,8 @@ button {
   font-weight: 700;
 }
 
-.field input {
+.field input,
+.field select {
   inline-size: 100%;
   min-block-size: 2.75rem;
   padding-inline: 0.8rem;
@@ -345,12 +468,70 @@ button {
   background: var(--blue);
   color: #ffffff;
   font-weight: 700;
+  text-decoration: none;
+}
+
+.secondary-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-block-size: 2.5rem;
+  padding-inline: 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 600;
+}
+
+.secondary-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .form-message {
   min-block-size: 1.25rem;
   color: #b42318;
   font-size: 0.88rem;
+}
+
+.workspace-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.requisition-form {
+  display: grid;
+  gap: 1rem;
+}
+
+.line-rows {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.line-row {
+  display: grid;
+  gap: 0.6rem;
+  padding: 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-muted);
+}
+
+.line-row__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr);
+  gap: 0.6rem;
+}
+
+.line-row__footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
 }
 
 @container (max-width: 360px) {
@@ -368,6 +549,7 @@ button {
     position: sticky;
     inset-block-start: 0;
     z-index: 10;
+    min-inline-size: 0;
     padding: 0.85rem 1rem;
   }
 
@@ -382,6 +564,12 @@ button {
   .workspace-header {
     align-items: flex-start;
     flex-direction: column;
+  }
+}
+
+@media (max-width: 560px) {
+  .line-row__grid {
+    grid-template-columns: 1fr;
   }
 }
 

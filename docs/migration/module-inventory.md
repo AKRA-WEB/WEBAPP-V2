@@ -60,8 +60,20 @@ For each module, capture:
 - `picking`: Phase 3 pilot schema and V1 mapping drafted (plan `V2-0006`) —
   products, staff, requisitions, lines, problem reports, lifecycle events,
   daily bill sequences, and server-only token/contact tables. Migrations have
-  been applied to staging and DB-verified; no V1 Picking data exported or
-  imported.
+  been applied to staging and DB-verified. First UI slice (plan `V2-0019`, ADR
+  `0012`) is implemented and verified: permission-gated read-only `/picking`
+  list and `/picking/[id]` detail against staging Supabase. Second UI slice
+  (plan `V2-0020`, ADR `0013`/`0015`) is implemented and verified: migration
+  `0009` adds a nullable `catalog_products`/`catalog_product_aliases` bridge
+  on `picking_requisition_lines` and the atomic, service-role-only
+  `public.create_picking_requisition(...)` RPC; real V1 Picking `ProductName`
+  (4,758 `matched_code` + 3 `manual_review` aliases) and `Staff` ("Chen") were
+  imported as shared-catalog aliases/`picking_staff`+LINE account rows;
+  `/picking/new` (guarded by `picking.write`) creates real requisitions in
+  staging. Staging requisitions are a mix of staging-only fixtures
+  (`legacy_source = "v2_fixture"`) and real app-created rows
+  (`legacy_source = "v2_app"`), not V1 `Requisition` history. Status/problem
+  workflows and LINE integration remain.
 
 ## Notes From V1 Context
 
