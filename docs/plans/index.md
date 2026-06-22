@@ -41,7 +41,28 @@ tracks recommendations for user review.
 implemented schema and planned app/module flows. `V2-0028` adds a
 management-friendly Thai executive summary at
 `docs/project-management/executive-summary-th.md` for presenting the project
-status, current capabilities, stack, and roadmap to supervisors.
+status, current capabilities, stack, and roadmap to supervisors. `V2-0029`
+adds a static UI/UX mock-up at `docs/mockups/v2-ui-ux-mockup.html`, preserving
+V1 workflow familiarity while proposing improved V2 responsive UI patterns.
+`V2-0030` adds `FRONTEND_CONDUCTOR.md` as a frontend sub-conductor with
+shortcuts for UI/UX resume, planning, mock-ups, implementation, review,
+responsive checks, and design-system work. `V2-0031` adds `Gemini.md` as the
+Gemini-specific companion for frontend design, UI/UX critique, mock-up support,
+responsive review, and implementation advice. `V2-0034` prepares the Picking
+cutover package (`docs/migration/picking-cutover-package.md`): V1 history
+archive note, a real staging data-reconciliation query (4 fixture
+requisitions only, no leftover test rows), a UAT checklist, a filled
+module cutover checklist, and a rollback plan. It deliberately does not
+declare Picking cut over — deployed Vercel Preview/Development verification
+and one combined human UAT pass remain open, user-gated items. `V2-0036`
+drafts the PR/PO/GR foundation plan and has executed its first slice: V1
+source profiling confirmed a live `PR` sheet with no CSV export yet, and
+`scripts/pr-po-gr-import-dry-run.mjs` profiled `PO`/`GR`/`ProductName`/
+`Vendor` against staging (0 blockers, 7 warnings — see
+`docs/migration/pr-po-gr-v1-mapping.md`); schema/RLS design and staging
+migration are not started. `V2-0037` designed and implemented
+the Purchase Requisition (PR) module frontend mockup under
+`docs/mockups/pr-ui-ux-mockup.html`. `V2-0038` designed and implemented the KPI Tracker module frontend mockup under `docs/mockups/kpi-ui-ux-mockup.html`.
 
 ## Active Queue
 
@@ -55,8 +76,10 @@ status, current capabilities, stack, and roadmap to supervisors.
      2026-06-20 work-log entry. Step 6 (Picking read-only pilot, `V2-0019`)
      completed 2026-06-20. The create requisition write slice (`V2-0020`) and
      the status-transition slice (`V2-0023`) both completed 2026-06-20.
-   - Next action: LINE notification/failure recovery is the next Picking
-     slice per `V2-0022`'s chain (problem reporting, `V2-0025`, is complete).
+   - Next action: Picking cutover package (`V2-0034`) is prepared but not
+     approved — deployed Vercel Preview/Development verification and one
+     combined human UAT pass are open, user-gated items per
+     `docs/migration/picking-cutover-package.md`.
    - File: `docs/plans/V2-0009-next-execution-sequence.md`
 3. `V2-0014` - Deployment boundary and staging access
    - Status: Complete on 2026-06-19.
@@ -129,8 +152,9 @@ status, current capabilities, stack, and roadmap to supervisors.
      problem reporting, Picking LINE/failure recovery, Picking cutover package,
      PR/PO/GR foundation, PR, PO, GR, warehouse, Returnitem, KPI, and final
      hardening/cutover.
-   - Next action: LINE notification/failure recovery is next (status
-     transitions `V2-0023` and problem reporting `V2-0025` are complete).
+   - Next action: Picking cutover package (`V2-0034`) is prepared; the user
+     must decide on the two open gates (deployed verification, combined UAT)
+     before PR/PO/GR foundation planning starts.
    - File: `docs/plans/V2-0022-full-v1-parity-timeline.md`
 11. `V2-0017` - Main portal design direction
    - Status: Complete on 2026-06-20.
@@ -191,9 +215,9 @@ status, current capabilities, stack, and roadmap to supervisors.
      `docs/project-management/decision-board.md`; archived older active-log
      entries into
      `docs/handoff/archive/work-log-2026-06-20-core-through-picking-create.md`.
-   - Next action: use the decision board for proposed next moves; current
-     recommendation is LINE notification/failure recovery (problem reporting,
-     `V2-0025`, is complete).
+   - Next action: use the decision board for proposed next moves; the Picking
+     cutover package (`V2-0034`) is prepared and awaiting a user decision on
+     its two open gates.
    - File: `docs/plans/V2-0024-project-management-operating-model.md`
 17. `V2-0026` - Database structure data-flow HTML
    - Status: Complete on 2026-06-20.
@@ -263,6 +287,105 @@ status, current capabilities, stack, and roadmap to supervisors.
      390px/no-console-error checks passed. Also archived 5 older work-log
      entries to stay under the context budget.
    - File: `docs/plans/V2-0027-picking-line-notification-failure-recovery.md`
+21. `V2-0029` - UI/UX mock-up
+   - Status: Complete on 2026-06-22.
+   - Outcome: added `docs/mockups/v2-ui-ux-mockup.html`, a static mock-up for
+     Main portal, Picking board, create requisition, detail/problem flow,
+     mobile preview, and UX notes. It records the working direction that V2 UX
+     should stay familiar to V1 while UI may improve visual hierarchy,
+     responsive behavior, status visibility, and role-aware actions.
+   - File: `docs/plans/V2-0029-ui-ux-mockup.md`
+22. `V2-0030` - Frontend conductor and shortcuts
+   - Status: Complete on 2026-06-22.
+   - Outcome: added `FRONTEND_CONDUCTOR.md`, frontend shortcut commands,
+     `docs/frontend/ui-ux-operating-model.md`, and ADR `0019`. Frontend work
+     is now defined as a sub-conductor lane inside the same migration plan
+     board, not a separate source of truth.
+   - File: `docs/plans/V2-0030-frontend-conductor-and-shortcuts.md`
+23. `V2-0031` - Gemini frontend instructions
+   - Status: Complete on 2026-06-22.
+   - Outcome: added `Gemini.md` and linked it from `AGENTS.md`,
+     `CONDUCTOR.md`, `README.md`, and `FRONTEND_CONDUCTOR.md`. Gemini is now
+     documented as a frontend/UI/UX design and review companion under the
+     frontend sub-conductor, not a separate source of truth or execution
+     authority.
+   - File: `docs/plans/V2-0031-gemini-frontend-instructions.md`
+24. `V2-0032` - Frontend UI/UX module roadmap
+   - Status: Complete on 2026-06-22 (documentation only).
+   - Outcome: defined the Frontend UI/UX roadmap for all remaining V2 modules (PO, PR, GR, KPI, AKRA, TRDAKRA, Picking), detailing pages to build, V1 UX parity, V2 UI improvements, mobile responsive boundaries, and dependencies.
+   - File: `docs/plans/V2-0032-frontend-ui-ux-module-roadmap.md`
+25. `V2-0033` - PO Frontend UI/UX Mock-up
+   - Status: Complete on 2026-06-22 (mockup phase).
+   - Outcome: designed and implemented the Purchasing Orders (PO) module frontend mockup under `docs/mockups/po-ui-ux-mockup.html`, demonstrating active list, detail review, direct PO isolation rules, interactive role matrix toggles, and responsive device layout simulation.
+   - File: `docs/plans/V2-0033-po-frontend-mockup.md`
+26. `V2-0034` - Picking cutover package
+   - Status: Prepared on 2026-06-22; not approved. Updated 2026-06-22 in
+     response to `Review: V2-0034` feedback (5 findings, all verified
+     accurate).
+   - Outcome: added `docs/migration/picking-cutover-package.md`. Documents
+     the V1 history archive answer (V1 Picking stays live/unchanged for
+     pre-cutover lookups), a real staging data-reconciliation query (4
+     `v2_fixture` requisitions only, zero leftover `v2_app` test rows, 0
+     problem-report/secret rows — confirms prior slices' cleanup claims), a
+     UAT checklist, a fully filled `docs/migration/cutover-checklist.md`
+     instance, and a rollback plan. Explicitly does **not** check off
+     deployed Vercel Preview/Development verification (local `main` is 2
+     commits ahead of `origin/main`, and the local Vercel CLI account cannot
+     reach the real project's team scope) or a combined human UAT pass —
+     both are named as open, user-gated decisions rather than silently
+     marked done. Review response added: a re-runnable
+     reconciliation script (`scripts/verify-picking-cutover-reconciliation.mjs`,
+     `npm run picking:verify-cutover-reconciliation`, replacing a deleted
+     one-off query — numbers unchanged); a reference-data freshness section
+     (3a) clarifying the existing check only proves snapshot-internal
+     consistency, not live-V1 freshness, with a fresh-export step still
+     required pre-cutover; and a concrete cutover runbook (section 5a:
+     pause/redirect V1 — a business action outside this repo's authority,
+     enable the V2 production route, notify users, rollback).
+   - File: `docs/plans/V2-0034-picking-cutover-package.md`
+27. `V2-0035` - GR Frontend UI/UX Mock-up
+   - Status: Complete on 2026-06-22 (Updated on 2026-06-22 with dynamic V1 parity).
+   - Outcome: designed and implemented the Goods Receiving (GR) mobile-first frontend mockup under `docs/mockups/gr-ui-ux-mockup.html`, achieving strict V1 layout parity. Based on feedback, upgraded the mockup to be fully dynamic, generating the 14-day calendar grid (displaying date, day badge, and vendor confirmed/estimated pills), warehouse filter chips with counts, PO cards, and status-gated action buttons (Draft, Review, Confirm, Recall, Reset) dynamically in Javascript, including automated field lockout.
+   - File: `docs/plans/V2-0035-gr-frontend-mockup.md`
+28. `V2-0036` - PR/PO/GR foundation
+   - Status: In progress on 2026-06-22 — source profiling + dry-run report
+     slice complete; schema drafting not started.
+   - Outcome: plans the grouped purchasing/receiving foundation before
+     implementation: V1 source profiling, PR source confirmation, dry-run
+     import report, Direct PO identity preservation, proposed
+     `public.purchasing_*` / `public.receiving_*` table families, RLS/grant
+     posture, staging-only migration verification, and later PR/PO/GR UI
+     sequencing. Executed the first implementation slice
+     (`Go: ทำ V2-0036 เฉพาะ PR/PO/GR source profiling + dry-run report`):
+     added `docs/migration/pr-po-gr-v1-mapping.md` (confirms a live V1 `PR`
+     sheet exists but has no CSV export yet; documents V1's own PO
+     bill-grouping key, lift-fee/extra-item Remark tag formats, and a real
+     `PO.csv` header mismatch — no `Expected_Date` column in the export
+     despite `Code.gs.txt` documenting one) and
+     `scripts/pr-po-gr-import-dry-run.mjs` (+ npm alias
+     `pr-po-gr:import-dry-run`), which profiles `PO.csv`/`GR.csv`/
+     `ProductName.csv`/`Vendor.csv` and cross-matches against staging
+     `catalog_products`/`catalog_vendors`/`warehouse_warehouses`. Result: 0
+     blockers, 7 warnings (no PR CSV export; 233 ambiguous bare-`DIRECT`
+     bill groups, largest 21 lines; 10 orphan GR `Ref_PO_UID`; GR date
+     issues split into 16 genuinely malformed vs 54 epoch-zero export
+     artifacts vs 7 `-`-placeholder dates; 5 unmatched PO SKUs; 2 PO
+     products needing manual catalog review). No schema/migration, staging
+     data, V1 production files, or secrets changed; `lint`/`typecheck`/
+     `build`/`git diff --check` all pass.
+   - Next action: task breakdown items 3-7 (finalize schema details, draft
+     migration `0013`, verification tooling, staging apply, docs close-out)
+     remain undone; recommend `Architect:` to lock schema details given the
+     `Expected_Date` mismatch and bare-`DIRECT` grouping volume found.
+   - File: `docs/plans/V2-0036-pr-po-gr-foundation.md`
+29. `V2-0037` - PR Frontend UI/UX Mock-up
+   - Status: Complete on 2026-06-22 (Mockup phase).
+   - Outcome: designed and implemented the Purchase Requisition (PR) module frontend mockup under `docs/mockups/pr-ui-ux-mockup.html`, demonstrating active form submission, dynamic autocomplete suggestion list with matching/freetext badges, collapsible history list showing statuses (Pending, Approved, Rejected, Ordered), interactive supervisor approvals with rejection comment modal, purchasing officer actions, progress timeline bar, and LINE Flex preview.
+   - File: `docs/plans/V2-0037-pr-frontend-mockup.md`
+30. `V2-0038` - KPI Frontend UI/UX Mock-up
+   - Status: Complete on 2026-06-22 (Mockup phase).
+   - Outcome: designed and implemented the KPI Tracker module frontend mockup under `docs/mockups/kpi-ui-ux-mockup.html`, demonstrating active daily records input, branch switching (AKRA vs TRD), role simulation (Staff, Supervisor, Admin), dynamic SVG charts for error trends and monthly rankings, HP gamification rings leaderboard (starting at 100 HP), weekly task list status checks, CSV export utility, and administrative employee roster controls.
+   - File: `docs/plans/V2-0038-kpi-frontend-mockup.md`
 
 ## Completed Or Baseline Plans
 
@@ -291,6 +414,9 @@ status, current capabilities, stack, and roadmap to supervisors.
   V1 Sheets remain read-only archives after operational replacement.
 - For non-Picking modules, which notification paths require parity before
   cutover versus after operational replacement.
+- For `V2-0036`, where the authoritative PR row export lives, since current
+  `import-data/po-pr-gr` contains PO/GR/ProductName/Vendor snapshots but no
+  dedicated PR CSV.
 
 ## Update Rules
 

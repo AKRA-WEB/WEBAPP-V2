@@ -1,0 +1,2721 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AKRA V2 - KPI Tracker UI/UX Parity Mockup</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+Thai:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: light;
+      --brand-blue: #1e40af;
+      --brand-blue-light: #eff6ff;
+      --brand-blue-border: #bfdbfe;
+
+      --brand-orange: #ea580c;
+      --brand-orange-light: #fff7ed;
+
+      --ink: #1f2937;
+      --muted: #6b7280;
+      --soft-bg: #f3f4f6;
+      --surface: #ffffff;
+      --line: #e5e7eb;
+
+      --danger: #ef4444;
+      --danger-light: #fef2f2;
+      --danger-border: #fca5a5;
+
+      --warning: #f59e0b;
+      --warning-light: #fefbeb;
+      --warning-border: #fde68a;
+
+      --success: #10b981;
+      --success-light: #ecfdf5;
+      --success-border: #a7f3d0;
+
+      --purple: #8b5cf6;
+      --purple-light: #f5f3ff;
+      --purple-border: #ddd6fe;
+
+      --radius-sm: 8px;
+      --radius: 12px;
+      --radius-lg: 16px;
+
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+      --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.08);
+
+      --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: #cbd5e1;
+      color: var(--ink);
+      font-family: 'Inter', 'Noto Sans Thai', -apple-system, sans-serif;
+      font-size: 15px;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    /* Container holding the simulation frame */
+    .viewport-container {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: var(--transition);
+    }
+
+    .viewport-container.device-desktop {
+      max-width: 1400px;
+      background: #f1f5f9;
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow-lg);
+    }
+
+    /* Interactive frame: Mobile by default (390px) */
+    .phone-frame {
+      width: 390px;
+      height: 844px;
+      background: var(--surface);
+      border-radius: 40px;
+      border: 12px solid #000;
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.3), 0 0 0 4px #1e293b;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transition: var(--transition);
+    }
+
+    .viewport-container.device-desktop .phone-frame {
+      width: 100%;
+      height: 760px;
+      border: none;
+      border-radius: var(--radius-lg);
+      box-shadow: none;
+    }
+
+    /* Mobile bar simulator */
+    .mobile-status-bar {
+      background: #000;
+      color: #fff;
+      font-size: 11px;
+      padding: 6px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      height: 28px;
+      flex-shrink: 0;
+    }
+
+    .viewport-container.device-desktop .mobile-status-bar {
+      display: none;
+    }
+
+    /* Application Header */
+    header {
+      background: var(--brand-blue);
+      color: #ffffff;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      z-index: 100;
+    }
+
+    .header-title-area {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .header-main-title {
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .header-sub-title {
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .sync-btn {
+      background: rgba(255, 255, 255, 0.15);
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 4px 8px;
+      border-radius: 20px;
+      font-size: 10px;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: var(--transition);
+    }
+
+    .sync-btn:hover {
+      background: rgba(255, 255, 255, 0.25);
+    }
+
+    /* Main Scrollable Canvas */
+    .canvas {
+      flex: 1;
+      background: #f3f4f6;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Simulation Control Box */
+    .mockup-controls {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background: rgba(17, 24, 39, 0.96);
+      border: 1px solid #374151;
+      color: #fff;
+      padding: 16px;
+      border-radius: var(--radius);
+      width: 320px;
+      z-index: 2000;
+      box-shadow: var(--shadow-lg);
+      backdrop-filter: blur(10px);
+    }
+
+    @media (max-width: 1100px) {
+      .mockup-controls {
+        position: relative;
+        top: 0;
+        left: 0;
+        width: 100%;
+        max-width: 390px;
+        margin-bottom: 16px;
+      }
+      body {
+        flex-direction: column;
+        padding: 10px;
+      }
+    }
+
+    .mockup-title {
+      font-weight: 800;
+      font-size: 14px;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .mockup-btn-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .mockup-btn {
+      background: #374151;
+      color: #d1d5db;
+      border: 1px solid #4b5563;
+      padding: 8px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 700;
+      transition: var(--transition);
+      text-align: center;
+    }
+
+    .mockup-btn:hover {
+      background: #4b5563;
+      color: #fff;
+    }
+
+    .mockup-btn.active {
+      background: var(--brand-orange);
+      color: #fff;
+      border-color: var(--brand-orange);
+    }
+
+    .mockup-section-label {
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #9ca3af;
+      margin-top: 10px;
+      margin-bottom: 4px;
+      display: block;
+    }
+
+    /* Views */
+    .view-panel {
+      display: none;
+      animation: fadeIn 0.2s ease forwards;
+    }
+
+    .view-panel.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    /* Common Card design */
+    .kpi-card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      margin: 12px;
+      padding: 14px;
+      overflow: hidden;
+    }
+
+    .kpi-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #f3f4f6;
+      padding-bottom: 8px;
+      margin-bottom: 12px;
+    }
+
+    .kpi-card-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #111827;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Date field styling */
+    .date-selection {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      margin: 12px;
+      padding: 12px;
+    }
+
+    .input-field {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--line);
+      background: #f9fafb;
+      font-family: inherit;
+      font-size: 14px;
+      color: var(--ink);
+      outline: none;
+      transition: var(--transition);
+    }
+
+    .input-field:focus {
+      border-color: var(--brand-blue);
+      background: var(--surface);
+      box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1);
+    }
+
+    /* Dynamic entries styling */
+    .entry-row {
+      background: #f9fafb;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      padding: 10px;
+      margin-bottom: 8px;
+      position: relative;
+      animation: entrySlide 0.2s ease-out forwards;
+    }
+
+    @keyframes entrySlide {
+      from { opacity: 0; transform: translateY(-5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .entry-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .entry-remove-btn {
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      width: 20px;
+      height: 20px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--muted);
+      font-size: 10px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .entry-remove-btn:hover {
+      color: var(--danger);
+      background: var(--danger-light);
+      border-color: var(--danger-border);
+    }
+
+    .add-row-btn {
+      width: 100%;
+      padding: 10px;
+      background: var(--soft-bg);
+      border: 1px dashed var(--line);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--muted);
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+
+    .add-row-btn:hover {
+      border-color: var(--brand-blue);
+      color: var(--brand-blue);
+      background: var(--brand-blue-light);
+    }
+
+    /* Volume Adjusters styling */
+    .vol-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #f9fafb;
+      padding-bottom: 8px;
+      margin-bottom: 8px;
+    }
+
+    .vol-info {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .vol-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #374151;
+    }
+
+    .vol-subtitle {
+      font-size: 10px;
+      color: var(--muted);
+    }
+
+    .step-control {
+      display: flex;
+      align-items: center;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      background: #fff;
+    }
+
+    .step-btn {
+      width: 32px;
+      height: 32px;
+      border: none;
+      background: #f3f4f6;
+      font-size: 16px;
+      font-weight: bold;
+      color: var(--brand-blue);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+    }
+
+    .step-btn:hover {
+      background: var(--brand-blue-light);
+    }
+
+    .step-input {
+      width: 44px;
+      height: 32px;
+      border: none;
+      text-align: center;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--brand-blue);
+      outline: none;
+    }
+
+    /* Sticky save bar */
+    .sticky-save-bar {
+      position: sticky;
+      bottom: 60px;
+      left: 0;
+      right: 0;
+      background: rgba(255, 255, 255, 0.9);
+      border-top: 1px solid var(--line);
+      padding: 10px 12px;
+      z-index: 500;
+      backdrop-filter: blur(8px);
+    }
+
+    .save-btn {
+      width: 100%;
+      background: var(--brand-blue);
+      color: #fff;
+      border: none;
+      padding: 12px;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 6px rgba(30, 64, 175, 0.2);
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .save-btn:hover {
+      background: #1e3a8a;
+      box-shadow: 0 6px 10px rgba(30, 64, 175, 0.3);
+    }
+
+    /* Dashboard Header Week Selector */
+    .week-navigator {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      margin: 12px;
+      padding: 10px 12px;
+    }
+
+    .nav-arrow-btn {
+      width: 32px;
+      height: 32px;
+      border: none;
+      background: var(--brand-blue-light);
+      color: var(--brand-blue);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .nav-arrow-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    /* Overview metric badges */
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin: 12px;
+    }
+
+    .metric-box {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 12px;
+      text-align: center;
+      box-shadow: var(--shadow);
+    }
+
+    .metric-box.border-red {
+      border-bottom: 4px solid var(--danger);
+    }
+
+    .metric-box.border-blue {
+      border-bottom: 4px solid var(--brand-blue);
+    }
+
+    .metric-box.border-green {
+      border-bottom: 4px solid var(--success);
+    }
+
+    .metric-value {
+      font-size: 24px;
+      font-weight: 800;
+      color: #111827;
+      margin-top: 4px;
+    }
+
+    .metric-label {
+      font-size: 9px;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .metric-trend {
+      font-size: 10px;
+      margin-top: 4px;
+      font-weight: 600;
+    }
+
+    /* SVG Chart containers */
+    .chart-container {
+      margin-block: 10px;
+      padding: 4px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .chart-svg {
+      width: 100%;
+      height: 120px;
+    }
+
+    .chart-grid-line {
+      stroke: #f3f4f6;
+      stroke-width: 1;
+    }
+
+    .chart-line {
+      fill: none;
+      stroke: var(--brand-blue);
+      stroke-width: 3;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .chart-area {
+      fill: url(#blue-grad);
+      opacity: 0.1;
+    }
+
+    .chart-bar {
+      fill: var(--brand-blue);
+      rx: 3px;
+      transition: fill 0.2s;
+    }
+
+    .chart-bar:hover {
+      fill: var(--brand-orange);
+    }
+
+    .chart-point {
+      fill: #fff;
+      stroke: var(--brand-blue);
+      stroke-width: 2;
+    }
+
+    .chart-label {
+      font-size: 8px;
+      fill: var(--muted);
+      text-anchor: middle;
+    }
+
+    /* AI Analysis panel */
+    .ai-summary-card {
+      background: linear-gradient(to right bottom, #eef2ff, #f5f3ff);
+      border: 1px solid #e0e7ff;
+      border-radius: var(--radius);
+      margin: 12px;
+      padding: 14px;
+      position: relative;
+    }
+
+    .ai-sparkle {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      color: #a5b4fc;
+      opacity: 0.5;
+    }
+
+    /* Gamification Leaderboard Ring meter */
+    .leaderboard-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .leader-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #f9fafb;
+      padding: 8px 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--line);
+    }
+
+    .leader-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .leader-rank {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--muted);
+      background: #e5e7eb;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .leader-row:nth-child(1) .leader-rank { background: #fcd34d; color: #78350f; }
+    .leader-row:nth-child(2) .leader-rank { background: #d1d5db; color: #374151; }
+    .leader-row:nth-child(3) .leader-rank { background: #fda4af; color: #9f1239; }
+
+    .leader-name {
+      font-size: 13px;
+      font-weight: 700;
+      color: #111827;
+    }
+
+    .leader-score-area {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Visual mini HP Ring */
+    .hp-ring-outer {
+      position: relative;
+      width: 32px;
+      height: 32px;
+    }
+
+    .hp-ring-svg {
+      transform: rotate(-90deg);
+      width: 32px;
+      height: 32px;
+    }
+
+    .hp-ring-bg {
+      fill: none;
+      stroke: #e5e7eb;
+      stroke-width: 3;
+    }
+
+    .hp-ring-bar {
+      fill: none;
+      stroke-width: 3;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 0.3s;
+    }
+
+    .hp-text {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 8px;
+      font-weight: bold;
+      color: #111827;
+    }
+
+    /* Weekly Tasks list */
+    .task-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #f9fafb;
+      border: 1px solid var(--line);
+      padding: 10px;
+      border-radius: var(--radius-sm);
+      margin-bottom: 6px;
+    }
+
+    .task-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #1f2937;
+    }
+
+    .task-meta {
+      font-size: 10px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .task-status-badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      border: 1px solid transparent;
+      cursor: pointer;
+    }
+
+    .task-status-badge.not-started {
+      background: var(--soft-bg);
+      color: var(--muted);
+      border-color: var(--line);
+    }
+
+    .task-status-badge.in-progress {
+      background: var(--warning-light);
+      color: var(--warning);
+      border-color: var(--warning-border);
+    }
+
+    .task-status-badge.completed {
+      background: var(--success-light);
+      color: var(--success);
+      border-color: var(--success-border);
+    }
+
+    /* Notes logs */
+    .note-log-item {
+      background: #f9fafb;
+      border: 1px solid var(--line);
+      padding: 8px 10px;
+      border-radius: var(--radius-sm);
+      font-size: 11px;
+      line-height: 1.4;
+      margin-bottom: 6px;
+    }
+
+    /* Executive Board / Admin Dash filters */
+    .admin-filter-bar {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      margin: 12px;
+      padding: 12px;
+    }
+
+    .admin-filter-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .export-btn {
+      background: #10b981;
+      color: #fff;
+      border: none;
+      padding: 10px 14px;
+      font-size: 12px;
+      font-weight: 700;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: var(--transition);
+      box-shadow: 0 2px 4px rgba(16, 185, 129, 0.1);
+    }
+
+    .export-btn:hover {
+      background: #059669;
+    }
+
+    /* Settings employee roster */
+    .roster-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #f9fafb;
+      border: 1px solid var(--line);
+      padding: 8px 12px;
+      border-radius: var(--radius-sm);
+      margin-bottom: 6px;
+    }
+
+    .roster-details {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .roster-name {
+      font-size: 13px;
+      font-weight: 700;
+      color: #111827;
+    }
+
+    .roster-sub {
+      font-size: 10px;
+      color: var(--muted);
+    }
+
+    .roster-actions {
+      display: flex;
+      gap: 4px;
+    }
+
+    .btn-icon {
+      width: 28px;
+      height: 28px;
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .btn-icon:hover {
+      background: var(--soft-bg);
+    }
+
+    .btn-icon.delete:hover {
+      color: var(--danger);
+      background: var(--danger-light);
+      border-color: var(--danger-border);
+    }
+
+    /* Footer tab menu */
+    .footer-tabs {
+      background: var(--surface);
+      border-top: 1px solid var(--line);
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      flex-shrink: 0;
+      z-index: 100;
+    }
+
+    .tab-item {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 700;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      flex: 1;
+      height: 100%;
+      justify-content: center;
+    }
+
+    .tab-item.active {
+      color: var(--brand-blue);
+      border-top: 3px solid var(--brand-blue);
+    }
+
+    /* Toast notification inside frame */
+    .toast-box {
+      position: absolute;
+      top: 40px;
+      left: 20px;
+      right: 20px;
+      background: rgba(31, 41, 55, 0.95);
+      color: #fff;
+      padding: 10px 14px;
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      font-weight: 600;
+      z-index: 5000;
+      opacity: 0;
+      transform: translateY(-10px);
+      pointer-events: none;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .toast-box.active {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .toast-icon {
+      color: var(--success);
+    }
+
+  </style>
+</head>
+<body>
+
+  <!-- Mockup Panel -->
+  <div class="mockup-controls">
+    <div class="mockup-title">
+      <span>KPI Tracker Settings</span>
+      <span style="font-size: 8px; background:var(--brand-orange); color:#fff; padding:1px 4px; border-radius:3px;">PARITY MATCH</span>
+    </div>
+    <div style="font-size: 11px; color:#cbd5e1; margin-bottom:10px;">
+      ทดสอบสลับสาขา (AKRA/TRD) และบันทึกข้อความผิดพลาดเพื่อตรวจสอบการตัดคะแนน HP รวมถึงการพรีวิวกราฟสถิติแบบผู้บริหาร
+    </div>
+
+    <span class="mockup-section-label">สลับสาขาจำลอง (Simulated Branch)</span>
+    <div class="mockup-btn-grid">
+      <button id="branch-btn-AKRA" class="mockup-btn active" onclick="setBranch('AKRA')">AKRA (คลังใหญ่)</button>
+      <button id="branch-btn-TRD" class="mockup-btn" onclick="setBranch('TRD')">TRD (หน้าร้าน)</button>
+    </div>
+
+    <span class="mockup-section-label">สิทธิ์ผู้ใช้งาน (Simulated Role)</span>
+    <div class="mockup-btn-grid" style="grid-template-columns: repeat(3, 1fr);">
+      <button id="role-btn-STAFF" class="mockup-btn active" onclick="setRole('STAFF')">พนักงาน</button>
+      <button id="role-btn-SUPERVISOR" class="mockup-btn" onclick="setRole('SUPERVISOR')">หัวหน้า</button>
+      <button id="role-btn-ADMIN" class="mockup-btn" onclick="setRole('ADMIN')">แอดมิน</button>
+    </div>
+
+    <span class="mockup-section-label">รูปแบบอุปกรณ์ (Simulated Device)</span>
+    <div class="mockup-btn-grid">
+      <button id="btn-device-mobile" class="mockup-btn active" onclick="setDevice('mobile')">MOBILE (390px)</button>
+      <button id="btn-device-desktop" class="mockup-btn" onclick="setDevice('desktop')">DESKTOP</button>
+    </div>
+  </div>
+
+  <!-- Main view containment -->
+  <div id="viewport" class="viewport-container">
+
+    <div class="phone-frame">
+
+      <!-- Simulated Phone Top Status Bar -->
+      <div class="mobile-status-bar">
+        <span>16:34</span>
+        <div>
+          <span>📶 5G</span>
+          <span style="margin-left:6px;">🔋 90%</span>
+        </div>
+      </div>
+
+      <!-- Main Header -->
+      <header>
+        <div class="header-title-area">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+          <div>
+            <div class="header-main-title">KPI <span id="header-branch-lbl" style="color:var(--brand-orange)">AKRA</span></div>
+            <div class="header-sub-title">ระบบประเมินความผิดพลาดการทำงาน</div>
+          </div>
+        </div>
+        <button class="sync-btn" onclick="syncData()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path></svg>
+          ซิงค์
+        </button>
+      </header>
+
+      <!-- App Canvas Scrollable Area -->
+      <div class="canvas" id="canvas-area">
+
+        <!-- ================= VIEW 1: RECORD TAB ================= -->
+        <div id="view-record" class="view-panel active">
+
+          <div class="date-selection">
+            <label class="input-label" style="display:flex; align-items:center; gap:6px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--brand-blue);"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+              วันที่บันทึก (Date)
+            </label>
+            <input type="date" id="record-date" class="input-field" style="background:#fff; font-weight:700; color:var(--brand-blue);">
+          </div>
+
+          <!-- Error Logger Card -->
+          <div class="kpi-card">
+            <div class="kpi-card-header">
+              <div class="kpi-card-title" style="color:var(--danger)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"></polygon><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                <span>บันทึกความผิดพลาด (KPI Errors)</span>
+              </div>
+            </div>
+
+            <div id="error-entries-list"></div>
+
+            <button type="button" class="add-row-btn" onclick="addErrorRow()" style="margin-top:6px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+              เพิ่มรายการความผิดพลาด
+            </button>
+          </div>
+
+          <!-- Daily work numbers (Hidden for TRD) -->
+          <div class="kpi-card" id="volume-record-panel">
+            <div class="kpi-card-header">
+              <div class="kpi-card-title" style="color:var(--brand-blue)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
+                <span>ข้อมูลงานประจำวัน (Work Volumes)</span>
+              </div>
+            </div>
+
+            <div class="vol-row">
+              <div class="vol-info">
+                <span class="vol-title">บิลย้ายคลัง</span>
+                <span class="vol-subtitle">หน้าร้านเบิก</span>
+              </div>
+              <div class="step-control">
+                <button class="step-btn" onclick="stepVol('vol-transfer', -1)">−</button>
+                <input type="number" id="vol-transfer" class="step-input" value="0" min="0">
+                <button class="step-btn" onclick="stepVol('vol-transfer', 1)">+</button>
+              </div>
+            </div>
+
+            <div class="vol-row" style="flex-direction: column; align-items: stretch; gap: 8px;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div class="vol-info">
+                  <span class="vol-title">ลูกค้ามารับที่ร้าน</span>
+                  <span class="vol-subtitle">รับเองคลังใหญ่</span>
+                </div>
+                <div class="step-control">
+                  <button class="step-btn" onclick="stepVol('vol-pickup', -1)">−</button>
+                  <input type="number" id="vol-pickup" class="step-input" value="0" min="0">
+                  <button class="step-btn" onclick="stepVol('vol-pickup', 1)">+</button>
+                </div>
+              </div>
+              <input type="text" id="note-pickup" class="input-field" style="font-size:12px; padding:6px 10px;" placeholder="ระบุชื่อลูกค้า หรือ หมายเหตุเพิ่มเติม...">
+            </div>
+
+            <div class="vol-row" style="flex-direction: column; align-items: stretch; gap: 8px;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div class="vol-info">
+                  <span class="vol-title">ส่งต่างจังหวัด (ตจว.)</span>
+                  <span class="vol-subtitle">ขนส่งเอกชน</span>
+                </div>
+                <div class="step-control">
+                  <button class="step-btn" onclick="stepVol('vol-upcountry', -1)">−</button>
+                  <input type="number" id="vol-upcountry" class="step-input" value="0" min="0">
+                  <button class="step-btn" onclick="stepVol('vol-upcountry', 1)">+</button>
+                </div>
+              </div>
+              <input type="text" id="note-upcountry" class="input-field" style="font-size:12px; padding:6px 10px;" placeholder="ระบุชื่อลูกค้า หรือ ขนส่ง/จังหวัด...">
+            </div>
+
+            <div class="vol-row" style="flex-direction: column; align-items: stretch; gap: 8px;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div class="vol-info">
+                  <span class="vol-title">ส่งในตลาด</span>
+                  <span class="vol-subtitle">มอเตอร์ไซค์/รถเข็น</span>
+                </div>
+                <div class="step-control">
+                  <button class="step-btn" onclick="stepVol('vol-inmarket', -1)">−</button>
+                  <input type="number" id="vol-inmarket" class="step-input" value="0" min="0">
+                  <button class="step-btn" onclick="stepVol('vol-inmarket', 1)">+</button>
+                </div>
+              </div>
+              <input type="text" id="note-inmarket" class="input-field" style="font-size:12px; padding:6px 10px;" placeholder="ระบุชื่อร้านในตลาด...">
+            </div>
+
+            <div class="vol-row" style="flex-direction: column; align-items: stretch; gap: 8px; border:none; margin-bottom:0; padding-bottom:0;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div class="vol-info">
+                  <span class="vol-title">ส่งนอกตลาด</span>
+                  <span class="vol-subtitle">กระบะ/รถใหญ่</span>
+                </div>
+                <div class="step-control">
+                  <button class="step-btn" onclick="stepVol('vol-outmarket', -1)">−</button>
+                  <input type="number" id="vol-outmarket" class="step-input" value="0" min="0">
+                  <button class="step-btn" onclick="stepVol('vol-outmarket', 1)">+</button>
+                </div>
+              </div>
+              <input type="text" id="note-outmarket" class="input-field" style="font-size:12px; padding:6px 10px;" placeholder="ระบุชื่อโรงงาน/ร้านค้านอกพื้นที่...">
+            </div>
+
+          </div>
+
+          <!-- Weekly plans checklist -->
+          <div class="kpi-card">
+            <div class="kpi-card-header">
+              <div class="kpi-card-title" style="color:var(--purple)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                <span>แผนงานสัปดาห์นี้ (Weekly Tasks)</span>
+              </div>
+            </div>
+
+            <div id="weekly-tasks-list"></div>
+
+            <button type="button" class="add-row-btn" onclick="addTaskRow()" style="margin-top:6px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+              เพิ่มแผนงานใหม่
+            </button>
+          </div>
+
+          <!-- Sticky save action -->
+          <div class="sticky-save-bar">
+            <button class="save-btn" onclick="submitRecord()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21.2 15a2 2 0 0 1-2 2H4.8a2 2 0 0 1-2-2V4.8a2 2 0 0 1 2-2h8.4l6 6Z"></path><polyline points="14.4 2.8 14.4 8.8 20.4 8.8"></polyline><polyline points="6 14.4 18 14.4"></polyline></button>
+              <span>บันทึกข้อมูลส่งเข้าระบบ (Save)</span>
+            </button>
+          </div>
+
+        </div>
+
+        <!-- ================= VIEW 2: DASHBOARD TAB ================= -->
+        <div id="view-dashboard" class="view-panel">
+
+          <div class="week-navigator">
+            <button class="nav-arrow-btn" onclick="adjustWeek(-1)">◀</button>
+            <div style="text-align:center;">
+              <div id="dash-week-title" style="font-size:13px; font-weight:800; color:#1e293b;">สัปดาห์นี้ (วีคปัจจุบัน)</div>
+              <div id="dash-week-range" style="font-size:10px; color:var(--muted); margin-top:2px;">22/06/2026 - 28/06/2026</div>
+            </div>
+            <button class="nav-arrow-btn" id="dash-next-week-btn" onclick="adjustWeek(1)" disabled>▶</button>
+          </div>
+
+          <!-- Metrics overview -->
+          <div class="metric-grid">
+            <div class="metric-box border-red">
+              <div class="metric-label">ความผิดพลาด</div>
+              <div class="metric-value" id="stat-errors-count">0</div>
+              <div class="metric-trend" id="stat-errors-compare" style="color:var(--muted)">ครั้ง</div>
+            </div>
+            <div class="metric-box border-blue" id="dash-volume-metric">
+              <div class="metric-label">ปริมาณงาน</div>
+              <div class="metric-value" id="stat-volume-count">0</div>
+              <div class="metric-trend" style="color:var(--brand-blue)">บิล</div>
+            </div>
+            <div class="metric-box border-green" id="dash-err-rate-metric">
+              <div class="metric-label">อัตราข้อผิดพลาด</div>
+              <div class="metric-value" id="stat-err-rate">0%</div>
+              <div class="metric-trend" id="stat-rate-tone" style="color:var(--success)">ดีเยี่ยม</div>
+            </div>
+          </div>
+
+          <!-- Dynamic SVG Trend Charts -->
+          <div class="kpi-card">
+            <div class="kpi-card-header">
+              <div class="kpi-card-title">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--brand-blue);"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+                <span>แนวโน้มความผิดพลาดสะสม (Errors Trend)</span>
+              </div>
+            </div>
+            <div class="chart-container">
+              <svg class="chart-svg" id="error-trend-svg" viewBox="0 0 350 120">
+                <defs>
+                  <linearGradient id="blue-grad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="var(--brand-blue)" />
+                    <stop offset="100%" stop-color="#fff" />
+                  </linearGradient>
+                </defs>
+                <!-- Rendered dynamically -->
+              </svg>
+            </div>
+          </div>
+
+          <!-- AI Insight Summary block -->
+          <div class="ai-summary-card">
+            <svg class="ai-sparkle" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"></path></svg>
+            <h4 style="font-size:13px; font-weight:700; color:#4f46e5; display:flex; align-items:center; gap:6px;">
+              💡 บทวิเคราะห์อัจฉริยะ (AI Smart Summary)
+            </h4>
+            <div id="ai-smart-summary-text" style="font-size:11px; color:#374151; margin-top:8px; line-height:1.5;">
+              ไม่พบข้อมูลความผิดพลาดสะสมในรอบสัปดาห์นี้ ทีมทำผลงานได้ยอดเยี่ยม ปริมาณงานทรงตัว
+            </div>
+          </div>
+
+          <!-- HP Gamification Leaderboard -->
+          <div class="kpi-card">
+            <div class="kpi-card-header">
+              <div class="kpi-card-title" style="color:var(--brand-orange)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>
+                <span>จัดอันดับความถูกต้องพนักงาน (HP Leaderboard)</span>
+              </div>
+              <span style="font-size: 10px; color:var(--muted); font-weight:700;">เริ่มต้น 100 HP</span>
+            </div>
+
+            <div class="leaderboard-list" id="leaderboard-target">
+              <!-- Inline JS injection -->
+            </div>
+          </div>
+
+          <!-- Tasks list status -->
+          <div class="kpi-card">
+            <div class="kpi-card-header">
+              <div class="kpi-card-title">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--purple);"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                <span>สถานะแผนงานสัปดาห์นี้</span>
+              </div>
+            </div>
+            <div id="dashboard-tasks-target"></div>
+          </div>
+
+          <!-- Individual detailed notes -->
+          <div class="kpi-card">
+            <div class="kpi-card-header">
+              <div class="kpi-card-title">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--muted);"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                <span>บันทึกประวัติความผิดพลาด</span>
+              </div>
+            </div>
+            <div id="dashboard-notes-target"></div>
+          </div>
+
+          <!-- Customer comments logs -->
+          <div class="kpi-card" id="customer-notes-panel">
+            <div class="kpi-card-header">
+              <div class="kpi-card-title">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--brand-blue);"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                <span>ข้อมูลลูกค้าจัดส่ง/หมายเหตุ</span>
+              </div>
+            </div>
+            <div id="dashboard-custnotes-target"></div>
+          </div>
+
+        </div>
+
+        <!-- ================= VIEW 3: ADMIN SUMMARY TAB ================= -->
+        <div id="view-admin-dash" class="view-panel">
+
+          <div class="admin-filter-bar">
+            <div class="admin-filter-row">
+              <div style="flex: 1;">
+                <label class="input-label">เดือนปีที่ตรวจสอบ</label>
+                <input type="month" id="admin-month-filter" class="input-field" style="background:#fff; font-weight:700;" onchange="renderAdminStats()">
+              </div>
+              <div style="flex: 1;">
+                <label class="input-label">เลือกพนักงาน</label>
+                <select id="admin-emp-filter" class="input-field" style="background:#fff; font-weight:700;" onchange="renderAdminStats()">
+                  <option value="ALL">รวมพนักงานทุกคน</option>
+                  <!-- Populated dynamically -->
+                </select>
+              </div>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
+              <span style="font-size:10px; color:var(--muted); font-weight:700;">ตรวจสอบภาพรวมทั้งบริษัท</span>
+              <button class="export-btn" onclick="triggerCsvExport()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                Export CSV
+              </button>
+            </div>
+          </div>
+
+          <!-- Monthly aggregate statistics cards -->
+          <div class="metric-grid">
+            <div class="metric-box border-red">
+              <div class="metric-label">ความผิดพลาดสะสม</div>
+              <div class="metric-value" id="admin-month-errors">0</div>
+              <div class="metric-trend" style="color:var(--danger)">ครั้งในเดือนนี้</div>
+            </div>
+            <div class="metric-box border-blue" id="admin-month-volume-box">
+              <div class="metric-label">ปริมาณงานสะสม</div>
+              <div class="metric-value" id="admin-month-volume">0</div>
+              <div class="metric-trend" style="color:var(--brand-blue)">บิลทั้งหมด</div>
+            </div>
+            <div class="metric-box border-green" id="admin-month-percent-box">
+              <div class="metric-label">อัตราผิดสะสม</div>
+              <div class="metric-value" id="admin-month-rate">0%</div>
+              <div class="metric-trend" style="color:var(--success)">ของบิลทั้งหมด</div>
+            </div>
+          </div>
+
+          <!-- Monthly top 5 errors maker list -->
+          <div class="kpi-card">
+            <div class="kpi-card-header">
+              <div class="kpi-card-title">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--brand-orange);"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                <span>พนักงานที่ผิดพลาดสูงสุด 5 อันดับ (Top 5 Monthly Errors)</span>
+              </div>
+            </div>
+
+            <div class="chart-container">
+              <svg class="chart-svg" id="admin-top5-svg" viewBox="0 0 350 120">
+                <!-- Top 5 bar chart SVG injected dynamically -->
+              </svg>
+            </div>
+          </div>
+
+          <!-- Entire Monthly detailed error log -->
+          <div class="kpi-card">
+            <div class="kpi-card-header">
+              <div class="kpi-card-title">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--brand-blue);"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                <span>บันทึกความผิดพลาดทั้งหมดประจำเดือน</span>
+              </div>
+            </div>
+
+            <div id="admin-monthly-logs-target" style="display:flex; flex-direction:column; gap:8px;">
+              <!-- Inject logs -->
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ================= VIEW 4: ADMIN SETTINGS TAB ================= -->
+        <div id="view-admin" class="view-panel">
+
+          <!-- Employee management form -->
+          <div class="kpi-card">
+            <div class="kpi-card-header">
+              <div class="kpi-card-title" style="color:var(--brand-blue)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
+                <span>เพิ่ม / แก้ไขพนักงาน (Manage Roster)</span>
+              </div>
+            </div>
+
+            <form id="admin-roster-form" onsubmit="handleEmployeeSubmit(event)">
+              <input type="hidden" id="emp-uid-key" value="">
+
+              <div class="input-group">
+                <label class="input-label">รหัสพนักงาน (UID / English ID) *</label>
+                <input type="text" id="emp-uid" class="input-field" placeholder="เช่น 250088 หรือ anan" required style="background:#fff;">
+              </div>
+
+              <div class="input-group">
+                <label class="input-label">ชื่อพนักงาน (ภาษาไทย สำหรับแสดงผล) *</label>
+                <input type="text" id="emp-name" class="input-field" placeholder="เช่น อนันต์" required style="background:#fff;">
+              </div>
+
+              <div class="input-group">
+                <label class="input-label">สาขาที่สังกัด (Branch Access)</label>
+                <div style="display:flex; gap:12px; margin-top:4px;">
+                  <label style="display:flex; align-items:center; gap:6px; font-size:13px; font-weight:700; cursor:pointer;">
+                    <input type="checkbox" id="emp-branch-akra" checked style="width:16px; height:16px;"> AKRA
+                  </label>
+                  <label style="display:flex; align-items:center; gap:6px; font-size:13px; font-weight:700; cursor:pointer;">
+                    <input type="checkbox" id="emp-branch-trd" style="width:16px; height:16px;" onchange="toggleRosterDept()"> TRD
+                  </label>
+                </div>
+              </div>
+
+              <div class="input-group" id="roster-dept-group" style="display:none;">
+                <label class="input-label">แผนก (สำหรับสาขา TRD)</label>
+                <select id="emp-dept" class="input-field" style="background:#fff;">
+                  <option value="">-- ไม่ระบุ --</option>
+                  <option value="หน้าร้าน/ในร้าน">หน้าร้าน/ในร้าน</option>
+                  <option value="แคชเชียร์">แคชเชียร์</option>
+                  <option value="คลัง">คลัง</option>
+                </select>
+              </div>
+
+              <div style="display:flex; gap:8px; margin-top:14px;">
+                <button type="submit" id="emp-submit-btn" class="save-btn" style="flex:2;">เพิ่มเข้าสู่รายชื่อ</button>
+                <button type="button" id="emp-cancel-btn" class="save-btn" style="flex:1; background:#9ca3af; display:none;" onclick="cancelRosterEdit()">ยกเลิก</button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Employee roster list -->
+          <div class="kpi-card">
+            <div class="kpi-card-header">
+              <div class="kpi-card-title">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--purple);"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                <span>รายชื่อพนักงานทั้งหมด (<span id="settings-roster-count">0</span> คน)</span>
+              </div>
+            </div>
+
+            <div id="settings-roster-list" style="display:flex; flex-direction:column; gap:6px;">
+              <!-- Inject roster list dynamically -->
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- Toast Popup Box inside viewport -->
+      <div id="toast" class="toast-box">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="toast-icon"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        <span id="toast-text">บันทึกสำเร็จ</span>
+      </div>
+
+      <!-- Footer tab navigator -->
+      <div class="footer-tabs" id="footer-navigation-tabs">
+        <button class="tab-item active" onclick="switchActiveTab('record')">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4z"></path></svg>
+          <span style="font-size:10px; margin-top:2px;">บันทึก</span>
+        </button>
+        <button class="tab-item" onclick="switchActiveTab('dashboard')">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 2v10l6 6"></path></svg>
+          <span style="font-size:10px; margin-top:2px;">แดชบอร์ด</span>
+        </button>
+        <button class="tab-item" id="nav-tab-admin-dash" onclick="switchActiveTab('admin-dash')" style="display: none;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+          <span style="font-size:10px; margin-top:2px;">ภาพรวม</span>
+        </button>
+        <button class="tab-item" id="nav-tab-admin" onclick="switchActiveTab('admin')" style="display: none;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+          <span style="font-size:10px; margin-top:2px;">ตั้งค่า</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- JavaScript logic to power the mock-up interaction -->
+  <script>
+    // Initial static mock database of employees
+    const DEFAULT_ROSTER = [
+      { uid: "250001", name: "สมศักดิ์", branches: ["AKRA"], dept: "" },
+      { uid: "250002", name: "สุมิตร", branches: ["AKRA"], dept: "" },
+      { uid: "250003", name: "อนันต์", branches: ["AKRA", "TRD"], dept: "คลัง" },
+      { uid: "250004", name: "ชัยชนะ", branches: ["AKRA"], dept: "" },
+      { uid: "250005", name: "สมชาย", branches: ["TRD"], dept: "หน้าร้าน/ในร้าน" },
+      { uid: "250006", name: "พิมพ์ใจ", branches: ["TRD"], dept: "แคชเชียร์" },
+      { uid: "250007", name: "วิศรุต", branches: ["TRD"], dept: "คลัง" },
+      { uid: "250008", name: "ประเสริฐ", branches: ["AKRA", "TRD"], dept: "" }
+    ];
+
+    // Initial log of error entries for dynamic mockup statistics (loaded to localStorage)
+    const DEFAULT_ERROR_LOGS = [
+      // 22-06-2026 logs
+      { date: "2026-06-22", employee: "สุมิตร", branch: "AKRA", type: "จัดสินค้าไม่ครบตามบิล", severity: "Low", desc: "ขาดแคลนสับปะรดกวน 1 ถุงในกล่องใหญ่" },
+      { date: "2026-06-22", employee: "อนันต์", branch: "AKRA", type: "วางสินค้าผิดตําแหน่งชั้นคลัง", severity: "Medium", desc: "วางถุงแป้งในโซน W2-3F-A แทนที่จะเป็น W2-1F" },
+      { date: "2026-06-22", employee: "สมชาย", branch: "TRD", type: "คีย์ยอดสินค้าหน้าร้านผิดพลาด", severity: "Low", desc: "พิมพ์ยอดรับแป้งผิดใบรับ" },
+
+      // 21-06-2026 logs
+      { date: "2026-06-21", employee: "ชัยชนะ", branch: "AKRA", type: "แพ็คสินค้าชำรุดเสียหาย", severity: "High", desc: "ทำกล่องแป้งสีกระดาษตกหล่นฉีกขาดขณะยกพาเลท" },
+      { date: "2026-06-21", employee: "พิมพ์ใจ", branch: "TRD", type: "คิดเงินทอนผิดพลาด", severity: "Medium", desc: "ทอนเงินให้ลูกค้าเกินไป 100 บาท ตรวจสอบเจอตอนบ่าย" },
+
+      // 20-06-2026 logs
+      { date: "2026-06-20", employee: "สุมิตร", branch: "AKRA", type: "จัดสินค้าไม่ครบตามบิล", severity: "Low", desc: "จัดน้ำมันพืชตกหล่น 1 ขวด" }
+    ];
+
+    // Daily volume logs (WMS only)
+    const DEFAULT_VOLUME_LOGS = {
+      "2026-06-22": { transfer: 12, pickup: 4, upcountry: 8, inmarket: 15, outmarket: 6, note_pickup: "สมควรพาณิชย์", note_upcountry: "เอกขนส่ง/เชียงใหม่", note_inmarket: "ร้านเจ๊แดงตลาดเก่า", note_outmarket: "บจก.อาหารไทย" },
+      "2026-06-21": { transfer: 9, pickup: 2, upcountry: 14, inmarket: 10, outmarket: 4, note_pickup: "คุณพนิดา", note_upcountry: "ด่วนเอกเพรส/ขอนแก่น", note_inmarket: "ร้านแป้งนุ่ม", note_outmarket: "ร้านสุโขทัยค้าส่ง" },
+      "2026-06-20": { transfer: 15, pickup: 5, upcountry: 7, inmarket: 18, outmarket: 8, note_pickup: "เฮียหมูมารับแป้ง", note_upcountry: "ไทยพัสดุ/ระยอง", note_inmarket: "เจ๊หมวยเบเกอรี่", note_outmarket: "บจก.รวมมิตรฟู้ด" }
+    };
+
+    // Weekly tasks
+    const DEFAULT_TASKS = [
+      { id: 1, title: "เคลียร์เศษวัสดุกล่องกระดาษคลังสินค้า W5", assignee: "อนันต์", status: "Completed", date: "2026-06-22" },
+      { id: 2, title: "นับสต๊อกแป้งสาลีและกล่องกระดาษยอดกลางเดือน", assignee: "ชัยชนะ", status: "In progress", date: "2026-06-22" },
+      { id: 3, title: "ตรวจสอบตำแหน่งจัดเก็บถังแกลลอนใหม่โซน C1", assignee: "สุมิตร", status: "Not started", date: "2026-06-22" },
+      { id: 4, title: "เช็คสต๊อกป้ายราคาสินค้าและป้ายโปรโมชั่นหน้าร้าน", assignee: "สมชาย", status: "Completed", date: "2026-06-22" }
+    ];
+
+    // Global variables
+    let currentBranch = 'AKRA'; // AKRA / TRD
+    let currentRole = 'STAFF'; // STAFF / SUPERVISOR / ADMIN
+    let currentActiveTab = 'record'; // record / dashboard / admin-dash / admin
+    let selectedDate = "2026-06-22"; // Set initial date
+    let currentWeekOffset = 0; // 0 = this week, -1 = last week, etc.
+
+    let errorLogs = [];
+    let volumeLogs = {};
+    let taskLogs = [];
+    let roster = [];
+    let errorEntryCount = 0;
+
+    // Load mock database from localStorage
+    function initDatabase() {
+      // Date setup
+      const recordDateInput = document.getElementById('record-date');
+      recordDateInput.value = selectedDate;
+      recordDateInput.addEventListener('change', (e) => {
+        selectedDate = e.target.value;
+        loadDailyVolumes();
+      });
+
+      // Errors
+      const storedErrors = localStorage.getItem('akra_kpi_errors_db');
+      if (storedErrors) errorLogs = JSON.parse(storedErrors);
+      else { errorLogs = [...DEFAULT_ERROR_LOGS]; saveErrors(); }
+
+      // Volumes
+      const storedVolumes = localStorage.getItem('akra_kpi_volumes_db');
+      if (storedVolumes) volumeLogs = JSON.parse(storedVolumes);
+      else { volumeLogs = {...DEFAULT_VOLUME_LOGS}; saveVolumes(); }
+
+      // Tasks
+      const storedTasks = localStorage.getItem('akra_kpi_tasks_db');
+      if (storedTasks) taskLogs = JSON.parse(storedTasks);
+      else { taskLogs = [...DEFAULT_TASKS]; saveTasks(); }
+
+      // Roster
+      const storedRoster = localStorage.getItem('akra_kpi_roster_db');
+      if (storedRoster) roster = JSON.parse(storedRoster);
+      else { roster = [...DEFAULT_ROSTER]; saveRoster(); }
+
+      // UI Init
+      updateRoleAccessibility();
+      setBranch(currentBranch);
+      loadDailyVolumes();
+    }
+
+    function saveErrors() { localStorage.setItem('akra_kpi_errors_db', JSON.stringify(errorLogs)); }
+    function saveVolumes() { localStorage.setItem('akra_kpi_volumes_db', JSON.stringify(volumeLogs)); }
+    function saveTasks() { localStorage.setItem('akra_kpi_tasks_db', JSON.stringify(taskLogs)); }
+    function saveRoster() { localStorage.setItem('akra_kpi_roster_db', JSON.stringify(roster)); }
+
+    // Sync mock script
+    function syncData() {
+      showToast("ซิงค์ข้อมูลกับชีตเรียบร้อย (จำลองสำเร็จ)");
+    }
+
+    // Switcing Branch
+    function setBranch(branchName) {
+      currentBranch = branchName;
+      document.getElementById('header-branch-lbl').innerText = branchName;
+
+      // Update control buttons
+      document.querySelectorAll('.mockup-controls button').forEach(btn => {
+        if (btn.id === `branch-btn-${branchName}`) btn.classList.add('active');
+        else if (btn.id.startsWith('branch-btn-')) btn.classList.remove('active');
+      });
+
+      // Form display adjust
+      const volPanel = document.getElementById('volume-record-panel');
+      const custNotesPanel = document.getElementById('customer-notes-panel');
+      const dashVolumeMetric = document.getElementById('dash-volume-metric');
+      const dashErrRateMetric = document.getElementById('dash-err-rate-metric');
+      const adminMonthVolume = document.getElementById('admin-month-volume-box');
+      const adminMonthPercent = document.getElementById('admin-month-percent-box');
+
+      if (branchName === 'TRD') {
+        volPanel.style.display = 'none';
+        custNotesPanel.style.display = 'none';
+        dashVolumeMetric.style.display = 'none';
+        dashErrRateMetric.style.display = 'none';
+        adminMonthVolume.style.display = 'none';
+        adminMonthPercent.style.display = 'none';
+      } else {
+        volPanel.style.display = 'block';
+        custNotesPanel.style.display = 'block';
+        dashVolumeMetric.style.display = 'block';
+        dashErrRateMetric.style.display = 'block';
+        adminMonthVolume.style.display = 'block';
+        adminMonthPercent.style.display = 'block';
+      }
+
+      // Refresh listings
+      document.getElementById('error-entries-list').innerHTML = '';
+      errorEntryCount = 0;
+      addErrorRow();
+      loadDailyVolumes();
+      refreshDashboard();
+      populateAdminFilters();
+      renderRosterList();
+
+      showToast(`เปลี่ยนสาขาเป็น: ${branchName === 'AKRA' ? 'อัครา (คลัง)' : 'ทีอาร์ดี (หน้าร้าน)'}`);
+    }
+
+    // Role switcher
+    function setRole(roleName) {
+      currentRole = roleName;
+
+      document.querySelectorAll('.mockup-controls button').forEach(btn => {
+        if (btn.id === `role-btn-${roleName}`) btn.classList.add('active');
+        else if (btn.id.startsWith('role-btn-')) btn.classList.remove('active');
+      });
+
+      updateRoleAccessibility();
+      showToast(`เปลี่ยนสิทธิ์ผู้ใช้งานเป็น: ${roleName}`);
+    }
+
+    function updateRoleAccessibility() {
+      const navTabAdminDash = document.getElementById('nav-tab-admin-dash');
+      const navTabAdmin = document.getElementById('nav-tab-admin');
+
+      if (currentRole === 'STAFF') {
+        navTabAdminDash.style.display = 'none';
+        navTabAdmin.style.display = 'none';
+        if (currentActiveTab === 'admin' || currentActiveTab === 'admin-dash') {
+          switchActiveTab('record');
+        }
+      } else if (currentRole === 'SUPERVISOR') {
+        navTabAdminDash.style.display = 'flex';
+        navTabAdmin.style.display = 'none';
+        if (currentActiveTab === 'admin') {
+          switchActiveTab('admin-dash');
+        }
+      } else if (currentRole === 'ADMIN') {
+        navTabAdminDash.style.display = 'flex';
+        navTabAdmin.style.display = 'flex';
+      }
+      refreshDashboard();
+    }
+
+    // Device size modifier
+    function setDevice(deviceType) {
+      const viewport = document.getElementById('viewport');
+      const btnMobile = document.getElementById('btn-device-mobile');
+      const btnDesktop = document.getElementById('btn-device-desktop');
+
+      if (deviceType === 'desktop') {
+        viewport.classList.add('device-desktop');
+        btnDesktop.classList.add('active');
+        btnMobile.classList.remove('active');
+      } else {
+        viewport.classList.remove('device-desktop');
+        btnDesktop.classList.remove('active');
+        btnMobile.classList.add('active');
+      }
+      showToast(`ปรับหน้าแสดงผล: ${deviceType.toUpperCase()}`);
+    }
+
+    // Toast triggers
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toast-text').innerText = message;
+      toast.classList.add('active');
+      setTimeout(() => {
+        toast.classList.remove('active');
+      }, 3000);
+    }
+
+    // View switcher tabs
+    function switchActiveTab(tabName) {
+      currentActiveTab = tabName;
+
+      // Update Tab button active state
+      const tabs = document.querySelectorAll('.footer-tabs .tab-item');
+      tabs.forEach((tab, index) => {
+        // Simple mapping: index 0: record, 1: dashboard, 2: admin-dash, 3: admin
+        let buttonTabName = 'record';
+        if (index === 1) buttonTabName = 'dashboard';
+        if (index === 2) buttonTabName = 'admin-dash';
+        if (index === 3) buttonTabName = 'admin';
+
+        if (buttonTabName === tabName) tab.classList.add('active');
+        else tab.classList.remove('active');
+      });
+
+      // Update visibility panels
+      document.querySelectorAll('.view-panel').forEach(panel => {
+        if (panel.id === `view-${tabName}`) panel.classList.add('active');
+        else panel.classList.remove('active');
+      });
+
+      // Load specific tab data
+      if (tabName === 'dashboard') {
+        refreshDashboard();
+      } else if (tabName === 'admin-dash') {
+        populateAdminFilters();
+        renderAdminStats();
+      } else if (tabName === 'admin') {
+        renderRosterList();
+      }
+    }
+
+    // Step Adjust volumes
+    function stepVol(id, amount) {
+      const input = document.getElementById(id);
+      let val = parseInt(input.value) || 0;
+      val += amount;
+      if (val < 0) val = 0;
+      input.value = val;
+    }
+
+    // Load and store daily volume values
+    function loadDailyVolumes() {
+      const data = volumeLogs[selectedDate] || { transfer: 0, pickup: 0, upcountry: 0, inmarket: 0, outmarket: 0, note_pickup: "", note_upcountry: "", note_inmarket: "", note_outmarket: "" };
+
+      document.getElementById('vol-transfer').value = data.transfer || 0;
+      document.getElementById('vol-pickup').value = data.pickup || 0;
+      document.getElementById('vol-upcountry').value = data.upcountry || 0;
+      document.getElementById('vol-inmarket').value = data.inmarket || 0;
+      document.getElementById('vol-outmarket').value = data.outmarket || 0;
+
+      document.getElementById('note-pickup').value = data.note_pickup || "";
+      document.getElementById('note-upcountry').value = data.note_upcountry || "";
+      document.getElementById('note-inmarket').value = data.note_inmarket || "";
+      document.getElementById('note-outmarket').value = data.note_outmarket || "";
+
+      // Load specific date task listing
+      renderRecordTasks();
+    }
+
+    // Error Row Builder
+    function addErrorRow() {
+      errorEntryCount++;
+      const rowId = `err-row-${errorEntryCount}`;
+      const container = document.getElementById('error-entries-list');
+
+      // Populate employee selections based on current branch
+      const branchEmployees = roster.filter(e => e.branches.includes(currentBranch));
+      let optHtml = '<option value="" disabled selected>เลือกพนักงาน...</option>';
+      branchEmployees.forEach(emp => {
+        optHtml += `<option value="${emp.name}">${emp.name} (${emp.uid})</option>`;
+      });
+
+      // Error categories
+      const errorsList = [
+        "จัดสินค้าไม่ครบตามบิล",
+        "จัดสินค้าผิดตําแหน่งชั้นคลัง",
+        "วางสินค้าผิดตําแหน่งชั้นคลัง",
+        "แพ็คสินค้าชำรุดเสียหาย",
+        "ป้อนบิลเข้าคลังผิดยอด",
+        "คิดเงินทอนผิดพลาด (TRD)",
+        "คีย์ยอดสินค้าหน้าร้านผิดพลาด",
+        "อื่น ๆ"
+      ];
+      let errOptHtml = '<option value="" disabled selected>ประเภทความผิดพลาด...</option>';
+      errorsList.forEach(err => {
+        errOptHtml += `<option value="${err}">${err}</option>`;
+      });
+
+      const div = document.createElement('div');
+      div.className = "entry-row";
+      div.id = rowId;
+      div.innerHTML = `
+        <button type="button" class="entry-remove-btn" onclick="removeErrorRow('${rowId}')">✕</button>
+        <div class="entry-grid">
+          <div>
+            <label class="input-label">พนักงานที่ผิดพลาด *</label>
+            <select id="${rowId}-emp" class="input-field pr-err-emp" required style="background:#fff; font-weight:600;">
+              ${optHtml}
+            </select>
+          </div>
+          <div>
+            <label class="input-label">ประเภทความผิด *</label>
+            <select id="${rowId}-type" class="input-field pr-err-type" required style="background:#fff;">
+              ${errOptHtml}
+            </select>
+          </div>
+        </div>
+
+        <div class="entry-grid" style="grid-template-columns: 1fr 2fr;">
+          <div>
+            <label class="input-label">ความรุนแรง</label>
+            <select id="${rowId}-severity" class="input-field" style="background:#fff; font-weight:700; color:var(--brand-orange);">
+              <option value="Low" selected>Low (-5 HP)</option>
+              <option value="Medium">Medium (-15 HP)</option>
+              <option value="High">High (-30 HP)</option>
+            </select>
+          </div>
+          <div>
+            <label class="input-label">คำอธิบาย/หมายเหตุ</label>
+            <input type="text" id="${rowId}-desc" class="input-field" placeholder="ระบุเหตุการณ์ เช่น ขาดน้ำมัน 2 ขวด..." style="background:#fff;">
+          </div>
+        </div>
+      `;
+      container.appendChild(div);
+    }
+
+    function removeErrorRow(rowId) {
+      const container = document.getElementById('error-entries-list');
+      if (container.children.length > 1) {
+        document.getElementById(rowId).remove();
+        showToast("ลบรายการความผิดพลาดออก");
+      } else {
+        showToast("อย่างน้อยต้องมี 1 ช่องรายการ");
+      }
+    }
+
+    // Weekly Tasks in record view
+    function renderRecordTasks() {
+      const listContainer = document.getElementById('weekly-tasks-list');
+      listContainer.innerHTML = '';
+
+      const todayTasks = taskLogs.filter(t => t.date === selectedDate);
+      if (todayTasks.length === 0) {
+        // Pre-populate with default layout if empty
+        const defaultTasksTitles = [
+          "ตรวจสต็อกแป้งสาลีชั้น 1-2",
+          "เคลียร์พื้นที่เก็บกล่องกระดาษชำรุด",
+          "ซ่อมบำรุงรถเข็นจัดสินค้าเบอร์ 2"
+        ];
+        defaultTasksTitles.forEach((title, idx) => {
+          taskLogs.push({
+            id: Date.now() + idx,
+            title: title,
+            assignee: roster[idx % roster.length].name,
+            status: "Not started",
+            date: selectedDate
+          });
+        });
+        saveTasks();
+      }
+
+      const activeTasks = taskLogs.filter(t => t.date === selectedDate);
+      activeTasks.forEach((task, index) => {
+        const rowId = `task-row-${task.id}`;
+
+        const branchEmployees = roster.filter(e => e.branches.includes(currentBranch));
+        let assignOptHtml = `<option value="">-- เลือกผู้รับผิดชอบ --</option>`;
+        branchEmployees.forEach(emp => {
+          const sel = emp.name === task.assignee ? 'selected' : '';
+          assignOptHtml += `<option value="${emp.name}" ${sel}>${emp.name}</option>`;
+        });
+
+        const div = document.createElement('div');
+        div.className = "entry-row";
+        div.id = rowId;
+        div.innerHTML = `
+          <div style="font-size:12px; font-weight:700; color:var(--brand-blue); margin-bottom:4px;">แผนงานข้อที่ ${index + 1}</div>
+          <div class="input-group">
+            <input type="text" id="${rowId}-title" class="input-field" value="${task.title}" placeholder="ระบุชื่องานที่ต้องทำ..." style="background:#fff;" onchange="updateTaskField(${task.id}, 'title', this.value)">
+          </div>
+          <div class="entry-grid" style="margin-top:6px; margin-bottom:0;">
+            <div>
+              <label class="input-label">ผู้รับผิดชอบ</label>
+              <select id="${rowId}-assignee" class="input-field" style="background:#fff; font-weight:600;" onchange="updateTaskField(${task.id}, 'assignee', this.value)">
+                ${assignOptHtml}
+              </select>
+            </div>
+            <div>
+              <label class="input-label">สถานะ</label>
+              <select id="${rowId}-status" class="input-field" style="background:#fff; font-weight:700;" onchange="updateTaskField(${task.id}, 'status', this.value)">
+                <option value="Not started" ${task.status === 'Not started' ? 'selected' : ''}>ยังไม่เริ่ม</option>
+                <option value="In progress" ${task.status === 'In progress' ? 'selected' : ''}>กำลังดำเนินงาน</option>
+                <option value="Completed" ${task.status === 'Completed' ? 'selected' : ''}>เสร็จสิ้น</option>
+              </select>
+            </div>
+          </div>
+        `;
+        listContainer.appendChild(div);
+      });
+    }
+
+    function updateTaskField(taskId, fieldName, value) {
+      const idx = taskLogs.findIndex(t => t.id === taskId);
+      if (idx !== -1) {
+        taskLogs[idx][fieldName] = value;
+        saveTasks();
+      }
+    }
+
+    function addTaskRow() {
+      const newTask = {
+        id: Date.now(),
+        title: "",
+        assignee: "",
+        status: "Not started",
+        date: selectedDate
+      };
+      taskLogs.push(newTask);
+      saveTasks();
+      renderRecordTasks();
+      showToast("เพิ่มช่องกรอกแผนงานใหม่");
+    }
+
+    // Submit Record
+    function submitRecord() {
+      const errRows = document.querySelectorAll('#error-entries-list .entry-row');
+      let validated = true;
+
+      // 1. Save volumes
+      if (currentBranch === 'AKRA') {
+        const transfer = parseInt(document.getElementById('vol-transfer').value) || 0;
+        const pickup = parseInt(document.getElementById('vol-pickup').value) || 0;
+        const upcountry = parseInt(document.getElementById('vol-upcountry').value) || 0;
+        const inmarket = parseInt(document.getElementById('vol-inmarket').value) || 0;
+        const outmarket = parseInt(document.getElementById('vol-outmarket').value) || 0;
+
+        const note_pickup = document.getElementById('note-pickup').value.trim();
+        const note_upcountry = document.getElementById('note-upcountry').value.trim();
+        const note_inmarket = document.getElementById('note-inmarket').value.trim();
+        const note_outmarket = document.getElementById('note-outmarket').value.trim();
+
+        volumeLogs[selectedDate] = {
+          transfer, pickup, upcountry, inmarket, outmarket,
+          note_pickup, note_upcountry, note_inmarket, note_outmarket
+        };
+        saveVolumes();
+      }
+
+      // 2. Save errors
+      errRows.forEach(row => {
+        const id = row.id;
+        const empVal = document.getElementById(`${id}-emp`).value;
+        const typeVal = document.getElementById(`${id}-type`).value;
+        const severityVal = document.getElementById(`${id}-severity`).value;
+        const descVal = document.getElementById(`${id}-desc`).value.trim();
+
+        if (empVal && typeVal) {
+          // Check duplicate for same date/employee/type/desc to prevent spam
+          const isDup = errorLogs.some(l =>
+            l.date === selectedDate && l.employee === empVal && l.type === typeVal && l.desc === descVal
+          );
+
+          if (!isDup) {
+            errorLogs.push({
+              date: selectedDate,
+              employee: empVal,
+              branch: currentBranch,
+              type: typeVal,
+              severity: severityVal,
+              desc: descVal
+            });
+          }
+        }
+      });
+      saveErrors();
+
+      // Clear record logs
+      document.getElementById('error-entries-list').innerHTML = '';
+      errorEntryCount = 0;
+      addErrorRow();
+
+      showToast("บันทึกข้อมูลเข้าระบบเรียบร้อยแล้ว!");
+
+      // Auto move to dashboard to see effects
+      setTimeout(() => {
+        switchActiveTab('dashboard');
+      }, 500);
+    }
+
+    // Dashboard navigation offset
+    function adjustWeek(offset) {
+      currentWeekOffset += offset;
+      const nextBtn = document.getElementById('dash-next-week-btn');
+
+      if (currentWeekOffset === 0) {
+        document.getElementById('dash-week-title').innerText = "สัปดาห์นี้ (วีคปัจจุบัน)";
+        nextBtn.setAttribute('disabled', true);
+      } else {
+        document.getElementById('dash-week-title').innerText = `ย้อนหลัง ${Math.abs(currentWeekOffset)} สัปดาห์`;
+        nextBtn.removeAttribute('disabled');
+      }
+
+      // Shift date display range (approx 7 days range)
+      const baseDate = new Date("2026-06-22");
+      baseDate.setDate(baseDate.getDate() + (currentWeekOffset * 7));
+
+      const endDate = new Date(baseDate);
+      endDate.setDate(endDate.getDate() + 6);
+
+      const d1 = baseDate.toLocaleDateString('th-TH', {day:'2-digit', month:'2-digit', year:'numeric'});
+      const d2 = endDate.toLocaleDateString('th-TH', {day:'2-digit', month:'2-digit', year:'numeric'});
+      document.getElementById('dash-week-range').innerText = `${d1} - ${d2}`;
+
+      refreshDashboard();
+    }
+
+    // Refresh Dashboard stats
+    function refreshDashboard() {
+      // Calculate current date range limits
+      const baseDate = new Date("2026-06-22");
+      baseDate.setDate(baseDate.getDate() + (currentWeekOffset * 7));
+
+      const datesInWeek = [];
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(baseDate);
+        d.setDate(d.getDate() + i);
+        datesInWeek.push(d.toISOString().slice(0,10));
+      }
+
+      // Filter errors
+      const weeklyErrors = errorLogs.filter(e =>
+        e.branch === currentBranch && datesInWeek.includes(e.date)
+      );
+
+      // Filter volumes (only for AKRA)
+      let totalVolume = 0;
+      if (currentBranch === 'AKRA') {
+        datesInWeek.forEach(dt => {
+          const d = volumeLogs[dt];
+          if (d) {
+            totalVolume += (d.transfer || 0) + (d.pickup || 0) + (d.upcountry || 0) + (d.inmarket || 0) + (d.outmarket || 0);
+          }
+        });
+      }
+
+      // Set statistics labels
+      document.getElementById('stat-errors-count').innerText = weeklyErrors.length;
+      document.getElementById('stat-volume-count').innerText = totalVolume;
+
+      // Rate calculations
+      if (currentBranch === 'AKRA') {
+        const rate = totalVolume > 0 ? ((weeklyErrors.length / totalVolume) * 100).toFixed(1) : "0.0";
+        document.getElementById('stat-err-rate').innerText = `${rate}%`;
+        const toneEl = document.getElementById('stat-rate-tone');
+        if (parseFloat(rate) <= 1.0) {
+          toneEl.innerText = "ดีเยี่ยม";
+          toneEl.style.color = "var(--success)";
+        } else if (parseFloat(rate) <= 3.0) {
+          toneEl.innerText = "ปกติ";
+          toneEl.style.color = "var(--warning)";
+        } else {
+          toneEl.innerText = "ต้องปรับปรุง";
+          toneEl.style.color = "var(--danger)";
+        }
+      }
+
+      // Draw SVG Line Chart
+      drawTrendLineChart(datesInWeek);
+
+      // Dynamic AI summary recommendation
+      const aiText = document.getElementById('ai-smart-summary-text');
+      if (weeklyErrors.length === 0) {
+        aiText.innerText = "💡 สัปดาห์นี้การทำงานมีความละเอียดรอบคอบดีเยี่ยม ปริมาณผิดพลาดเป็นศูนย์ สามารถจัดการสต๊อกส่งมอบลูกค้าได้ตามเป้าหมาย (KPI 100%)";
+      } else {
+        // Aggregate top error type
+        const errTypes = {};
+        weeklyErrors.forEach(e => errTypes[e.type] = (errTypes[e.type] || 0) + 1);
+        let topType = "";
+        let maxCount = 0;
+        for (let t in errTypes) {
+          if (errTypes[t] > maxCount) { topType = t; maxCount = errTypes[t]; }
+        }
+        aiText.innerHTML = `⚠️ พบจุดบกพร่องสะสมจำนวน <strong>${weeklyErrors.length} ครั้ง</strong> สัปดาห์นี้ ความบกพร่องอันดับสูงสุดคือ <strong>"${topType}"</strong> (${maxCount} ครั้ง) แนะนำให้หัวหน้าคลังสินค้าจัดบรีฟสั้น (Morning Brief) เน้นย้ำขั้นตอนคีย์ข้อมูลจัดส่งและจัดระเบียบพาเลท`;
+      }
+
+      // Ranks Leaders (HP)
+      renderLeaderboard(weeklyErrors);
+
+      // Tasks status
+      renderDashboardTasks(datesInWeek);
+
+      // History logs
+      renderDashboardLogs(weeklyErrors, datesInWeek);
+    }
+
+    // Dynamic SVG Line chart drawing
+    function drawTrendLineChart(datesInWeek) {
+      const svg = document.getElementById('error-trend-svg');
+      svg.innerHTML = `
+        <defs>
+          <linearGradient id="blue-grad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="var(--brand-blue)" />
+            <stop offset="100%" stop-color="#fff" />
+          </linearGradient>
+        </defs>
+      `;
+
+      // Aggregate counts by day in datesInWeek
+      const counts = datesInWeek.map(dt => {
+        return errorLogs.filter(e => e.branch === currentBranch && e.date === dt).length;
+      });
+
+      // Max count for scaling
+      const maxCount = Math.max(...counts, 4); // default minimum ceiling 4
+
+      // Layout constants
+      const w = 350;
+      const h = 120;
+      const paddingLeft = 30;
+      const paddingRight = 10;
+      const paddingTop = 15;
+      const paddingBottom = 20;
+
+      const chartW = w - paddingLeft - paddingRight;
+      const chartH = h - paddingTop - paddingBottom;
+
+      // Draw horizontal grids
+      for (let i = 0; i <= 4; i++) {
+        const gridY = paddingTop + (chartH / 4) * i;
+        const valLabel = Math.round(maxCount - (maxCount / 4) * i);
+
+        // Grid Line
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute("x1", paddingLeft);
+        line.setAttribute("y1", gridY);
+        line.setAttribute("x2", w - paddingRight);
+        line.setAttribute("y2", gridY);
+        line.setAttribute("class", "chart-grid-line");
+        svg.appendChild(line);
+
+        // Grid Value label
+        const lbl = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        lbl.setAttribute("x", paddingLeft - 6);
+        lbl.setAttribute("y", gridY + 3);
+        lbl.setAttribute("style", "font-size: 8px; fill:var(--muted); text-anchor:end; font-weight:700;");
+        lbl.textContent = valLabel;
+        svg.appendChild(lbl);
+      }
+
+      // X coordinates & Path definitions
+      const points = [];
+      const stepX = chartW / 6;
+
+      counts.forEach((c, idx) => {
+        const cx = paddingLeft + (stepX * idx);
+        const cy = paddingTop + chartH - ((c / maxCount) * chartH);
+        points.push({x: cx, y: cy, val: c, date: datesInWeek[idx]});
+      });
+
+      // Draw area under line
+      let pathAreaD = `M ${points[0].x} ${paddingTop + chartH} `;
+      points.forEach(pt => {
+        pathAreaD += `L ${pt.x} ${pt.y} `;
+      });
+      pathAreaD += `L ${points[points.length-1].x} ${paddingTop + chartH} Z`;
+
+      const area = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      area.setAttribute("d", pathAreaD);
+      area.setAttribute("class", "chart-area");
+      svg.appendChild(area);
+
+      // Draw line path
+      let pathD = `M ${points[0].x} ${points[0].y} `;
+      for (let i = 1; i < points.length; i++) {
+        pathD += `L ${points[i].x} ${points[i].y} `;
+      }
+
+      const line = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      line.setAttribute("d", pathD);
+      line.setAttribute("class", "chart-line");
+      svg.appendChild(line);
+
+      // Draw points & Labels
+      points.forEach((pt, idx) => {
+        // Point node circle
+        const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        circle.setAttribute("cx", pt.x);
+        circle.setAttribute("cy", pt.y);
+        circle.setAttribute("r", 3.5);
+        circle.setAttribute("class", "chart-point");
+        svg.appendChild(circle);
+
+        // Tooltip hover node trigger
+        circle.addEventListener('mouseover', () => {
+          circle.setAttribute("r", 5);
+          circle.style.fill = "var(--brand-orange)";
+        });
+        circle.addEventListener('mouseout', () => {
+          circle.setAttribute("r", 3.5);
+          circle.style.fill = "#fff";
+        });
+
+        // X Axis label (day)
+        const dateObj = new Date(pt.date);
+        const dayLblText = dateObj.toLocaleDateString('th-TH', {weekday: 'short'}).replace('.','');
+
+        const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        text.setAttribute("x", pt.x);
+        text.setAttribute("y", h - 4);
+        text.setAttribute("class", "chart-label");
+        text.textContent = dayLblText;
+        svg.appendChild(text);
+      });
+    }
+
+    // Render HP leaderboard rankings
+    function renderLeaderboard(weeklyErrors) {
+      const listContainer = document.getElementById('leaderboard-target');
+      listContainer.innerHTML = '';
+
+      // Get employees list
+      const branchEmployees = roster.filter(e => e.branches.includes(currentBranch));
+
+      const scores = branchEmployees.map(emp => {
+        let hp = 100;
+
+        // Deduct points based on weekly errors
+        const empErrors = weeklyErrors.filter(e => e.employee === emp.name);
+        empErrors.forEach(err => {
+          if (err.severity === 'Low') hp -= 5;
+          if (err.severity === 'Medium') hp -= 15;
+          if (err.severity === 'High') hp -= 30;
+        });
+
+        if (hp < 0) hp = 0;
+        return { name: emp.name, uid: emp.uid, hp: hp, dept: emp.dept || 'ทั่วไป' };
+      });
+
+      // Sort by score desc, then name asc
+      scores.sort((a,b) => b.hp - a.hp || a.name.localeCompare(b.name));
+
+      scores.forEach((sc, idx) => {
+        // Color bounds
+        let strokeColor = "var(--success)";
+        if (sc.hp < 70) strokeColor = "var(--danger)";
+        else if (sc.hp < 90) strokeColor = "var(--warning)";
+
+        // Math for stroke dash offset: radius 12 -> perimeter 75.36
+        const strokeDashOffset = 75.36 - (75.36 * sc.hp / 100);
+
+        const row = document.createElement('div');
+        row.className = "leader-row";
+        row.innerHTML = `
+          <div class="leader-info">
+            <span class="leader-rank">${idx + 1}</span>
+            <div>
+              <span class="leader-name">${sc.name}</span>
+              <span style="font-size:10px; color:var(--muted); display:block;">รหัส ${sc.uid} • แผนก ${sc.dept}</span>
+            </div>
+          </div>
+
+          <div class="leader-score-area">
+            <div class="hp-ring-outer">
+              <svg class="hp-ring-svg">
+                <circle class="hp-ring-bg" cx="16" cy="16" r="12" />
+                <circle class="hp-ring-bar" cx="16" cy="16" r="12"
+                        stroke="${strokeColor}"
+                        stroke-dasharray="75.36"
+                        stroke-dashoffset="${strokeDashOffset}" />
+              </svg>
+              <div class="hp-text">${sc.hp}</div>
+            </div>
+            <span style="font-size:11px; font-weight:700; color:var(--muted);">HP</span>
+          </div>
+        `;
+        listContainer.appendChild(row);
+      });
+    }
+
+    // Render Weekly task log in dashboard
+    function renderDashboardTasks(datesInWeek) {
+      const container = document.getElementById('dashboard-tasks-target');
+      container.innerHTML = '';
+
+      const weeklyTasks = taskLogs.filter(t => datesInWeek.includes(t.date));
+
+      if (weeklyTasks.length === 0) {
+        container.innerHTML = `
+          <div style="font-size:12px; color:var(--muted); text-align:center; padding:10px;">
+            ไม่มีแผนงานสำหรับช่วงสัปดาห์นี้
+          </div>
+        `;
+        return;
+      }
+
+      weeklyTasks.forEach(task => {
+        let stClass = "not-started";
+        let stText = "ยังไม่เริ่ม";
+
+        if (task.status === "Completed") {
+          stClass = "completed";
+          stText = "เสร็จสิ้น";
+        } else if (task.status === "In progress") {
+          stClass = "in-progress";
+          stText = "กำลังทำ";
+        }
+
+        const div = document.createElement('div');
+        div.className = "task-item";
+        div.innerHTML = `
+          <div>
+            <span class="task-title">${task.title || '(ไม่มีชื่องาน)'}</span>
+            <div class="task-meta">ผู้รับผิดชอบ: <strong>${task.assignee || 'ยังไม่มอบหมาย'}</strong> • กำหนด: ${task.date}</div>
+          </div>
+          <span class="task-status-badge ${stClass}" onclick="toggleDashboardTaskStatus(${task.id})">${stText}</span>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function toggleDashboardTaskStatus(taskId) {
+      const idx = taskLogs.findIndex(t => t.id === taskId);
+      if (idx !== -1) {
+        const statuses = ["Not started", "In progress", "Completed"];
+        const currentIdx = statuses.indexOf(taskLogs[idx].status);
+        taskLogs[idx].status = statuses[(currentIdx + 1) % statuses.length];
+        saveTasks();
+        refreshDashboard();
+        showToast("อัปเดตสถานะงานสำเร็จ");
+      }
+    }
+
+    // Render detailed error logs & customer delivery notes
+    function renderDashboardLogs(weeklyErrors, datesInWeek) {
+      const notesContainer = document.getElementById('dashboard-notes-target');
+      notesContainer.innerHTML = '';
+
+      if (weeklyErrors.length === 0) {
+        notesContainer.innerHTML = `
+          <div style="font-size:12px; color:var(--muted); text-align:center; padding:10px;">
+            ไม่มีประวัติความผิดพลาดในรอบสัปดาห์นี้
+          </div>
+        `;
+      } else {
+        weeklyErrors.forEach(err => {
+          let sevColor = "var(--muted)";
+          if (err.severity === "Medium") sevColor = "var(--warning)";
+          if (err.severity === "High") sevColor = "var(--danger)";
+
+          const div = document.createElement('div');
+          div.className = "note-log-item";
+          div.innerHTML = `
+            <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+              <strong>${err.date} • ${err.employee}</strong>
+              <span style="font-weight:800; color:${sevColor};">[${err.severity}]</span>
+            </div>
+            <div style="color:#374151;">ความผิด: <strong>${err.type}</strong></div>
+            ${err.desc ? `<div style="color:var(--muted); margin-top:2px;">คำอธิบาย: ${err.desc}</div>` : ''}
+          `;
+          notesContainer.appendChild(div);
+        });
+      }
+
+      // Customer delivery notes log (only for AKRA)
+      if (currentBranch === 'AKRA') {
+        const custContainer = document.getElementById('dashboard-custnotes-target');
+        custContainer.innerHTML = '';
+
+        const activeVolLogs = [];
+        datesInWeek.forEach(dt => {
+          const log = volumeLogs[dt];
+          if (log && (log.note_pickup || log.note_upcountry || log.note_inmarket || log.note_outmarket)) {
+            activeVolLogs.push({date: dt, data: log});
+          }
+        });
+
+        if (activeVolLogs.length === 0) {
+          custContainer.innerHTML = `
+            <div style="font-size:12px; color:var(--muted); text-align:center; padding:10px;">
+              ไม่มีข้อมูลจัดส่งลูกค้าในรอบสัปดาห์นี้
+            </div>
+          `;
+        } else {
+          activeVolLogs.forEach(log => {
+            const d = log.data;
+            let noteStr = '';
+            if (d.note_pickup) noteStr += `• รับเอง: ${d.note_pickup} (${d.pickup} บิล)<br>`;
+            if (d.note_upcountry) noteStr += `• ตจว: ${d.note_upcountry} (${d.upcountry} บิล)<br>`;
+            if (d.note_inmarket) noteStr += `• ในตลาด: ${d.note_inmarket} (${d.inmarket} บิล)<br>`;
+            if (d.note_outmarket) noteStr += `• นอกตลาด: ${d.note_outmarket} (${d.outmarket} บิล)<br>`;
+
+            const div = document.createElement('div');
+            div.className = "note-log-item";
+            div.innerHTML = `
+              <div style="font-weight:700; margin-bottom:4px;">📅 วันที่ ${log.date}</div>
+              <div style="font-size:10px; color:#4b5563;">
+                ${noteStr}
+              </div>
+            `;
+            custContainer.appendChild(div);
+          });
+        }
+      }
+    }
+
+    // Populates Admin/Executive filters
+    function populateAdminFilters() {
+      // Month
+      const monthFilter = document.getElementById('admin-month-filter');
+      if (!monthFilter.value) {
+        monthFilter.value = "2026-06"; // Default month value
+      }
+
+      // Employees selector
+      const empFilter = document.getElementById('admin-emp-filter');
+      empFilter.innerHTML = '<option value="ALL">รวมพนักงานทุกคน (ALL)</option>';
+      roster.forEach(emp => {
+        empFilter.innerHTML += `<option value="${emp.name}">${emp.name} (${emp.uid})</option>`;
+      });
+    }
+
+    // Render monthly admin/executive statistics
+    function renderAdminStats() {
+      const monthVal = document.getElementById('admin-month-filter').value; // e.g. "2026-06"
+      const empVal = document.getElementById('admin-emp-filter').value;
+
+      // Filter monthly errors
+      const monthlyErrors = errorLogs.filter(e => {
+        const matchesMonth = e.date.startsWith(monthVal);
+        const matchesEmp = empVal === 'ALL' || e.employee === empVal;
+        return matchesMonth && matchesEmp;
+      });
+
+      // Filter monthly volume (AKRA only)
+      let totalVolume = 0;
+      for (let dt in volumeLogs) {
+        if (dt.startsWith(monthVal)) {
+          const d = volumeLogs[dt];
+          totalVolume += (d.transfer || 0) + (d.pickup || 0) + (d.upcountry || 0) + (d.inmarket || 0) + (d.outmarket || 0);
+        }
+      }
+
+      document.getElementById('admin-month-errors').innerText = monthlyErrors.length;
+      document.getElementById('admin-month-volume').innerText = totalVolume;
+
+      // Monthly error rate
+      const rate = totalVolume > 0 ? ((monthlyErrors.length / totalVolume) * 100).toFixed(1) : "0.0";
+      document.getElementById('admin-month-rate').innerText = `${rate}%`;
+
+      // Render monthly top 5 errors chart
+      renderAdminTop5Chart(monthlyErrors);
+
+      // Render monthly log records list
+      const logsTarget = document.getElementById('admin-monthly-logs-target');
+      logsTarget.innerHTML = '';
+
+      if (monthlyErrors.length === 0) {
+        logsTarget.innerHTML = `
+          <div style="font-size:12px; color:var(--muted); text-align:center; padding:15px; background:#fff; border: 1px dashed var(--line); border-radius:var(--radius-sm);">
+            ไม่พบรายการความผิดพลาดประจำเดือน
+          </div>
+        `;
+        return;
+      }
+
+      monthlyErrors.forEach(err => {
+        const div = document.createElement('div');
+        div.style.background = "#fff";
+        div.style.border = "1px solid var(--line)";
+        div.style.padding = "10px";
+        div.style.borderRadius = "var(--radius-sm)";
+        div.style.fontSize = "12px";
+
+        let branchColor = err.branch === 'AKRA' ? 'var(--brand-orange)' : 'var(--brand-blue)';
+
+        div.innerHTML = `
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+            <strong>${err.date} • ${err.employee}</strong>
+            <span style="font-size:9px; font-weight:800; background:var(--soft-bg); padding:2px 6px; border-radius:10px; color:${branchColor}; border:1px solid var(--line);">${err.branch}</span>
+          </div>
+          <div>ความผิด: <strong>${err.type}</strong></div>
+          ${err.desc ? `<div style="color:var(--muted); margin-top:2px;">หมายเหตุ: ${err.desc}</div>` : ''}
+        `;
+        logsTarget.appendChild(div);
+      });
+    }
+
+    // Dynamic Top 5 bar chart SVG
+    function renderAdminTop5Chart(monthlyErrors) {
+      const svg = document.getElementById('admin-top5-svg');
+      svg.innerHTML = '';
+
+      // Aggregate counts by employee
+      const empCounts = {};
+      monthlyErrors.forEach(e => empCounts[e.employee] = (empCounts[e.employee] || 0) + 1);
+
+      // Convert to array and sort
+      const chartData = [];
+      for (let name in empCounts) {
+        chartData.push({name, count: empCounts[name]});
+      }
+      chartData.sort((a,b) => b.count - a.count);
+
+      // Slice top 5
+      const top5 = chartData.slice(0, 5);
+
+      if (top5.length === 0) {
+        svg.innerHTML = `
+          <text x="175" y="60" style="font-size:12px; fill:var(--muted); text-anchor:middle; font-weight:700;">
+            ไม่มีข้อมูลความผิดพลาดสะสม
+          </text>
+        `;
+        return;
+      }
+
+      const maxCount = Math.max(...top5.map(d => d.count), 2);
+
+      const w = 350;
+      const h = 120;
+      const chartH = h - 30; // 30px label padding at bottom
+      const barWidth = 36;
+      const gap = 20;
+
+      // Draw vertical bars
+      const startX = (w - ((barWidth + gap) * top5.length - gap)) / 2;
+
+      top5.forEach((d, idx) => {
+        const x = startX + (idx * (barWidth + gap));
+        const barH = (d.count / maxCount) * chartH;
+        const y = chartH - barH + 10;
+
+        // Rectangle bar
+        const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        rect.setAttribute("x", x);
+        rect.setAttribute("y", y);
+        rect.setAttribute("width", barWidth);
+        rect.setAttribute("height", barH);
+        rect.setAttribute("class", "chart-bar");
+        svg.appendChild(rect);
+
+        // Count value label on top of bar
+        const countText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        countText.setAttribute("x", x + (barWidth / 2));
+        countText.setAttribute("y", y - 4);
+        countText.setAttribute("style", "font-size: 9px; fill:var(--brand-orange); text-anchor:middle; font-weight:800;");
+        countText.textContent = `${d.count} ครั้ง`;
+        svg.appendChild(countText);
+
+        // Employee Name label at bottom
+        const nameText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        nameText.setAttribute("x", x + (barWidth / 2));
+        nameText.setAttribute("y", h - 6);
+        nameText.setAttribute("style", "font-size: 9px; fill:var(--ink); text-anchor:middle; font-weight:700;");
+        nameText.textContent = d.name;
+        svg.appendChild(nameText);
+      });
+    }
+
+    // CSV Data Exporter
+    function triggerCsvExport() {
+      const monthVal = document.getElementById('admin-month-filter').value;
+      const filtered = errorLogs.filter(e => e.date.startsWith(monthVal));
+
+      if (filtered.length === 0) {
+        alert("ไม่พบข้อมูลสำหรับการส่งออก (Export) ในเดือนนี้");
+        return;
+      }
+
+      let csvContent = "\uFEFF"; // Add UTF-8 BOM for Excel Thai language rendering
+      csvContent += "วันที่,ชื่อพนักงาน,สาขา,ข้อผิดพลาด,ระดับความรุนแรง,รายละเอียดหมายเหตุ\n";
+
+      filtered.forEach(log => {
+        csvContent += `"${log.date}","${log.employee}","${log.branch}","${log.type}","${log.severity}","${log.desc || ''}"\n`;
+      });
+
+      // Create download link element
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `kpi-errors-report-${monthVal}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      showToast("ดาวน์โหลดไฟล์ CSV เรียบร้อยแล้ว!");
+    }
+
+    // Employee settings management
+    function toggleRosterDept() {
+      const trdChecked = document.getElementById('emp-branch-trd').checked;
+      const deptGroup = document.getElementById('roster-dept-group');
+      if (trdChecked) {
+        deptGroup.style.display = 'block';
+      } else {
+        deptGroup.style.display = 'none';
+        document.getElementById('emp-dept').value = '';
+      }
+    }
+
+    function renderRosterList() {
+      const target = document.getElementById('settings-roster-list');
+      target.innerHTML = '';
+      document.getElementById('settings-roster-count').innerText = roster.length;
+
+      roster.forEach(emp => {
+        const branchesStr = emp.branches.join(', ');
+        const deptStr = emp.dept ? `แผนก: ${emp.dept}` : 'สาขาคลังสินค้า';
+
+        const div = document.createElement('div');
+        div.className = 'roster-item';
+        div.innerHTML = `
+          <div class="roster-details">
+            <span class="roster-name">${emp.name} <span style="font-weight:normal; font-size:11px; color:var(--muted);">(${emp.uid})</span></span>
+            <span class="roster-sub">สิทธิ์สาขา: <strong>${branchesStr}</strong> • ${deptStr}</span>
+          </div>
+          <div class="roster-actions">
+            <button class="btn-icon" onclick="editRosterEmp('${emp.uid}')">✏️</button>
+            <button class="btn-icon delete" onclick="deleteRosterEmp('${emp.uid}')">🗑️</button>
+          </div>
+        `;
+        target.appendChild(div);
+      });
+    }
+
+    function handleEmployeeSubmit(event) {
+      event.preventDefault();
+
+      const uidKey = document.getElementById('emp-uid-key').value;
+      const uidVal = document.getElementById('emp-uid').value.trim();
+      const nameVal = document.getElementById('emp-name').value.trim();
+
+      const isAkra = document.getElementById('emp-branch-akra').checked;
+      const isTrd = document.getElementById('emp-branch-trd').checked;
+      const deptVal = document.getElementById('emp-dept').value;
+
+      if (!isAkra && !isTrd) {
+        alert("กรุณาเลือกสาขาที่พนักงานสังกัดอย่างน้อย 1 สาขา");
+        return;
+      }
+
+      const branchesList = [];
+      if (isAkra) branchesList.push("AKRA");
+      if (isTrd) branchesList.push("TRD");
+
+      if (uidKey) {
+        // Edit Mode
+        const idx = roster.findIndex(e => e.uid === uidKey);
+        if (idx !== -1) {
+          roster[idx] = {
+            uid: uidVal,
+            name: nameVal,
+            branches: branchesList,
+            dept: deptVal
+          };
+          showToast(`แก้ไขข้อมูลพนักงานสำเร็จ: ${nameVal}`);
+        }
+      } else {
+        // Create Mode
+        const isExists = roster.some(e => e.uid === uidVal);
+        if (isExists) {
+          alert("รหัสพนักงานนี้มีอยู่แล้วในระบบ");
+          return;
+        }
+
+        roster.push({
+          uid: uidVal,
+          name: nameVal,
+          branches: branchesList,
+          dept: deptVal
+        });
+        showToast(`เพิ่มพนักงานใหม่เรียบร้อย: ${nameVal}`);
+      }
+
+      saveRoster();
+      cancelRosterEdit();
+      renderRosterList();
+      populateAdminFilters();
+    }
+
+    function editRosterEmp(uid) {
+      const emp = roster.find(e => e.uid === uid);
+      if (!emp) return;
+
+      document.getElementById('emp-uid-key').value = emp.uid;
+      document.getElementById('emp-uid').value = emp.uid;
+      document.getElementById('emp-uid').setAttribute('readonly', true);
+      document.getElementById('emp-name').value = emp.name;
+
+      document.getElementById('emp-branch-akra').checked = emp.branches.includes("AKRA");
+      document.getElementById('emp-branch-trd').checked = emp.branches.includes("TRD");
+      document.getElementById('emp-dept').value = emp.dept || '';
+
+      document.getElementById('emp-submit-btn').innerText = "แก้ไขข้อมูล";
+      document.getElementById('emp-cancel-btn').style.display = 'block';
+
+      toggleRosterDept();
+    }
+
+    function cancelRosterEdit() {
+      document.getElementById('emp-uid-key').value = '';
+      document.getElementById('emp-uid').value = '';
+      document.getElementById('emp-uid').removeAttribute('readonly');
+      document.getElementById('emp-name').value = '';
+      document.getElementById('emp-branch-akra').checked = true;
+      document.getElementById('emp-branch-trd').checked = false;
+      document.getElementById('emp-dept').value = '';
+
+      document.getElementById('emp-submit-btn').innerText = "เพิ่มเข้าสู่รายชื่อ";
+      document.getElementById('emp-cancel-btn').style.display = 'none';
+
+      toggleRosterDept();
+    }
+
+    function deleteRosterEmp(uid) {
+      if (roster.length <= 2) {
+        alert("ไม่สามารถลบพนักงานได้ ระบบต้องคงเหลือพนักงานอย่างน้อย 2 คน");
+        return;
+      }
+      if (confirm(`คุณต้องการลบรายชื่อพนักงานรหัส ${uid} ใช่หรือไม่?`)) {
+        const name = roster.find(e => e.uid === uid).name;
+        roster = roster.filter(e => e.uid !== uid);
+        saveRoster();
+        renderRosterList();
+        populateAdminFilters();
+        showToast(`ลบรายชื่อพนักงานเรียบร้อย: ${name}`);
+      }
+    }
+
+    // Bootstrap init
+    window.addEventListener('DOMContentLoaded', () => {
+      initDatabase();
+    });
+
+  </script>
+</body>
+</html>

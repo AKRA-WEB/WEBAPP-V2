@@ -119,6 +119,27 @@ Go: ทำตามแผน V2-0010 เฉพาะ read-only list/detail
 Review code, docs, or a plan. Lead with findings, risks, missing tests, and
 specific file/line references where possible.
 
+### Frontend command layer
+
+Use `FRONTEND_CONDUCTOR.md` for UI/UX-specific shortcuts:
+
+- `Frontend:` or `FE:` - frontend resume/status only.
+- `Frontend Architect:` - frontend plan only.
+- `Frontend Mockup:` - static mock-up before implementation.
+- `Frontend Go:` - execute an approved frontend slice.
+- `Frontend Review:` - UI/UX, accessibility, and responsive review.
+- `Responsive Check:` - mobile/responsive audit or smallest approved fix.
+- `Design System:` - reusable UI standards/tokens/component guidance.
+
+These commands do not replace `Architect:`, `Go:`, or `Review:`. Frontend work
+must still stay tied to the active plan board and handoff docs. A frontend
+shortcut does not authorize runtime code changes unless it is explicitly a
+`Frontend Go:` request or paired with `Go:`.
+
+When Gemini is used for frontend, UI, UX, design exploration, or mock-up work,
+also follow `Gemini.md`. Gemini guidance is subordinate to this conductor,
+`AGENTS.md`, and `FRONTEND_CONDUCTOR.md`.
+
 ## Plan Lifecycle
 
 Use these statuses consistently:

@@ -1,0 +1,1949 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AKRA V2 - Purchase Requisition (PR) UI/UX Parity Mockup</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+Thai:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: light;
+      --brand-blue: #171c8f;
+      --brand-blue-light: #f0f2ff;
+      --brand-blue-border: #d2d8ff;
+
+      --brand-orange: #e35205;
+      --brand-orange-light: #fff5f0;
+
+      --ink: #1e293b;
+      --muted: #64748b;
+      --soft-bg: #f8fafc;
+      --surface: #ffffff;
+      --line: #e2e8f0;
+
+      --danger: #ef4444;
+      --danger-light: #fef2f2;
+      --danger-border: #fca5a5;
+
+      --warning: #f59e0b;
+      --warning-light: #fefbeb;
+      --warning-border: #fde68a;
+
+      --success: #10b981;
+      --success-light: #ecfdf5;
+      --success-border: #a7f3d0;
+
+      --purple: #8b5cf6;
+      --purple-light: #f5f3ff;
+      --purple-border: #ddd6fe;
+
+      --radius-sm: 8px;
+      --radius: 12px;
+      --radius-lg: 16px;
+
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.05), 0 2px 4px -2px rgba(15, 23, 42, 0.05);
+      --shadow-lg: 0 20px 25px -5px rgba(15, 23, 42, 0.1), 0 8px 10px -6px rgba(15, 23, 42, 0.1);
+
+      --transition: all 0.2s ease;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: #cbd5e1;
+      color: var(--ink);
+      font-family: 'Inter', 'Noto Sans Thai', -apple-system, sans-serif;
+      font-size: 15px;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    /* Container holding the simulation frame */
+    .viewport-container {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: var(--transition);
+    }
+
+    .viewport-container.device-desktop {
+      max-width: 1400px;
+      background: #f1f5f9;
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow-lg);
+    }
+
+    /* Interactive frame: Mobile by default (390px) */
+    .phone-frame {
+      width: 390px;
+      height: 844px;
+      background: var(--surface);
+      border-radius: 40px;
+      border: 12px solid #000;
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.3), 0 0 0 4px #1e293b;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transition: var(--transition);
+    }
+
+    .viewport-container.device-desktop .phone-frame {
+      width: 100%;
+      height: 800px;
+      border: none;
+      border-radius: var(--radius-lg);
+      box-shadow: none;
+    }
+
+    /* Mobile bar simulator */
+    .mobile-status-bar {
+      background: #000;
+      color: #fff;
+      font-size: 11px;
+      padding: 6px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      height: 28px;
+      flex-shrink: 0;
+    }
+
+    .viewport-container.device-desktop .mobile-status-bar {
+      display: none;
+    }
+
+    /* Application Header */
+    header {
+      background: var(--brand-blue);
+      color: #ffffff;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      z-index: 100;
+    }
+
+    .header-title-area {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .header-main-title {
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .header-sub-title {
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    /* Main Scrollable Canvas */
+    .canvas {
+      flex: 1;
+      background: #f1f5f9;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Simulation Control Box */
+    .mockup-controls {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid #334155;
+      color: #fff;
+      padding: 16px;
+      border-radius: var(--radius);
+      width: 320px;
+      z-index: 2000;
+      box-shadow: var(--shadow-lg);
+      backdrop-filter: blur(10px);
+    }
+
+    @media (max-width: 1100px) {
+      .mockup-controls {
+        position: relative;
+        top: 0;
+        left: 0;
+        width: 100%;
+        max-width: 390px;
+        margin-bottom: 16px;
+      }
+      body {
+        flex-direction: column;
+        padding: 10px;
+      }
+    }
+
+    .mockup-title {
+      font-weight: 800;
+      font-size: 14px;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .mockup-btn-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .mockup-btn {
+      background: #334155;
+      color: #cbd5e1;
+      border: 1px solid #475569;
+      padding: 8px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 700;
+      transition: var(--transition);
+      text-align: center;
+    }
+
+    .mockup-btn:hover {
+      background: #475569;
+      color: #fff;
+    }
+
+    .mockup-btn.active {
+      background: var(--brand-orange);
+      color: #fff;
+      border-color: var(--brand-orange);
+    }
+
+    .mockup-section-label {
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--muted);
+      margin-top: 10px;
+      margin-bottom: 4px;
+      display: block;
+    }
+
+    /* Form Styles */
+    .pr-form-card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      margin: 12px;
+      padding: 16px;
+    }
+
+    .pr-form-header {
+      margin-bottom: 14px;
+      border-b: 1px solid var(--line);
+      padding-bottom: 10px;
+    }
+
+    .pr-form-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #1e293b;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .input-group {
+      margin-bottom: 12px;
+    }
+
+    .input-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    .input-field {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--line);
+      background: var(--soft-bg);
+      font-family: inherit;
+      font-size: 14px;
+      color: var(--ink);
+      outline: none;
+      transition: var(--transition);
+    }
+
+    .input-field:focus {
+      border-color: var(--brand-blue);
+      background: var(--surface);
+      box-shadow: 0 0 0 3px rgba(23, 28, 143, 0.1);
+    }
+
+    .input-field[readonly] {
+      background: #f1f5f9;
+      color: var(--muted);
+      cursor: not-allowed;
+    }
+
+    /* Dynamic Requisition Line Table/List */
+    .items-container-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 18px;
+      margin-bottom: 8px;
+      padding-symmetric: 4px;
+    }
+
+    .item-row {
+      background: var(--soft-bg);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 12px;
+      position: relative;
+      margin-bottom: 10px;
+      animation: slideDown 0.2s ease-out forwards;
+    }
+
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .item-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+
+    .viewport-container.device-desktop .item-grid {
+      grid-template-columns: 2fr 1fr 1fr 2fr;
+    }
+
+    .item-remove-btn {
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      background: #fff;
+      border: 1px solid var(--line);
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: var(--shadow-sm);
+      color: var(--muted);
+      transition: var(--transition);
+    }
+
+    .item-remove-btn:hover {
+      color: var(--danger);
+      border-color: var(--danger-border);
+      background: var(--danger-light);
+    }
+
+    /* Autocomplete Box styles */
+    .autocomplete-wrapper {
+      position: relative;
+    }
+
+    .suggestion-list {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      box-shadow: var(--shadow-lg);
+      max-height: 180px;
+      overflow-y: auto;
+      z-index: 1000;
+      margin-top: 4px;
+      list-style: none;
+    }
+
+    .suggestion-item {
+      padding: 10px 12px;
+      cursor: pointer;
+      font-size: 13px;
+      border-bottom: 1px solid #f8fafc;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .suggestion-item:hover {
+      background: var(--brand-blue-light);
+    }
+
+    .suggestion-sku {
+      font-size: 10px;
+      color: var(--muted);
+      background: #f1f5f9;
+      padding: 2px 4px;
+      border-radius: 3px;
+    }
+
+    /* Autocomplete badge status indicators */
+    .match-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      margin-top: 6px;
+      width: fit-content;
+    }
+
+    .match-indicator.matched {
+      background: var(--success-light);
+      color: var(--success);
+      border: 1px solid var(--success-border);
+    }
+
+    .match-indicator.freetext {
+      background: var(--warning-light);
+      color: var(--warning);
+      border: 1px solid var(--warning-border);
+    }
+
+    /* Glove-friendly step control */
+    .step-control {
+      display: flex;
+      align-items: center;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      background: #fff;
+    }
+
+    .step-btn {
+      width: 40px;
+      height: 40px;
+      border: none;
+      background: var(--soft-bg);
+      font-size: 18px;
+      font-weight: bold;
+      color: var(--brand-blue);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition);
+      user-select: none;
+    }
+
+    .step-btn:hover {
+      background: var(--brand-blue-light);
+    }
+
+    .step-input {
+      flex: 1;
+      width: 50px;
+      height: 40px;
+      border: none;
+      text-align: center;
+      font-size: 14px;
+      font-weight: 700;
+      outline: none;
+    }
+
+    .add-row-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      width: 100%;
+      background: #fff;
+      border: 2px dashed #cbd5e1;
+      color: var(--muted);
+      padding: 12px;
+      border-radius: var(--radius);
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 13px;
+      transition: var(--transition);
+      margin-top: 10px;
+      outline: none;
+    }
+
+    .add-row-btn:hover {
+      border-color: var(--brand-blue);
+      color: var(--brand-blue);
+      background: var(--brand-blue-light);
+    }
+
+    .submit-btn {
+      background: var(--brand-blue);
+      color: #fff;
+      border: none;
+      padding: 14px;
+      font-size: 15px;
+      font-weight: 700;
+      width: 100%;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: var(--transition);
+      margin-top: 14px;
+      box-shadow: 0 4px 10px rgba(23, 28, 143, 0.2);
+    }
+
+    .submit-btn:hover {
+      background: #11146b;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 14px rgba(23, 28, 143, 0.3);
+    }
+
+    .submit-btn:active {
+      transform: scale(0.98);
+    }
+
+    /* History panel styles */
+    .history-section {
+      padding: 0 12px 20px 12px;
+    }
+
+    .history-title-area {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      padding: 0 4px;
+    }
+
+    .history-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--brand-blue);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .history-refresh-btn {
+      background: var(--brand-blue-light);
+      border: 1px solid var(--brand-blue-border);
+      color: var(--brand-blue);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .pr-card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      margin-bottom: 10px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      transition: var(--transition);
+    }
+
+    .pr-card-summary {
+      padding: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .pr-card-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .pr-bill-no {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--brand-blue);
+      background: var(--brand-blue-light);
+      padding: 2px 6px;
+      border-radius: 4px;
+      width: fit-content;
+    }
+
+    .pr-bill-date {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .pr-bill-desc {
+      font-size: 13px;
+      font-weight: 700;
+      color: #1e293b;
+      margin-top: 2px;
+    }
+
+    .pr-bill-actors {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .status-badge {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: var(--radius-sm);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      border: 1px solid transparent;
+    }
+
+    .status-badge.pending {
+      background: var(--warning-light);
+      color: var(--warning);
+      border-color: var(--warning-border);
+    }
+
+    .status-badge.approved {
+      background: var(--success-light);
+      color: var(--success);
+      border-color: var(--success-border);
+    }
+
+    .status-badge.rejected {
+      background: var(--danger-light);
+      color: var(--danger);
+      border-color: var(--danger-border);
+    }
+
+    .status-badge.mixed {
+      background: var(--brand-blue-light);
+      color: var(--brand-blue);
+      border-color: var(--brand-blue-border);
+    }
+
+    .pr-card-details {
+      padding: 0 14px 14px 14px;
+      border-top: 1px solid var(--soft-bg);
+      background: var(--soft-bg);
+      display: none;
+      animation: fadeIn 0.2s ease forwards;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .pr-detail-header {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--muted);
+      margin-top: 10px;
+      margin-bottom: 6px;
+    }
+
+    .pr-detail-item {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      margin-bottom: 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .pr-item-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .pr-item-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--ink);
+    }
+
+    .pr-item-qty {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--brand-blue);
+      white-space: nowrap;
+    }
+
+    .pr-item-status-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 2px;
+    }
+
+    .pr-item-remark {
+      font-size: 11px;
+      color: var(--muted);
+      background: var(--soft-bg);
+      padding: 4px 8px;
+      border-radius: 4px;
+      width: fit-content;
+    }
+
+    .pr-item-rejection-msg {
+      font-size: 11px;
+      color: var(--danger);
+      background: var(--danger-light);
+      border: 1px solid rgba(239, 68, 68, 0.15);
+      padding: 6px 8px;
+      border-radius: 4px;
+      margin-top: 4px;
+    }
+
+    /* Actions for supervisors/purchasing inside card */
+    .detail-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .btn-action-sm {
+      flex: 1;
+      padding: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      border-radius: 6px;
+      cursor: pointer;
+      text-align: center;
+      border: 1px solid transparent;
+      transition: var(--transition);
+    }
+
+    .btn-approve {
+      background: var(--success);
+      color: #fff;
+    }
+
+    .btn-approve:hover {
+      background: #059669;
+    }
+
+    .btn-reject {
+      background: var(--danger);
+      color: #fff;
+    }
+
+    .btn-reject:hover {
+      background: #dc2626;
+    }
+
+    .btn-order {
+      background: var(--purple);
+      color: #fff;
+    }
+
+    .btn-order:hover {
+      background: #7c3aed;
+    }
+
+    /* Timeline Tracking Indicator */
+    .timeline-tracker {
+      margin-top: 14px;
+      padding: 12px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+    }
+
+    .timeline-title {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .timeline-flow {
+      display: flex;
+      justify-content: space-between;
+      position: relative;
+      margin-bottom: 4px;
+    }
+
+    .timeline-flow::before {
+      content: '';
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      right: 10px;
+      height: 2px;
+      background: var(--line);
+      z-index: 1;
+    }
+
+    .timeline-flow.step-1::before {
+      background: linear-gradient(to right, var(--brand-blue) 33%, var(--line) 33%);
+    }
+
+    .timeline-flow.step-2::before {
+      background: linear-gradient(to right, var(--brand-blue) 66%, var(--line) 66%);
+    }
+
+    .timeline-flow.step-3::before {
+      background: var(--brand-blue);
+    }
+
+    .timeline-flow.step-rejected::before {
+      background: linear-gradient(to right, var(--brand-blue) 33%, var(--danger) 33%, var(--danger) 100%);
+    }
+
+    .timeline-step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      z-index: 2;
+      flex: 1;
+    }
+
+    .timeline-dot {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #fff;
+      border: 2px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+      font-weight: bold;
+      color: var(--muted);
+      transition: var(--transition);
+    }
+
+    .timeline-step.active .timeline-dot {
+      border-color: var(--brand-blue);
+      background: var(--brand-blue);
+      color: #fff;
+    }
+
+    .timeline-step.rejected .timeline-dot {
+      border-color: var(--danger);
+      background: var(--danger);
+      color: #fff;
+    }
+
+    .timeline-label {
+      font-size: 9px;
+      font-weight: 700;
+      color: var(--muted);
+      margin-top: 4px;
+      text-align: center;
+    }
+
+    .timeline-step.active .timeline-label {
+      color: var(--brand-blue);
+    }
+
+    .timeline-step.rejected .timeline-label {
+      color: var(--danger);
+    }
+
+    /* Modal dialog */
+    .modal-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.4);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      backdrop-filter: blur(2px);
+      opacity: 0;
+      pointer-events: none;
+      transition: var(--transition);
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-card {
+      background: #fff;
+      border-radius: var(--radius);
+      padding: 18px;
+      width: 100%;
+      max-width: 320px;
+      box-shadow: var(--shadow-lg);
+      transform: translateY(10px);
+      transition: var(--transition);
+    }
+
+    .modal-overlay.active .modal-card {
+      transform: translateY(0);
+    }
+
+    .modal-header {
+      font-weight: 700;
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+
+    .modal-btn-grid {
+      display: flex;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .modal-btn {
+      flex: 1;
+      padding: 10px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--line);
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 700;
+      text-align: center;
+      transition: var(--transition);
+    }
+
+    .modal-btn-primary {
+      background: var(--brand-blue);
+      color: #fff;
+      border-color: var(--brand-blue);
+    }
+
+    .modal-btn-primary:hover {
+      background: #11146b;
+    }
+
+    /* LINE flex message drawer preview style */
+    .line-preview-drawer {
+      margin: 12px;
+      padding: 12px;
+      background: #06c755;
+      color: #fff;
+      border-radius: var(--radius);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-weight: 700;
+      font-size: 13px;
+      box-shadow: var(--shadow);
+    }
+
+    .line-preview-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 1100;
+      display: none;
+      flex-direction: column;
+      justify-content: flex-end;
+    }
+
+    .line-preview-content {
+      background: #74889e;
+      border-top-left-radius: 20px;
+      border-top-right-radius: 20px;
+      padding: 16px;
+      max-height: 80%;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .line-chat-bubble {
+      background: #fff;
+      border-radius: 12px;
+      color: #1e293b;
+      padding: 14px;
+      width: 100%;
+      font-family: sans-serif;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+
+    .flex-header {
+      border-bottom: 1px solid #f1f5f9;
+      padding-bottom: 8px;
+      margin-bottom: 8px;
+    }
+
+    .flex-title {
+      font-weight: bold;
+      color: var(--brand-blue);
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .flex-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      margin-bottom: 4px;
+    }
+
+    .flex-lbl {
+      color: var(--muted);
+    }
+
+    .flex-val {
+      font-weight: 600;
+      text-align: right;
+    }
+
+    .flex-item-line {
+      background: #f8fafc;
+      padding: 6px 8px;
+      border-radius: 6px;
+      margin-bottom: 4px;
+      font-size: 11px;
+    }
+
+    /* Toast style */
+    .toast-box {
+      position: absolute;
+      top: 40px;
+      left: 20px;
+      right: 20px;
+      background: rgba(30, 41, 59, 0.9);
+      color: #fff;
+      padding: 10px 14px;
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      font-weight: 600;
+      z-index: 5000;
+      opacity: 0;
+      transform: translateY(-10px);
+      pointer-events: none;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .toast-box.active {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .toast-icon {
+      color: var(--brand-orange);
+    }
+
+    /* Bottom Navigator tabs */
+    .nav-tab-label {
+      font-size: 10px;
+      margin-top: 2px;
+    }
+
+  </style>
+</head>
+<body>
+
+  <!-- Mockup Panel -->
+  <div class="mockup-controls">
+    <div class="mockup-title">
+      <span>PR Layout Feedback</span>
+      <span style="font-size: 8px; background:var(--brand-orange); color:#fff; padding:1px 4px; border-radius:3px;">PARITY MATCH</span>
+    </div>
+    <div style="font-size: 11px; color:#cbd5e1; margin-bottom:10px;">
+      ป้อนคำขอซื้อสินค้า (PR) ตาม UX/UI V1: อัตโนมัติระบุหน่วย, แจ้งเตือน Free-Text, ตรวจสอบผู้อนุมัติรายข้อ, พร้อมจำลองการเปลี่ยนสิทธิ์
+    </div>
+
+    <span class="mockup-section-label">สิทธิ์ผู้ใช้งาน (Simulated Role)</span>
+    <div class="mockup-btn-grid" style="grid-template-columns: repeat(3, 1fr);">
+      <button id="role-btn-REQUESTER" class="mockup-btn active" onclick="setRole('REQUESTER')">ขอซื้อ</button>
+      <button id="role-btn-SUPERVISOR" class="mockup-btn" onclick="setRole('SUPERVISOR')">หัวหน้า</button>
+      <button id="role-btn-OFFICER" class="mockup-btn" onclick="setRole('OFFICER')">จัดซื้อ</button>
+    </div>
+
+    <span class="mockup-section-label">รูปแบบอุปกรณ์ (Simulated Device)</span>
+    <div class="mockup-btn-grid">
+      <button id="btn-device-mobile" class="mockup-btn active" onclick="setDevice('mobile')">MOBILE (390px)</button>
+      <button id="btn-device-desktop" class="mockup-btn" onclick="setDevice('desktop')">DESKTOP</button>
+    </div>
+  </div>
+
+  <!-- Main view containment -->
+  <div id="viewport" class="viewport-container">
+
+    <div class="phone-frame">
+
+      <!-- Simulated Phone Top Status Bar -->
+      <div class="mobile-status-bar">
+        <span>15:35</span>
+        <div>
+          <span>📶 5G</span>
+          <span style="margin-left:6px;">🔋 92%</span>
+        </div>
+      </div>
+
+      <!-- Main Header -->
+      <header>
+        <div class="header-title-area">
+          <!-- Inline svg for PR form icon -->
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+          <div>
+            <div class="header-main-title">แบบฟอร์มขอซื้อสินค้า (PR)</div>
+            <div class="header-sub-title">ระบบสั่งซื้อสาขา & คลังสินค้า</div>
+          </div>
+        </div>
+      </header>
+
+      <!-- App Canvas Scrollable Area -->
+      <div class="canvas" id="canvas-area">
+
+        <!-- Requisition Submit Form -->
+        <div class="pr-form-card" id="pr-submit-form-panel">
+          <div class="pr-form-header">
+            <div class="pr-form-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--brand-blue);"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4z"></path></svg>
+              <span>ส่งคำขอสั่งซื้อสินค้า</span>
+            </div>
+            <p style="font-size: 11px; color:var(--muted); margin-top:2px;">ข้อมูลจะถูกส่งไปยังหัวหน้างานและจัดซื้อเพื่อจัดซื้อเข้าคลัง</p>
+          </div>
+
+          <form id="main-pr-form" onsubmit="handlePrSubmit(event)">
+            <div class="input-group">
+              <label class="input-label">ชื่อผู้ขอซื้อ (Requester)</label>
+              <input type="text" id="pr-requester" class="input-field" value="สมคิด พนักงานขอซื้อ" readonly>
+            </div>
+
+            <div class="input-group">
+              <label class="input-label">สาขา / คลังสินค้าที่ต้องการ *</label>
+              <select id="pr-warehouse" class="input-field" required style="font-weight: 700; color: var(--brand-blue); background:#fff;">
+                <option value="" disabled>เลือกสาขา/คลังสินค้า...</option>
+                <option value="W1">W1 (สีขาว)</option>
+                <option value="W2" selected>W2 (สีส้ม)</option>
+                <option value="W3">W3 (สีเหลือง)</option>
+                <option value="W4">W4 (สีเขียว)</option>
+                <option value="W5">W5 (สีเทา)</option>
+                <option value="C1">C1 (สีฟ้าอ่อน)</option>
+                <option value="C2">C2 (สีฟ้าเข้ม)</option>
+              </select>
+            </div>
+
+            <div class="items-container-header">
+              <span style="font-size: 13px; font-weight:700; color:#1e293b;">รายการสินค้า</span>
+              <span id="pr-total-items-badge" style="font-size: 11px; font-weight:700; color:var(--brand-blue); background:var(--brand-blue-light); padding:2px 8px; border-radius:12px;">1 รายการ</span>
+            </div>
+
+            <!-- Dynamic Lines insertion point -->
+            <div id="pr-rows-list"></div>
+
+            <button type="button" class="add-row-btn" onclick="addEmptyRequisitionRow()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+              เพิ่มสินค้าอีก 1 รายการ
+            </button>
+
+            <button type="submit" class="submit-btn">ส่งคำขอสั่งซื้อ (Submit PR)</button>
+          </form>
+        </div>
+
+        <!-- LINE Message quick access preview bar -->
+        <div class="line-preview-drawer" onclick="showLineFlexModal()">
+          <span style="display:flex; align-items:center; gap:6px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M24 10.3c0-5.7-5.4-10.3-12-10.3S0 4.6 0 10.3c0 5.1 4.3 9.4 10.1 10.2.4.1.9.3 1.1.7l.3 1.9c.1.5.4.7.7.7.3 0 .6-.2.8-.5l2-2.7c1.4-.4 2.8-1.2 3.9-2.3 3.3-3.2 5.1-7 5.1-8.1zM6.9 13.7H4.4c-.3 0-.5-.2-.5-.5V7.4c0-.3.2-.5.5-.5h.6c.3 0 .5.2.5.5v4.8h1.4c.3 0 .5.2.5.5v.5c0 .3-.2.5-.5.5zm2.8-.5c0 .3-.2.5-.5.5h-.6c-.3 0-.5-.2-.5-.5V7.4c0-.3.2-.5.5-.5h.6c.3 0 .5.2.5.5v5.8zm4.8 0c0 .3-.2.5-.5.5h-2.5c-.3 0-.5-.2-.5-.5V7.4c0-.3.2-.5.5-.5h2.5c.3 0 .5.2.5.5v.5c0 .3-.2.5-.5.5h-1.9v1.4h1.6c.3 0 .5.2.5.5v.5c0 .3-.2.5-.5.5h-1.6v1.4h1.9c.3 0 .5.2.5.5v.6zm4-.5c0 .3-.2.5-.5.5h-2.5c-.3 0-.5-.2-.5-.5V7.4c0-.3.2-.5.5-.5h2.5c.3 0 .5.2.5.5v.5c0 .3-.2.5-.5.5h-1.9v1.4h1.6c.3 0 .5.2.5.5v.5c0 .3-.2.5-.5.5h-1.6v1.9c0 .3-.2.5-.5.5z"/></svg>
+            ดูตัวอย่าง LINE Flex Message
+          </span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        </div>
+
+        <!-- Requisition History area -->
+        <div class="history-section">
+          <div class="history-title-area">
+            <div>
+              <div class="history-title">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                <span>ประวัติคำขอสั่งซื้อ (รวมทุกสาขา)</span>
+              </div>
+              <p style="font-size: 10px; color:var(--muted); margin-top:2px;">ข้อมูลใบขอซื้อทั้งหมดพร้อมบันทึกประวัติการเปลี่ยนสถานะรายชิ้น</p>
+            </div>
+            <button class="history-refresh-btn" onclick="resetMockData()">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path></svg>
+              รีเซ็ต
+            </button>
+          </div>
+
+          <!-- PR Card render targets -->
+          <div id="pr-history-list"></div>
+        </div>
+
+      </div>
+
+      <!-- Toast Popup Box inside viewport -->
+      <div id="toast" class="toast-box">
+        <svg class="toast-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+        <span id="toast-text">ข้อความแจ้งเตือน</span>
+      </div>
+
+      <!-- Modal comment block -->
+      <div id="rejection-modal" class="modal-overlay">
+        <div class="modal-card">
+          <div class="modal-header">ระบุเหตุผลการปฏิเสธ (Rejection Reason)</div>
+          <div class="input-group">
+            <textarea id="rejection-reason-input" class="input-field" rows="3" placeholder="ระบุสาเหตุที่ไม่นุมัติรายการขอซื้อนี้..." style="resize: none; background:#fff;"></textarea>
+          </div>
+          <div class="modal-btn-grid">
+            <button class="modal-btn" onclick="closeRejectionModal()">ยกเลิก</button>
+            <button class="modal-btn modal-btn-primary" onclick="confirmRejection()">ปฏิเสธรายการ</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- LINE preview slide overlay -->
+      <div id="line-modal" class="line-preview-overlay" onclick="closeLineFlexModal()">
+        <div class="line-preview-content" onclick="event.stopPropagation()">
+          <div style="text-align: center; color: #fff; font-size:12px; font-weight:700; margin-bottom:-4px;">
+            ตัวอย่าง LINE Flex Message (แจ้งเตือนส่งคำขอ)
+          </div>
+
+          <div class="line-chat-bubble">
+            <div class="flex-header">
+              <div class="flex-title">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--brand-orange);"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                <span>ใบขอซื้อใหม่: <span id="line-bill-no">PR20260622-03</span></span>
+              </div>
+              <div style="font-size: 10px; color:var(--muted); margin-top:2px;">ส่งแจ้งเตือนกลุ่มจัดซื้อแล้ว</div>
+            </div>
+
+            <div class="flex-row">
+              <span class="flex-lbl">ผู้ส่งคำขอ</span>
+              <span class="flex-val" id="line-requester">สมคิด พนักงานขอซื้อ</span>
+            </div>
+            <div class="flex-row">
+              <span class="flex-lbl">สาขา / คลัง</span>
+              <span class="flex-val" id="line-wh">W2 (สีส้ม)</span>
+            </div>
+            <div class="flex-row" style="margin-bottom:8px;">
+              <span class="flex-lbl">วันที่ส่ง</span>
+              <span class="flex-val">22/06/2026 15:35</span>
+            </div>
+
+            <div style="font-size: 11px; font-weight: 700; color:var(--muted); margin-bottom:4px; border-top:1px dashed var(--line); padding-top:6px;">
+              รายการสินค้าที่ขอซื้อ:
+            </div>
+            <div id="line-items-list">
+              <!-- Inline fill -->
+            </div>
+
+            <div style="margin-top: 10px; padding:8px; background:var(--brand-blue-light); border-radius:6px; font-size:10px; color:var(--brand-blue); text-align:center; font-weight:700;">
+              กดลิงก์เพื่อเข้าตรวจสอบ/อนุมัติบนเบราว์เซอร์
+            </div>
+          </div>
+
+          <button class="modal-btn" style="background:#fff; width:100%; border:none; padding:12px; font-weight:700;" onclick="closeLineFlexModal()">ปิดหน้าต่างพรีวิว</button>
+        </div>
+      </div>
+
+      <!-- Footer navigation simulated tabs -->
+      <div class="footer-tabs">
+        <button class="tab-item active">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+          <span class="nav-tab-label">ใบขอซื้อ (PR)</span>
+        </button>
+        <button class="tab-item" onclick="showToast('หน้าพอร์ทัลหลัก - หน้าจอจริงจะเปลี่ยนไปหน้า /')">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
+          <span class="nav-tab-label">หน้าหลัก</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- JavaScript logic to power the mock-up interaction -->
+  <script>
+    // Product catalog mock data matching catalog codes and units
+    const catalogProducts = [
+      { code: "P001", name: "สับปะรดกวน 'ฉลุย' (ถุง 1kg)", unit: "ถุง" },
+      { code: "P002", name: "แป้งสาลีเอนกประสงค์ (ถุง 1kg)", unit: "ถุง" },
+      { code: "P003", name: "น้ำตาลทรายขาว มิตรผล (กระสอบ 25kg)", unit: "กระสอบ" },
+      { code: "P004", name: "กล่องกระดาษลูกฟูก AKRA (ใบ)", unit: "ใบ" },
+      { code: "P005", name: "ถุงหูหิ้วพลาสติก 8x16 (แพ็ค)", unit: "แพ็ค" },
+      { code: "P006", name: "น้ำมันพืช ตรามรกต (ขวด 1L)", unit: "ขวด" },
+      { code: "P007", name: "กล่องกระดาษลูกฟูก W5 (ใบ)", unit: "ใบ" },
+      { code: "P008", name: "ถ้วยกระดาษลายการ์ตูน 12oz (แถว)", unit: "แถว" }
+    ];
+
+    // Initial mock dataset loaded to localStorage if empty
+    const DEFAULT_PR_HISTORY = [
+      {
+        prNumber: "PR20260620-01",
+        date: "2026-06-20 09:12",
+        requester: "สุมิตร พนักงานสาขา",
+        warehouse: "W2",
+        items: [
+          { name: "สับปะรดกวน 'ฉลุย' (ถุง 1kg)", code: "P001", qty: 50, unit: "ถุง", remark: "ด่วน สินค้าหน้าร้านหมด", status: "Approved", rejectReason: "" },
+          { name: "น้ำตาลทรายขาว มิตรผล (กระสอบ 25kg)", code: "P003", qty: 10, unit: "กระสอบ", remark: "สำหรับทำไส้ขนมหวาน", status: "Rejected", rejectReason: "น้ำตาลทรายในคลังหลักยังเหลือเยอะ ให้มาเบิกจากคลัง W1 แทน" }
+        ],
+        overallStatus: "Mixed",
+        timeline: [
+          { text: "สร้างใบขอซื้อโดย สุมิตร", time: "2026-06-20 09:12" },
+          { text: "LINE แจ้งเตือนส่งสำเร็จ", time: "2026-06-20 09:13" },
+          { text: "อนุมัติรายการที่ 1 โดยหัวหน้าสมศักดิ์", time: "2026-06-20 11:30" },
+          { text: "ปฏิเสธรายการที่ 2 โดยหัวหน้าสมศักดิ์", time: "2026-06-20 11:31" }
+        ]
+      },
+      {
+        prNumber: "PR20260621-01",
+        date: "2026-06-21 14:02",
+        requester: "อนันต์ คลังสินค้า",
+        warehouse: "W5",
+        items: [
+          { name: "กล่องกระดาษลูกฟูก W5 (ใบ)", code: "P007", qty: 1500, unit: "ใบ", remark: "ของล็อคถัดไปสำหรับแพ็คส่ง", status: "Pending", rejectReason: "" }
+        ],
+        overallStatus: "Pending",
+        timeline: [
+          { text: "สร้างใบขอซื้อโดย อนันต์", time: "2026-06-21 14:02" },
+          { text: "LINE แจ้งเตือนส่งสำเร็จ", time: "2026-06-21 14:03" }
+        ]
+      },
+      {
+        prNumber: "PR20260622-01",
+        date: "2026-06-22 10:45",
+        requester: "สมคิด พนักงานขอซื้อ",
+        warehouse: "C1",
+        items: [
+          { name: "ถุงหูหิ้วพลาสติก 8x16 (แพ็ค)", code: "P005", qty: 80, unit: "แพ็ค", remark: "ใช้ด่วนพรุ่งนี้เช้า", status: "Ordered", rejectReason: "" }
+        ],
+        overallStatus: "Approved",
+        timeline: [
+          { text: "สร้างใบขอซื้อโดย สมคิด", time: "2026-06-22 10:45" },
+          { text: "LINE แจ้งเตือนส่งสำเร็จ", time: "2026-06-22 10:45" },
+          { text: "อนุมัติรายการที่ 1 โดยหัวหน้าสิทธิ์", time: "2026-06-22 11:00" },
+          { text: "เจ้าหน้าที่จัดซื้อซื้อสินค้าสำเร็จ", time: "2026-06-22 13:10" }
+        ]
+      }
+    ];
+
+    let currentRole = 'REQUESTER'; // Defaults to requester
+    let activePrs = [];
+    let lineModalData = null; // Store temp data for Line preview
+    let pendingRejectItem = null; // Temp ref to item being rejected
+    let inputRowCount = 0; // Incremental counter for rows
+
+    // Init Mock Database
+    function getPrData() {
+      const data = localStorage.getItem('akra_v2_pr_mock_db');
+      if (data) {
+        activePrs = JSON.parse(data);
+      } else {
+        activePrs = [...DEFAULT_PR_HISTORY];
+        savePrData();
+      }
+    }
+
+    function savePrData() {
+      localStorage.setItem('akra_v2_pr_mock_db', JSON.stringify(activePrs));
+    }
+
+    function resetMockData() {
+      activePrs = [...DEFAULT_PR_HISTORY];
+      savePrData();
+      renderHistoryList();
+      showToast("รีเซ็ตฐานข้อมูลจำลองเรียบร้อยแล้ว");
+    }
+
+    // Role switcher
+    function setRole(roleName) {
+      currentRole = roleName;
+
+      // Update active control class
+      const buttons = document.querySelectorAll('.mockup-controls button');
+      buttons.forEach(btn => {
+        if (btn.id === `role-btn-${roleName}`) btn.classList.add('active');
+        else if (btn.id.startsWith('role-btn-')) btn.classList.remove('active');
+      });
+
+      // Update Form elements accessibility
+      const submitForm = document.getElementById('pr-submit-form-panel');
+      if (currentRole === 'REQUESTER') {
+        submitForm.style.display = 'block';
+      } else {
+        submitForm.style.display = 'none';
+      }
+
+      // Re-render list to reflect new action buttons
+      renderHistoryList();
+      showToast(`สลับโหมดเป็นสิทธิ์: ${roleName}`);
+    }
+
+    // Device Switcher
+    function setDevice(deviceType) {
+      const viewport = document.getElementById('viewport');
+      const btnMobile = document.getElementById('btn-device-mobile');
+      const btnDesktop = document.getElementById('btn-device-desktop');
+
+      if (deviceType === 'desktop') {
+        viewport.classList.add('device-desktop');
+        btnDesktop.classList.add('active');
+        btnMobile.classList.remove('active');
+      } else {
+        viewport.classList.remove('device-desktop');
+        btnDesktop.classList.remove('active');
+        btnMobile.classList.add('active');
+      }
+      showToast(`เปลี่ยนมุมมองอุปกรณ์เป็น: ${deviceType.toUpperCase()}`);
+    }
+
+    // Toast triggers
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      const toastText = document.getElementById('toast-text');
+      toastText.innerText = message;
+      toast.classList.add('active');
+      setTimeout(() => {
+        toast.classList.remove('active');
+      }, 3000);
+    }
+
+    // Dynamic requisition rows management
+    function addEmptyRequisitionRow() {
+      const container = document.getElementById('pr-rows-list');
+      inputRowCount++;
+      const rowId = `item-row-${inputRowCount}`;
+
+      const div = document.createElement('div');
+      div.className = "item-row";
+      div.id = rowId;
+      div.innerHTML = `
+        <button type="button" class="item-remove-btn" onclick="removeRequisitionRow('${rowId}')" title="ลบรายการ">✕</button>
+        <div class="item-grid">
+
+          <div class="input-group autocomplete-wrapper" style="margin-bottom: 0;">
+            <label class="input-label">ชื่อสินค้า (ค้นหาในระบบ) *</label>
+            <input type="text" id="${rowId}-name" class="input-field pr-input-name" placeholder="พิมพ์ชื่อสินค้า..." oninput="handleCatalogSearch(this, '${rowId}')" autocomplete="off" required>
+            <ul id="${rowId}-suggestions" class="suggestion-list" style="display:none;"></ul>
+            <div id="${rowId}-badge" class="match-indicator freetext">ป้อนเอง (แอดมินจะตรวจสอบรหัส)</div>
+          </div>
+
+          <div class="input-group" style="margin-bottom: 0;">
+            <label class="input-label">จำนวน *</label>
+            <div class="step-control">
+              <button type="button" class="step-btn" onclick="stepQty('${rowId}', -1)">−</button>
+              <input type="number" id="${rowId}-qty" class="step-input" value="1" min="1" required>
+              <button type="button" class="step-btn" onclick="stepQty('${rowId}', 1)">+</button>
+            </div>
+          </div>
+
+          <div class="input-group" style="margin-bottom: 0;">
+            <label class="input-label">หน่วย</label>
+            <input type="text" id="${rowId}-unit" class="input-field" placeholder="ระบุหน่วย..." value="ถุง">
+          </div>
+
+          <div class="input-group" style="margin-bottom: 0;">
+            <label class="input-label">หมายเหตุ</label>
+            <input type="text" id="${rowId}-remark" class="input-field" placeholder="ระบุเพิ่มเติม (เช่น ยี่ห้อ, ด่วนมาก)">
+          </div>
+
+        </div>
+      `;
+      container.appendChild(div);
+      updateTotalItemsBadge();
+    }
+
+    function removeRequisitionRow(rowId) {
+      const container = document.getElementById('pr-rows-list');
+      if (container.children.length > 1) {
+        const row = document.getElementById(rowId);
+        row.remove();
+        updateTotalItemsBadge();
+        showToast("ลบรายการสินค้าเรียบร้อย");
+      } else {
+        showToast("อย่างน้อยต้องมีสินค้า 1 รายการในการทำใบขอซื้อ");
+      }
+    }
+
+    function updateTotalItemsBadge() {
+      const count = document.getElementById('pr-rows-list').children.length;
+      document.getElementById('pr-total-items-badge').innerText = `${count} รายการ`;
+    }
+
+    function stepQty(rowId, amount) {
+      const qtyInput = document.getElementById(`${rowId}-qty`);
+      let val = parseInt(qtyInput.value) || 1;
+      val += amount;
+      if (val < 1) val = 1;
+      qtyInput.value = val;
+    }
+
+    // Autocomplete behavior
+    function handleCatalogSearch(inputEl, rowId) {
+      const query = inputEl.value.trim().toLowerCase();
+      const suggestionsBox = document.getElementById(`${rowId}-suggestions`);
+      const badge = document.getElementById(`${rowId}-badge`);
+      const unitInput = document.getElementById(`${rowId}-unit`);
+
+      if (!query) {
+        suggestionsBox.style.display = 'none';
+        badge.className = "match-indicator freetext";
+        badge.innerText = "ป้อนเอง (แอดมินจะตรวจสอบรหัส)";
+        unitInput.removeAttribute('readonly');
+        return;
+      }
+
+      const filtered = catalogProducts.filter(p =>
+        p.name.toLowerCase().includes(query) || p.code.toLowerCase().includes(query)
+      );
+
+      if (filtered.length === 0) {
+        suggestionsBox.style.display = 'none';
+        badge.className = "match-indicator freetext";
+        badge.innerText = "Free-Text (รอแอดมินยืนยันรหัส)";
+        unitInput.removeAttribute('readonly');
+        return;
+      }
+
+      suggestionsBox.innerHTML = '';
+      filtered.forEach(prod => {
+        const li = document.createElement('li');
+        li.className = 'suggestion-item';
+        li.innerHTML = `
+          <span>${prod.name}</span>
+          <span class="suggestion-sku">${prod.code} (${prod.unit})</span>
+        `;
+        li.onclick = () => {
+          inputEl.value = prod.name;
+          unitInput.value = prod.unit;
+          unitInput.setAttribute('readonly', true);
+          suggestionsBox.style.display = 'none';
+
+          // Set matched badge style
+          badge.className = "match-indicator matched";
+          badge.innerHTML = `✓ เชื่อมโยงรหัส: ${prod.code}`;
+        };
+        suggestionsBox.appendChild(li);
+      });
+      suggestionsBox.style.display = 'block';
+    }
+
+    // Hide autocomplete on click out
+    document.addEventListener('click', function(e) {
+      const dropDowns = document.querySelectorAll('.suggestion-list');
+      dropDowns.forEach(drop => {
+        if (!drop.parentNode.contains(e.target)) {
+          drop.style.display = 'none';
+        }
+      });
+    });
+
+    // Form submission simulation
+    function handlePrSubmit(event) {
+      event.preventDefault();
+
+      const warehouseEl = document.getElementById('pr-warehouse');
+      if (!warehouseEl.value) {
+        showToast("กรุณาเลือกสาขา/คลังที่ต้องการ");
+        return;
+      }
+
+      const rows = document.querySelectorAll('#pr-rows-list .item-row');
+      const itemsList = [];
+      let isFormValid = true;
+
+      rows.forEach(row => {
+        const rowId = row.id;
+        const nameVal = document.getElementById(`${rowId}-name`).value.trim();
+        const qtyVal = parseInt(document.getElementById(`${rowId}-qty`).value) || 0;
+        const unitVal = document.getElementById(`${rowId}-unit`).value.trim();
+        const remarkVal = document.getElementById(`${rowId}-remark`).value.trim();
+        const badge = document.getElementById(`${rowId}-badge`);
+
+        let skuCode = "";
+        if (badge.classList.contains('matched')) {
+          skuCode = badge.innerText.replace('✓ เชื่อมโยงรหัส: ', '');
+        }
+
+        if (!nameVal) {
+          isFormValid = false;
+        }
+
+        itemsList.push({
+          name: nameVal,
+          code: skuCode || "FREETEXT",
+          qty: qtyVal,
+          unit: unitVal || "ชิ้น",
+          remark: remarkVal,
+          status: "Pending",
+          rejectReason: ""
+        });
+      });
+
+      if (!isFormValid) {
+        showToast("กรุณากรอกชื่อสินค้าให้ครบถ้วน");
+        return;
+      }
+
+      // Generate a new PR number
+      const now = new Date();
+      const dateStr = now.toISOString().slice(0,10);
+      const randNo = Math.floor(100 + Math.random() * 900);
+      const prNo = `PR${dateStr.replace(/-/g,'')}-${randNo}`;
+
+      // Insert new PR
+      const newPr = {
+        prNumber: prNo,
+        date: dateStr + " " + now.toTimeString().slice(0,5),
+        requester: "สมคิด พนักงานขอซื้อ",
+        warehouse: warehouseEl.value,
+        items: itemsList,
+        overallStatus: "Pending",
+        timeline: [
+          { text: "สร้างใบขอซื้อโดย สมคิด", time: dateStr + " " + now.toTimeString().slice(0,5) },
+          { text: "LINE แจ้งเตือนส่งสำเร็จ", time: dateStr + " " + now.toTimeString().slice(0,5) }
+        ]
+      };
+
+      activePrs.unshift(newPr);
+      savePrData();
+
+      // Setup LINE modal preview temp data
+      lineModalData = newPr;
+
+      // Reset form
+      document.getElementById('pr-rows-list').innerHTML = '';
+      addEmptyRequisitionRow();
+
+      // Update UI list
+      renderHistoryList();
+      showToast("ส่งคำขอสั่งซื้อสำเร็จ! แจ้งเตือนเข้าไลน์เรียบร้อย");
+
+      // Auto trigger line Flex preview so user can review it
+      setTimeout(() => {
+        showLineFlexModal();
+      }, 500);
+    }
+
+    // Collapsible detail drawer and status actions
+    function toggleCard(id) {
+      const details = document.getElementById(`details-${id}`);
+      const icon = document.getElementById(`icon-${id}`);
+      if (details.style.display === 'block') {
+        details.style.display = 'none';
+        icon.style.transform = 'rotate(0deg)';
+      } else {
+        details.style.display = 'block';
+        icon.style.transform = 'rotate(180deg)';
+      }
+    }
+
+    // Dynamic history list rendering
+    function renderHistoryList() {
+      const listContainer = document.getElementById('pr-history-list');
+      if (activePrs.length === 0) {
+        listContainer.innerHTML = `
+          <div style="background:#fff; border: 1px dashed var(--line); border-radius: var(--radius); padding:30px; text-align:center; color: var(--muted); font-size:13px;">
+            ยังไม่มีประวัติคำขอสั่งซื้อในระบบ
+          </div>
+        `;
+        return;
+      }
+
+      listContainer.innerHTML = '';
+      activePrs.forEach((pr, index) => {
+        const prId = `pr-card-${index}`;
+
+        // Status calculations
+        let pendingCount = 0;
+        let approvedCount = 0;
+        let rejectedCount = 0;
+        let orderedCount = 0;
+
+        pr.items.forEach(it => {
+          if (it.status === 'Pending') pendingCount++;
+          if (it.status === 'Approved') approvedCount++;
+          if (it.status === 'Rejected') rejectedCount++;
+          if (it.status === 'Ordered') orderedCount++;
+        });
+
+        // Compute overall bill status label
+        let overallClass = 'pending';
+        let overallText = 'รอพิจารณา';
+
+        if (pendingCount === 0) {
+          if (rejectedCount > 0 && approvedCount === 0 && orderedCount === 0) {
+            overallClass = 'rejected';
+            overallText = 'ไม่อนุมัติทั้งหมด';
+          } else if (orderedCount > 0 && approvedCount === 0) {
+            overallClass = 'approved';
+            overallText = 'สั่งซื้อครบแล้ว';
+          } else {
+            overallClass = 'approved';
+            overallText = 'อนุมัติครบแล้ว';
+          }
+        } else {
+          if (approvedCount > 0 || rejectedCount > 0 || orderedCount > 0) {
+            overallClass = 'mixed';
+            overallText = 'ทยอยดำเนินการ';
+          }
+        }
+
+        // Sub items HTML
+        let itemsHtml = '';
+        pr.items.forEach((item, itemIdx) => {
+          let itemBadge = '';
+          if (item.status === 'Pending') itemBadge = `<span class="status-badge pending" style="padding:2px 6px; font-size:10px;">รออนุมัติ</span>`;
+          if (item.status === 'Approved') itemBadge = `<span class="status-badge approved" style="padding:2px 6px; font-size:10px;">อนุมัติแล้ว</span>`;
+          if (item.status === 'Rejected') itemBadge = `<span class="status-badge rejected" style="padding:2px 6px; font-size:10px;">ไม่อนุมัติ</span>`;
+          if (item.status === 'Ordered') itemBadge = `<span class="status-badge approved" style="padding:2px 6px; font-size:10px; background:var(--purple-light); color:var(--purple); border-color:var(--purple-border);">⚡ ซื้อให้แล้ว</span>`;
+
+          // Supervisor & Officer Actions
+          let actionButtons = '';
+          if (currentRole === 'SUPERVISOR' && item.status === 'Pending') {
+            actionButtons = `
+              <div class="detail-actions">
+                <button class="btn-action-sm btn-approve" onclick="approvePrItem(${index}, ${itemIdx})">อนุมัติ</button>
+                <button class="btn-action-sm btn-reject" onclick="openRejectionModal(${index}, ${itemIdx})">ปฏิเสธ</button>
+              </div>
+            `;
+          } else if (currentRole === 'OFFICER' && item.status === 'Approved') {
+            actionButtons = `
+              <div class="detail-actions">
+                <button class="btn-action-sm btn-order" onclick="orderPrItem(${index}, ${itemIdx})">ทำรายการซื้อแล้ว</button>
+              </div>
+            `;
+          }
+
+          const catalogBadge = item.code !== "FREETEXT" && item.code ? `<span style="font-size: 10px; background:#f1f5f9; color:var(--muted); padding:2px 4px; border-radius:3px; font-weight:700;">${item.code}</span>` : `<span style="font-size: 10px; background:var(--warning-light); color:var(--warning); padding:2px 4px; border-radius:3px; font-weight:700;">Free-Text</span>`;
+
+          itemsHtml += `
+            <div class="pr-detail-item">
+              <div class="pr-item-top">
+                <div>
+                  <div class="pr-item-title">${itemIdx + 1}. ${item.name} ${catalogBadge}</div>
+                  ${item.remark ? `<div class="pr-item-remark">📝 ${item.remark}</div>` : ''}
+                  ${item.rejectReason ? `<div class="pr-item-rejection-msg">❌ เหตุผลปฏิเสธ: ${item.rejectReason}</div>` : ''}
+                </div>
+                <div class="pr-item-qty">${item.qty} ${item.unit}</div>
+              </div>
+              <div class="pr-item-status-row">
+                <span></span>
+                ${itemBadge}
+              </div>
+              ${actionButtons}
+            </div>
+          `;
+        });
+
+        // Determine step index for timeline progress bar
+        let timelineClass = 'step-1';
+        if (overallText === 'อนุมัติครบแล้ว' || overallText === 'สั่งซื้อครบแล้ว') timelineClass = 'step-3';
+        else if (overallText === 'ทยอยดำเนินการ') timelineClass = 'step-2';
+        else if (overallText === 'ไม่อนุมัติทั้งหมด') timelineClass = 'step-rejected';
+
+        // Render card block
+        const div = document.createElement('div');
+        div.className = "pr-card";
+        div.innerHTML = `
+          <div class="pr-card-summary" onclick="toggleCard('${prId}')">
+            <div class="pr-card-meta">
+              <span class="pr-bill-no">${pr.prNumber}</span>
+              <span class="pr-bill-desc">${pr.items[0].name} ${pr.items.length > 1 ? `และสินค้าอื่นๆอีก ${pr.items.length - 1} รายการ` : ''}</span>
+              <span class="pr-bill-actors">ผู้ขอ: <strong>${pr.requester}</strong> • ส่งไป: <strong>คลัง ${pr.warehouse}</strong></span>
+              <span class="pr-bill-date">⏰ ${pr.date}</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span class="status-badge ${overallClass}">${overallText}</span>
+              <svg id="icon-${prId}" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="color:var(--muted); transition: transform 0.2s ease;"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </div>
+          </div>
+
+          <div class="pr-card-details" id="details-${prId}">
+            <div class="pr-detail-header">รายการสินค้าที่สั่งซื้อ</div>
+            ${itemsHtml}
+
+            <!-- Timeline tracker -->
+            <div class="timeline-tracker">
+              <div class="timeline-title">สถานะความคืบหน้า (Progress)</div>
+              <div class="timeline-flow ${timelineClass}">
+                <div class="timeline-step active">
+                  <div class="timeline-dot">1</div>
+                  <div class="timeline-label">ส่งคำขอ</div>
+                </div>
+                <div class="timeline-step ${timelineClass !== 'step-1' && timelineClass !== 'step-rejected' ? 'active' : ''} ${timelineClass === 'step-rejected' ? 'rejected' : ''}">
+                  <div class="timeline-dot">2</div>
+                  <div class="timeline-label">${timelineClass === 'step-rejected' ? 'ไม่อนุมัติ' : 'พิจารณา'}</div>
+                </div>
+                <div class="timeline-step ${timelineClass === 'step-3' ? 'active' : ''}">
+                  <div class="timeline-dot">3</div>
+                  <div class="timeline-label">จัดซื้อแล้ว</div>
+                </div>
+              </div>
+
+              <div style="margin-top:12px; font-size:10px; color:var(--muted); line-height:1.4;">
+                <strong>ประวัติกิจกรรม:</strong><br>
+                ${pr.timeline.map(tl => `• [${tl.time}] ${tl.text}`).join('<br>')}
+              </div>
+            </div>
+          </div>
+        `;
+        listContainer.appendChild(div);
+      });
+    }
+
+    // Action simulations
+    function approvePrItem(prIdx, itemIdx) {
+      const pr = activePrs[prIdx];
+      pr.items[itemIdx].status = 'Approved';
+
+      const now = new Date();
+      const timeStr = now.toISOString().slice(0,10) + " " + now.toTimeString().slice(0,5);
+      pr.timeline.push({
+        text: `อนุมัติรายการที่ ${itemIdx + 1} (${pr.items[itemIdx].name}) โดยหัวหน้า`,
+        time: timeStr
+      });
+
+      savePrData();
+      renderHistoryList();
+
+      // Auto expand the modified card so supervisor can see the update
+      const prId = `pr-card-${prIdx}`;
+      document.getElementById(`details-${prId}`).style.display = 'block';
+      document.getElementById(`icon-${prId}`).style.transform = 'rotate(180deg)';
+
+      showToast(`อนุมัติรายการสำเร็จ!`);
+    }
+
+    function openRejectionModal(prIdx, itemIdx) {
+      pendingRejectItem = { prIdx, itemIdx };
+      document.getElementById('rejection-reason-input').value = '';
+      document.getElementById('rejection-modal').classList.add('active');
+    }
+
+    function closeRejectionModal() {
+      document.getElementById('rejection-modal').classList.remove('active');
+      pendingRejectItem = null;
+    }
+
+    function confirmRejection() {
+      if (!pendingRejectItem) return;
+      const { prIdx, itemIdx } = pendingRejectItem;
+      const reason = document.getElementById('rejection-reason-input').value.trim();
+
+      if (!reason) {
+        alert("กรุณาระบุเหตุผลการปฏิเสธรายการ");
+        return;
+      }
+
+      const pr = activePrs[prIdx];
+      pr.items[itemIdx].status = 'Rejected';
+      pr.items[itemIdx].rejectReason = reason;
+
+      const now = new Date();
+      const timeStr = now.toISOString().slice(0,10) + " " + now.toTimeString().slice(0,5);
+      pr.timeline.push({
+        text: `ปฏิเสธรายการที่ ${itemIdx + 1} (${pr.items[itemIdx].name}) เหตุผล: ${reason}`,
+        time: timeStr
+      });
+
+      savePrData();
+      renderHistoryList();
+      closeRejectionModal();
+
+      // Keep expanded
+      const prId = `pr-card-${prIdx}`;
+      document.getElementById(`details-${prId}`).style.display = 'block';
+      document.getElementById(`icon-${prId}`).style.transform = 'rotate(180deg)';
+
+      showToast("ปฏิเสธรายการขอซื้อเรียบร้อย");
+    }
+
+    function orderPrItem(prIdx, itemIdx) {
+      const pr = activePrs[prIdx];
+      pr.items[itemIdx].status = 'Ordered';
+
+      const now = new Date();
+      const timeStr = now.toISOString().slice(0,10) + " " + now.toTimeString().slice(0,5);
+      pr.timeline.push({
+        text: `จัดซื้อสำเร็จโดยฝ่ายจัดซื้อสำหรับรายการที่ ${itemIdx + 1}`,
+        time: timeStr
+      });
+
+      savePrData();
+      renderHistoryList();
+
+      // Keep expanded
+      const prId = `pr-card-${prIdx}`;
+      document.getElementById(`details-${prId}`).style.display = 'block';
+      document.getElementById(`icon-${prId}`).style.transform = 'rotate(180deg)';
+
+      showToast("บันทึกการจัดซื้อสินค้าเรียบร้อย!");
+    }
+
+    // LINE preview window
+    function showLineFlexModal() {
+      // If we don't have new form submit data, display the first PR card in history
+      const data = lineModalData || activePrs[0];
+      if (!data) return;
+
+      document.getElementById('line-bill-no').innerText = data.prNumber;
+      document.getElementById('line-requester').innerText = data.requester;
+      document.getElementById('line-wh').innerText = `${data.warehouse} (คลัง ${data.warehouse})`;
+
+      const listContainer = document.getElementById('line-items-list');
+      listContainer.innerHTML = '';
+
+      data.items.forEach((item, index) => {
+        const itemLine = document.createElement('div');
+        itemLine.className = 'flex-item-line';
+        itemLine.innerHTML = `
+          <div style="font-weight:700; display:flex; justify-content:space-between;">
+            <span>${index + 1}. ${item.name}</span>
+            <span style="color:var(--brand-blue);">${item.qty} ${item.unit}</span>
+          </div>
+          ${item.remark ? `<div style="color:var(--muted); font-size:10px; margin-top:2px;">หมายเหตุ: ${item.remark}</div>` : ''}
+        `;
+        listContainer.appendChild(itemLine);
+      });
+
+      document.getElementById('line-modal').style.display = 'flex';
+    }
+
+    function closeLineFlexModal() {
+      document.getElementById('line-modal').style.display = 'none';
+    }
+
+    // Initialization bootstrap
+    window.addEventListener('DOMContentLoaded', () => {
+      getPrData();
+      addEmptyRequisitionRow();
+      renderHistoryList();
+    });
+
+  </script>
+</body>
+</html>

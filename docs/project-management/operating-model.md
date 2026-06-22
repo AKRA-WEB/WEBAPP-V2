@@ -1,6 +1,6 @@
 # Project Management Operating Model
 
-Last updated: 2026-06-20
+Last updated: 2026-06-22
 
 This file defines how AKRA WEBAPP V2 should be managed from this point forward.
 It is intentionally compact. Detailed implementation history belongs in plans,
@@ -34,6 +34,20 @@ resume:
 5. Wait for `Architect:`, `Go:`, `Review:`, or another explicit instruction
    before changing runtime code.
 
+## Frontend Lane
+
+Frontend/UI work uses `FRONTEND_CONDUCTOR.md` as a sub-conductor over the same
+plan board. It is appropriate to separate the commands and review checklist,
+but not to split the frontend backlog away from migration priorities.
+
+Use the frontend lane to capture V1 UX parity, static mock-ups, responsive
+checks, accessibility, role-aware states, and design-system guidance while the
+module's data and permission work moves forward.
+
+When Gemini is used for frontend design, UI/UX critique, mock-up support, or
+responsive review, use `Gemini.md` as Gemini-specific guidance under the same
+frontend lane.
+
 ## Operating Cadence
 
 - After every non-trivial task: update current state, work log, plan index, and
@@ -57,10 +71,11 @@ Default priority order:
 
 Current default next execution slice:
 
-1. Picking problem reporting.
-2. Picking LINE notification/failure recovery.
-3. Picking cutover package.
-4. PR/PO/GR foundation plan.
+1. Picking cutover package.
+2. PR/PO/GR foundation plan.
+3. UI/UX mock-up review and frontend slice planning for the next migrated
+   module.
+4. Full V1 parity closeout work by module priority.
 
 ## Definition Of Done
 
@@ -111,13 +126,23 @@ Track these risk classes in plans/handoff when they apply:
 - Mobile operational usability.
 - LINE notification side effects.
 - Cutover and rollback readiness.
+- Frontend mock-ups or UI work drifting away from migration readiness.
 
 ## Current Management Notes
 
 - Main portal (`V2-0017`) is complete.
 - Picking read-only, create requisition, and status transitions (`V2-0019`,
   `V2-0020`, `V2-0023`) are complete.
-- Picking problem reporting is the recommended next slice.
+- Picking problem reporting (`V2-0025`) and LINE notification/failure recovery
+  (`V2-0027`) are complete in staging/dry-run form; real LINE sends remain
+  unproven without credentials and explicit approval.
+- A static UI/UX mock-up (`V2-0029`) exists at
+  `docs/mockups/v2-ui-ux-mockup.html`.
+- `FRONTEND_CONDUCTOR.md` defines the frontend shortcut lane and should be used
+  for UI/UX planning, mock-ups, responsive checks, and frontend reviews.
+- `Gemini.md` defines Gemini-specific frontend/UI/UX guidance when Gemini is
+  used as a design or review companion.
+- Picking cutover package is the recommended next migration slice.
 - Placeholder non-Picking module routes still need server-side permission guard
   treatment before they get real content.
 - V1 remains the production system until module-specific cutover approval.

@@ -1,0 +1,2067 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AKRA V2 - Goods Receiving (GR) UI/UX Parity Mockup</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+Thai:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: light;
+      --brand-blue: #171c8f;
+      --brand-blue-light: #f0f2ff;
+      --brand-blue-border: #d2d8ff;
+
+      --brand-orange: #e35205;
+      --brand-orange-light: #fff5f0;
+
+      --ink: #1e293b;
+      --muted: #64748b;
+      --soft-bg: #f8fafc;
+      --surface: #ffffff;
+      --line: #e2e8f0;
+
+      --danger: #ef4444;
+      --danger-light: #fef2f2;
+      --danger-border: #fca5a5;
+
+      --warning: #f59e0b;
+      --warning-light: #fefbeb;
+
+      --success: #10b981;
+      --success-light: #ecfdf5;
+      --success-border: #a7f3d0;
+
+      --radius-sm: 8px;
+      --radius: 12px;
+      --radius-lg: 16px;
+
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.05), 0 2px 4px -2px rgba(15, 23, 42, 0.05);
+      --shadow-lg: 0 20px 25px -5px rgba(15, 23, 42, 0.1), 0 8px 10px -6px rgba(15, 23, 42, 0.1);
+
+      --transition: all 0.2s ease;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: #cbd5e1;
+      color: var(--ink);
+      font-family: 'Inter', 'Noto Sans Thai', -apple-system, sans-serif;
+      font-size: 15px;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    /* Container holding the simulation frame */
+    .viewport-container {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: var(--transition);
+    }
+
+    .viewport-container.device-desktop {
+      max-width: 1400px;
+      background: #f1f5f9;
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow-lg);
+    }
+
+    /* Interactive frame: Mobile by default (390px) */
+    .phone-frame {
+      width: 390px;
+      height: 844px;
+      background: var(--surface);
+      border-radius: 40px;
+      border: 12px solid #000;
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.3), 0 0 0 4px #1e293b;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transition: var(--transition);
+    }
+
+    .viewport-container.device-desktop .phone-frame {
+      width: 100%;
+      height: 760px;
+      border: none;
+      border-radius: var(--radius-lg);
+      box-shadow: none;
+    }
+
+    /* Mobile bar simulator */
+    .mobile-status-bar {
+      background: #000;
+      color: #fff;
+      font-size: 11px;
+      padding: 6px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      height: 28px;
+      flex-shrink: 0;
+    }
+
+    .viewport-container.device-desktop .mobile-status-bar {
+      display: none;
+    }
+
+    /* Application Header */
+    header {
+      background: var(--brand-blue);
+      color: #ffffff;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      z-index: 100;
+    }
+
+    .header-title-area {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .header-back-btn {
+      background: none;
+      border: none;
+      color: #fff;
+      cursor: pointer;
+      display: none; /* Visible in PO receipt details */
+      padding: 4px;
+    }
+
+    .header-main-title {
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .header-sub-title {
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    /* Main Scrollable Canvas */
+    .canvas {
+      flex: 1;
+      background: #f1f5f9;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Footer Tab Navigator */
+    .footer-tabs {
+      background: var(--surface);
+      border-top: 1px solid var(--line);
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      flex-shrink: 0;
+      z-index: 100;
+    }
+
+    .tab-item {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 700;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      flex: 1;
+    }
+
+    .tab-item.active {
+      color: var(--brand-blue);
+    }
+
+    /* Standardized V1 "แผนรับสินค้า" Collapsible Header Card */
+    .v1-plan-card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      margin: 12px;
+      padding: 12px;
+      flex-shrink: 0;
+    }
+
+    .v1-plan-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .v1-plan-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #1e293b;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .v1-plan-subtitle {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .v1-plan-bullets {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      font-size: 11px;
+      margin-top: 8px;
+    }
+
+    .bullet {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-weight: 600;
+    }
+
+    .bullet-red { color: var(--danger); }
+    .bullet-red::before { content: ''; display: inline-block; width: 6px; height: 6px; background: var(--danger); border-radius: 50%; }
+
+    .bullet-blue { color: var(--brand-blue); }
+    .bullet-blue::before { content: ''; display: inline-block; width: 6px; height: 6px; background: var(--brand-blue); border-radius: 50%; }
+
+    /* The 14-day grid exactly matching V1 columns styling */
+    .v1-calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr); /* 2 columns on mobile */
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .viewport-container.device-desktop .v1-calendar-grid {
+      grid-template-columns: repeat(7, 1fr); /* 7 columns on wide desktop view */
+    }
+
+    /* Day Box button */
+    .v1-day-box {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      padding: 8px;
+      text-align: left;
+      min-height: 104px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      transition: var(--transition);
+      width: 100%;
+    }
+
+    .v1-day-box:hover {
+      border-color: var(--brand-orange);
+      background: var(--brand-orange-light);
+    }
+
+    .v1-day-box.active {
+      border-color: var(--brand-orange);
+      background: var(--brand-orange-light);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .day-box-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 6px;
+    }
+
+    .day-box-day-lbl {
+      font-size: 11px;
+      font-weight: 700;
+      color: #334155;
+    }
+
+    .day-box-date-lbl {
+      font-size: 10px;
+      color: var(--muted);
+    }
+
+    .day-box-qty-badge {
+      font-size: 10px;
+      font-weight: 700;
+      background: var(--soft-bg);
+      border: 1px solid var(--line);
+      padding: 1px 5px;
+      border-radius: 20px;
+      color: #475569;
+    }
+
+    .v1-day-box.active .day-box-qty-badge {
+      background: var(--surface);
+    }
+
+    /* Specific Vendor pills rendering inside calendar box */
+    .day-box-pill-list {
+      margin-top: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      width: 100%;
+    }
+
+    .v1-vendor-pill {
+      font-size: 9px;
+      font-weight: 700;
+      padding: 2px 4px;
+      border-radius: 4px;
+      border: 1px solid transparent;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      display: block;
+      width: 100%;
+    }
+
+    .v1-vendor-pill.confirmed {
+      background: var(--danger-light);
+      color: var(--danger);
+      border-color: rgba(239, 68, 68, 0.15);
+    }
+
+    .v1-vendor-pill.estimated {
+      background: var(--brand-blue-light);
+      color: var(--brand-blue);
+      border-color: var(--brand-blue-border);
+    }
+
+    /* Warehouse filter chips styling like V1 */
+    .wh-chips-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin: 10px 0;
+      padding: 0 4px;
+    }
+
+    .wh-filter-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      border: 1px solid var(--line);
+      background: var(--surface);
+      color: var(--muted);
+      cursor: pointer;
+      transition: var(--transition);
+      outline: none;
+    }
+
+    .wh-filter-chip:hover {
+      border-color: var(--brand-orange);
+      color: var(--brand-orange);
+      background: var(--brand-orange-light);
+    }
+
+    .wh-filter-chip.active {
+      background: var(--brand-orange);
+      border-color: var(--brand-orange);
+      color: #fff;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .chip-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 18px;
+      height: 18px;
+      padding: 0 5px;
+      border-radius: 9px;
+      font-size: 9px;
+      font-weight: 700;
+      background: rgba(0, 0, 0, 0.05);
+      color: inherit;
+    }
+
+    .wh-filter-chip.active .chip-badge {
+      background: rgba(255, 255, 255, 0.2);
+      color: #fff;
+    }
+
+    .day-box-no-plan {
+      font-size: 9px;
+      color: var(--muted);
+      margin-top: 4px;
+      display: block;
+    }
+
+    .day-box-more {
+      display: block;
+      font-size: 9px;
+      font-weight: 700;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    /* Red "เลยแผน" overdue alert bar button */
+    .v1-overdue-alert-btn {
+      width: 100%;
+      background: var(--danger-light);
+      border: 1px solid rgba(239, 68, 68, 0.2);
+      border-radius: var(--radius-sm);
+      color: var(--danger);
+      font-weight: 700;
+      font-size: 12px;
+      padding: 10px;
+      margin-top: 10px;
+      text-align: left;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .v1-overdue-alert-btn:hover {
+      background: #fecaca;
+    }
+
+    /* PO List cards mimicking V1 styles precisely */
+    .po-list-area {
+      padding: 0 12px 12px 12px;
+    }
+
+    .v1-po-card {
+      background: var(--surface);
+      border-left: 4px solid var(--line);
+      border-top: 1px solid var(--line);
+      border-right: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      padding: 14px;
+      margin-bottom: 10px;
+      box-shadow: var(--shadow);
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .v1-po-card:hover {
+      box-shadow: var(--shadow-lg);
+    }
+
+    /* Border colors based on status */
+    .v1-po-card.status-overdue { border-left-color: var(--danger); background: #fef2f260; }
+    .v1-po-card.status-pending { border-left-color: #94a3b8; }
+    .v1-po-card.status-review { border-left-color: var(--brand-orange); background: var(--brand-orange-light); }
+    .v1-po-card.status-draft { border-left-color: var(--brand-blue); background: var(--brand-blue-light); }
+    .v1-po-card.status-completed { border-left-color: var(--success); background: #ecfdf550; }
+
+    .po-card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .po-card-no {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* V1 item rows list with individual badges */
+    .po-card-items-box {
+      margin-block: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .po-card-item-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+    }
+
+    .po-card-item-name {
+      font-weight: 500;
+      color: #1e293b;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      flex: 1;
+      padding-right: 12px;
+    }
+
+    .item-badge-pill {
+      font-size: 9px;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 4px;
+      border: 1px solid;
+      white-space: nowrap;
+    }
+
+    .item-badge-pill.confirmed { background: var(--danger-light); color: var(--danger); border-color: rgba(239, 68, 68, 0.15); }
+    .item-badge-pill.estimated { background: var(--brand-blue-light); color: var(--brand-blue); border-color: var(--brand-blue-border); }
+
+    /* Delivery plan block under product list */
+    .delivery-plan-block {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: 1px solid;
+      margin-bottom: 10px;
+    }
+
+    .delivery-plan-block.confirmed { background: var(--danger-light); color: var(--danger); border-color: rgba(239, 68, 68, 0.15); }
+    .delivery-plan-block.estimated { background: var(--brand-blue-light); color: var(--brand-blue); border-color: var(--brand-blue-border); }
+    .delivery-plan-block.partial { background: var(--brand-orange-light); color: var(--brand-orange); border-color: rgba(227, 82, 5, 0.2); }
+    .delivery-plan-block.none { background: var(--soft-bg); color: var(--muted); border-color: var(--line); }
+
+    /* PO Card Footer */
+    .po-card-footer {
+      border-top: 1px solid #f1f5f9;
+      padding-top: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .footer-vendor-lbl {
+      font-weight: 700;
+      color: #334155;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-bottom: 2px;
+      font-size: 12px;
+    }
+
+    .wh-badge {
+      font-size: 9px;
+      font-weight: 800;
+      background: var(--brand-blue);
+      color: #fff;
+      padding: 2px 6px;
+      border-radius: 4px;
+      display: inline-block;
+    }
+
+    .wh-badge.wh-w1 { background: #475569; }
+    .wh-badge.wh-w5 { background: var(--brand-orange); }
+
+    .open-po-action-lbl {
+      font-weight: 800;
+      color: var(--brand-blue);
+      display: flex;
+      align-items: center;
+      background: #fff;
+      padding: 3px 8px;
+      border-radius: 4px;
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .v1-po-card.status-review .open-po-action-lbl { color: var(--brand-orange); }
+    .v1-po-card.status-completed .open-po-action-lbl { color: var(--success); }
+
+    /* Filter Bar Area */
+    .mobile-filter-bar {
+      padding: 8px 12px;
+      background: #f1f5f9;
+      display: flex;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .mobile-search-wrapper {
+      flex: 1;
+      position: relative;
+    }
+
+    .mobile-search-input {
+      width: 100%;
+      height: 38px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--line);
+      padding: 0 10px 0 32px;
+      font-size: 13px;
+      background: #fff;
+    }
+
+    .mobile-search-icon {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .mobile-select {
+      height: 38px;
+      padding: 0 8px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--line);
+      font-size: 12px;
+      font-weight: 700;
+      background: #fff;
+      max-width: 90px;
+    }
+
+    /* Views (Screens) toggling */
+    .screen-view {
+      display: none;
+      flex: 1;
+      flex-direction: column;
+    }
+
+    .screen-view.active {
+      display: flex;
+    }
+
+    /* Status Header for Detail Receive view */
+    .rec-header-card {
+      background: var(--surface);
+      border-bottom: 1px solid var(--line);
+      padding: 14px 16px;
+      flex-shrink: 0;
+    }
+
+    .rec-vendor-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 6px;
+    }
+
+    .rec-vendor-avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 8px;
+      background: var(--soft-bg);
+      border: 1px solid var(--line);
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+    }
+
+    /* Verification item checklist styling */
+    .item-card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      padding: 14px;
+      margin: 12px;
+      border-left: 4px solid var(--brand-blue);
+    }
+
+    /* Glove counters style adjustments */
+    .qty-counter {
+      display: flex;
+      align-items: center;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      width: 130px;
+      height: 40px;
+    }
+
+    .qty-btn {
+      width: 40px;
+      height: 100%;
+      background: var(--soft-bg);
+      border: none;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      color: var(--ink);
+    }
+
+    .qty-val {
+      flex: 1;
+      width: 100%;
+      height: 100%;
+      text-align: center;
+      border: none;
+      font-weight: 800;
+      font-size: 15px;
+      color: var(--ink);
+    }
+
+    /* Dropdown structural grid triggers */
+    .structured-location-btn {
+      width: 100%;
+      padding: 8px 12px;
+      background: var(--brand-blue-light);
+      border: 1px dashed var(--brand-blue);
+      border-radius: 6px;
+      color: var(--brand-blue);
+      font-weight: 700;
+      font-size: 12px;
+      margin-top: 10px;
+      cursor: pointer;
+      text-align: left;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .structured-location-btn.split {
+      background: var(--brand-orange-light);
+      border-color: var(--brand-orange);
+      color: var(--brand-orange);
+    }
+
+    /* Bottom Sheets styles */
+    .sheet-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(15,23,42,0.4);
+      z-index: 150;
+      display: none;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+
+    .sheet-drawer {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #fff;
+      border-radius: 20px 20px 0 0;
+      z-index: 160;
+      padding: 16px;
+      transform: translateY(100%);
+      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      max-height: 80%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sheet-drawer.open { transform: translateY(0); }
+
+    .sheet-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 14px;
+    }
+
+    .sheet-title { font-weight: 800; font-size: 14px; color: var(--brand-blue); }
+
+    .sheet-body { overflow-y: auto; flex: 1; }
+
+    /* Lift fee forms */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .form-input {
+      width: 100%;
+      height: 38px;
+      padding: 0 10px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--line);
+      background: var(--soft-bg);
+      font-size: 13px;
+    }
+
+    /* Floating feedback controls */
+    .mockup-controls {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      background: rgba(15, 23, 42, 0.9);
+      backdrop-filter: blur(10px);
+      padding: 14px;
+      border-radius: var(--radius);
+      border: 1px solid rgba(255,255,255,0.15);
+      color: #fff;
+      z-index: 1000;
+      width: 280px;
+      box-shadow: var(--shadow-lg);
+    }
+
+    /* Split row layout styling */
+    .split-input-row {
+      display: grid;
+      grid-template-columns: 1.5fr 1fr 30px;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    /* Active filter alert badge */
+    .active-filter-alert {
+      background: var(--brand-orange-light);
+      border: 1px solid rgba(227, 82, 5, 0.15);
+      color: var(--brand-orange);
+      padding: 8px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      margin: 12px 12px 0 12px;
+      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Mockup Panel -->
+  <div class="mockup-controls">
+    <div class="mockup-title">
+      <span>GR Layout Feedback</span>
+      <span style="font-size: 8px; background:var(--brand-orange); color:#fff; padding:1px 4px; border-radius:3px;">PARITY MATCH</span>
+    </div>
+    <div style="font-size: 11px; color:#cbd5e1; margin-bottom:10px;">
+      ปรับโครงสร้างตาม V1: แสดงปฏิทินแบบ 14 ช่อง, รายละเอียด Vendor Pills และสถานะบิลบนการ์ดเลียนแบบ UI ของเดิมอย่างเที่ยงตรง
+    </div>
+    <div class="mockup-btn-grid">
+      <button class="mockup-btn active" onclick="setRole('ADMIN')">ADMIN</button>
+      <button class="mockup-btn" onclick="setRole('OPERATOR')">OPERATOR</button>
+      <button id="btn-device-mobile" class="mockup-btn active" onclick="setDevice('mobile')">MOBILE (390px)</button>
+      <button id="btn-device-desktop" class="mockup-btn" onclick="setDevice('desktop')">DESKTOP</button>
+    </div>
+  </div>
+
+  <div id="viewport" class="viewport-container">
+
+    <div class="phone-frame">
+
+      <!-- Simulated Phone Top Status Bar -->
+      <div class="mobile-status-bar">
+        <span>13:23</span>
+        <div>
+          <span>📶 5G</span>
+          <span style="margin-left:6px;">🔋 88%</span>
+        </div>
+      </div>
+
+      <!-- Main Header -->
+      <header>
+        <div class="header-title-area">
+          <button id="btn-back-header" class="header-back-btn" onclick="closeReceivingDetail()">
+            <svg style="width:20px;height:20px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M15 19l-7-7 7-7"></path></svg>
+          </button>
+          <div>
+            <span id="header-main-txt" class="header-main-title">แผนรับสินค้า (GR)</span>
+            <div id="header-sub-txt" class="header-sub-title">คลังสาขาและระบบสั่งจัดซื้อกลาง</div>
+          </div>
+        </div>
+
+        <div id="role-display-pill" style="font-size:10px; background:rgba(255,255,255,0.25); padding:2px 6px; border-radius:4px; font-weight:700;">
+          ADMIN
+        </div>
+      </header>
+
+      <!-- Content Canvas -->
+      <div class="canvas">
+
+        <!-- VIEW 1: MAIN GR LIST & CALENDAR -->
+        <div id="view-dashboard" class="screen-view active">
+
+          <!-- V1 Collapsible "แผนรับสินค้า" Card -->
+          <div class="v1-plan-card">
+            <div class="v1-plan-header">
+              <div>
+                <h3 class="v1-plan-title">
+                  <span style="font-size: 16px;">📅</span> แผนรับสินค้า
+                </h3>
+                <p class="v1-plan-subtitle">ใช้วันที่ Vendor ยืนยันก่อน ถ้าไม่มีระบบจะอิงตามประวัติขนส่ง</p>
+
+                <div class="v1-plan-bullets">
+                  <span class="bullet bullet-red" id="summary-confirmed-count">Vendor ยืนยัน 0</span>
+                  <span class="bullet bullet-blue" id="summary-estimated-count">คาดการณ์ 0</span>
+                  <span style="color:var(--muted); font-size:10px;">12 ตัวอย่าง · 4 Vendor</span>
+                </div>
+              </div>
+
+              <div id="calendar-header-actions" style="display: flex; gap: 8px;">
+                <button class="btn-outline" style="min-height:30px; font-size:11px; padding:2px 8px; border-radius:6px;" onclick="toggleCalendarBody()">
+                  <span id="lbl-toggle-cal">ซ่อนแผนรับสินค้า</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Overdue Alert banner inside Calendar summary card -->
+            <button id="overdue-alert-btn" class="v1-overdue-alert-btn" onclick="setFilter('overdue')" style="display: none;">
+              <span>มีบิลเลยแผน 0 บิล</span>
+              <span>ดูข้อมูล ➔</span>
+            </button>
+
+            <!-- 14-day Calendar Grid matching V1 styles -->
+            <div id="delivery-calendar-body" class="v1-calendar-grid">
+              <!-- Rendered dynamically via JavaScript -->
+            </div>
+          </div>
+
+          <!-- Active Day Filter indicator bar -->
+          <div id="filter-indicator-bar" class="active-filter-alert" style="display:none;">
+            <span>เปิดตัวกรองปฏิทิน: วันที่เลือก</span>
+            <button style="background:none; border:none; color:var(--brand-orange); font-weight:800; cursor:pointer;" onclick="clearDayFilter()">ล้างตัวกรอง</button>
+          </div>
+
+          <!-- Quick search and Warehouse chips -->
+          <div class="mobile-filter-bar" style="margin-bottom: 8px;">
+            <div class="mobile-search-wrapper" style="flex: 1;">
+              <span class="mobile-search-icon">🔍</span>
+              <input type="text" id="po-search" class="mobile-search-input" placeholder="ค้นหาเลขที่บิล, ชื่อสินค้า, ผู้จัดส่ง..." oninput="filterPoCards()">
+            </div>
+          </div>
+
+          <!-- Warehouse Filter Chips container -->
+          <div id="wh-chips-container" class="wh-chips-container">
+            <!-- Rendered dynamically via JavaScript -->
+          </div>
+
+          <!-- PO cards scroll list area -->
+          <div id="po-cards-container" class="po-list-area">
+            <!-- Rendered dynamically via JavaScript -->
+          </div>
+
+        </div>
+
+        <!-- VIEW 2: PO RECEIVING DETAILS -->
+        <div id="view-receiving" class="screen-view">
+
+          <div class="rec-header-card">
+            <div class="rec-vendor-row">
+              <div class="rec-vendor-avatar">🏢</div>
+              <div>
+                <span id="rec-vendor-lbl" style="font-weight:800; font-size:15px; color:#1e293b;">บจก. เพียวฟู้ดส์</span>
+                <div style="display:flex; gap:4px; margin-top:2px;">
+                  <span id="rec-wh-badge" class="wh-badge">W2</span>
+                  <span id="rec-po-lbl" style="font-size:11px; font-weight:700; color:var(--muted);">PO-2026-06-001</span>
+                </div>
+              </div>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; font-size:12px; color:var(--muted); margin-top:8px; border-top:1px solid var(--soft-bg); padding-top:8px;">
+              <span>สั่งซื้อเมื่อ: <b id="rec-po-date">22/06/2026</b></span>
+              <span>แผนส่ง: <b style="color:var(--brand-orange);" id="rec-plan-date">22/06/2026</b></span>
+            </div>
+          </div>
+
+          <!-- Items list -->
+          <div style="flex:1; overflow-y:auto; padding-bottom:20px;" id="item-cards-receiving-container">
+            <!-- Items populated dynamically -->
+          </div>
+
+          <!-- Lift fee and remarks -->
+          <div class="v1-plan-card" style="margin: 12px 12px 20px 12px;">
+            <span class="form-label" style="font-size:11px; margin-bottom:8px;">ค่าลิฟท์และการจ่ายเงิน (Lift Fee)</span>
+
+            <div class="form-grid">
+              <div>
+                <label class="form-label" style="font-size:9px;">วิธีการจ่าย</label>
+                <select id="gr-lift-payment" class="form-select" style="height:36px; font-size:13px;">
+                  <option value="โอน">โอนเงิน</option>
+                  <option value="เงินสด">เงินสด</option>
+                  <option value="ไม่มี">ไม่มี</option>
+                </select>
+              </div>
+              <div>
+                <label class="form-label" style="font-size:9px;">จำนวนรอบ</label>
+                <input id="gr-lift-rounds" type="number" class="form-input" value="1" min="0" style="height:36px; font-size:13px;">
+              </div>
+            </div>
+
+            <div style="margin-top:10px;">
+              <label class="form-label" style="font-size:9px;">หมายเหตุท้ายบิล (Remark)</label>
+              <input id="gr-remarks" type="text" class="form-input" style="height:36px; font-size:13px;" placeholder="ใส่บันทึกเพิ่มเติมที่นี่...">
+            </div>
+          </div>
+
+          <!-- Action bar (V1 dynamic action buttons) -->
+          <div id="rec-action-bar" style="padding: 12px; background:#fff; border-top: 1px solid var(--line); display:flex; flex-wrap:wrap; gap:8px;">
+            <button class="btn btn-cancel" style="height:44px; flex:1; min-width:80px;" onclick="closeReceivingDetail()">กลับ</button>
+            <button id="btn-draft" class="btn btn-outline" style="height:44px; flex:2; min-width:100px; font-weight:700;" onclick="submitGrWithStatus('Draft GR')">📝 พักบิล</button>
+            <button id="btn-review" class="btn" style="background:var(--warning); color:#fff; height:44px; flex:2; min-width:120px; font-weight:700;" onclick="submitGrWithStatus('Pending Review')">⏳ รับสินค้าเสร็จแล้ว</button>
+            <button id="btn-confirm" class="btn btn-submit" style="background:var(--brand-orange); height:44px; flex:2; min-width:130px; font-weight:700;" onclick="submitGrWithStatus('GR Completed')">✅ ยืนยันรับสินค้า</button>
+            <button id="btn-recall" class="btn btn-outline" style="height:44px; flex:2; min-width:130px; border-color:var(--brand-blue); color:var(--brand-blue); font-weight:700;" onclick="handleRecallReset('recall')">↩️ ดึงบิลมาแก้ไข</button>
+            <button id="btn-reset" class="btn btn-outline" style="height:44px; flex:2; min-width:130px; border-color:var(--danger); color:var(--danger); font-weight:700;" onclick="handleRecallReset('reset')">🗑️ รีเซ็ตเป็นรอสินค้าเข้า</button>
+          </div>
+
+        </div>
+
+        <!-- VIEW 3: SUCCESS PREVIEW -->
+        <div id="view-success" class="screen-view" style="padding:16px;">
+
+          <div class="card" style="text-align:center; padding:24px 16px; border-top:4px solid var(--success);">
+            <span style="font-size:36px; display:block; margin-bottom:8px;">✅</span>
+            <h3 style="font-weight:800; color:var(--success);">จัดเก็บเข้าคลังสินค้าสำเร็จ</h3>
+            <p style="font-size:12px; color:var(--muted); margin-top:4px;">บันทึกเลขที่รับของ GR เรียบร้อยพร้อมส่ง LINE สำเร็จ</p>
+          </div>
+
+          <span class="form-label" style="margin-bottom:6px;">พรีวิวสรุปยอดกลุ่ม LINE (Flex Parity)</span>
+
+          <div class="line-card">
+            <div class="line-card-header">
+              <span>🔔 รายงานการรับสินค้า (GR Notify)</span>
+            </div>
+
+            <div style="border-left:3px solid var(--brand-orange); padding-left:8px; margin-bottom:8px;">
+              <div class="line-meta-row">
+                <span>เลขใบสั่งซื้อ:</span>
+                <b id="line-po-no">PO-2026-06-001</b>
+              </div>
+              <div class="line-meta-row">
+                <span>ผู้จัดส่ง:</span>
+                <b id="line-vendor">บจก. เพียวฟู้ดส์</b>
+              </div>
+              <div class="line-meta-row">
+                <span>🏠 คลังรับสินค้า:</span>
+                <b style="color:var(--brand-blue);" id="line-wh">คลัง W2 (AKRA)</b>
+              </div>
+            </div>
+
+            <div class="form-label" style="font-size:9px; color:#999; margin-bottom:4px;">รายละเอียดแยกตามคลังจัดเก็บจริง</div>
+            <div id="line-items-box">
+              <!-- Item detail rows -->
+            </div>
+
+            <div id="line-remark-summary" style="font-size:11px; color:#555; border-top:1px solid #eee; padding-top:6px; margin-top:8px;">
+              💬 หมายเหตุ: - [ค่าลิฟท์: โอน 1 รอบ]
+            </div>
+          </div>
+
+          <button class="btn btn-submit" style="background:var(--brand-blue); width:100%; margin-top:20px; height:44px;" onclick="closeReceivingDetail()">กลับไปหน้าแดชบอร์ด</button>
+
+        </div>
+
+      </div>
+
+      <!-- App Bottom Bar Nav -->
+      <nav class="footer-tabs">
+        <button class="tab-item active" onclick="closeReceivingDetail()">
+          <span>📅</span>
+          <span>แผนรับของ</span>
+        </button>
+        <button class="tab-item" onclick="showToast('แท็บประวัติ GR (บิล Completed ทั้งหมด)')">
+          <span>📜</span>
+          <span>ประวัติ GR</span>
+        </button>
+        <button class="tab-item" onclick="showToast('หน้าต่างตั้งค่าระบบ (Settings)')">
+          <span>⚙️</span>
+          <span>การตั้งค่า</span>
+        </button>
+      </nav>
+
+      <!-- BOTTOM SHEET 1: SINGLE LOCATION SELECT -->
+      <div id="sheet-location-overlay" class="sheet-overlay" onclick="closeLocDrawer()"></div>
+      <div id="sheet-location" class="sheet-drawer">
+        <div class="sheet-head">
+          <span class="sheet-title">📍 ระบุพิกัดจัดเก็บสินค้า</span>
+          <button class="close-sheet-btn" onclick="closeLocDrawer()">✕</button>
+        </div>
+        <div class="sheet-body">
+          <div class="form-group">
+            <label class="form-label">คลังสินค้า (Warehouse)</label>
+            <select class="form-select" id="field-wh" style="height:38px; width:100%; border:1px solid var(--line); padding:0 8px; border-radius:6px; font-weight:700;">
+              <option value="W2">W2 - คลังหลัก AKRA</option>
+              <option value="W1">W1 - คลัง TRD</option>
+              <option value="W5">W5 - คลังเบิกห้าง W5</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">ระดับชั้นวาง (Floor)</label>
+            <select class="form-select" id="field-floor" style="height:38px; width:100%; border:1px solid var(--line); padding:0 8px; border-radius:6px; font-weight:700;">
+              <option value="1F">ชั้นที่ 1 (1F)</option>
+              <option value="2F">ชั้นที่ 2 (2F)</option>
+              <option value="3F">ชั้นที่ 3 (3F)</option>
+              <option value="4F">ชั้นที่ 4 (4F)</option>
+              <option value="5F">ชั้นที่ 5 (5F)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">โซนตำแหน่งจัดเก็บ (Zone)</label>
+            <input type="text" id="field-zone" class="form-input" value="1" placeholder="ระบุโซนเช่น 3A, 4B">
+          </div>
+
+          <div style="display:flex; gap:8px; margin-top:20px;">
+            <button class="btn btn-cancel" style="height:40px;" onclick="triggerSplitStorageSheet()">✕ แยกคลังย่อย (Split)</button>
+            <button class="btn btn-submit" style="background:var(--brand-blue); height:40px;" onclick="saveSingleLocation()">ยืนยันพิกัด</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- BOTTOM SHEET 2: SPLIT STORAGE DRAWER (V1 item splitting) -->
+      <div id="sheet-split-overlay" class="sheet-overlay" onclick="closeSplitDrawer()"></div>
+      <div id="sheet-split" class="sheet-drawer">
+        <div class="sheet-head">
+          <span class="sheet-title">🥞 แยกคลังจัดเก็บสินค้า (Split Item)</span>
+          <button class="close-sheet-btn" onclick="closeSplitDrawer()">✕</button>
+        </div>
+        <div class="sheet-body">
+          <div style="font-size:12px; font-weight:700; margin-bottom:12px;">
+            ยอดจัดส่งบิล: <span id="lbl-split-limit" style="color:var(--brand-orange);">50</span> | ยอดจัดสรรแล้ว: <span id="lbl-split-current" style="color:var(--success);">0</span>
+          </div>
+
+          <div id="split-inputs-container">
+            <!-- Split rows -->
+          </div>
+
+          <button class="btn btn-outline" style="width:100%; min-height:36px; font-size:12px; margin-top:8px;" onclick="addSplitInputRow()">
+            ➕ เพิ่มตำแหน่งจัดเก็บย่อย
+          </button>
+
+          <div style="display:flex; gap:8px; margin-top:20px;">
+            <button class="btn btn-cancel" style="height:40px;" onclick="closeSplitDrawer()">ยกเลิก</button>
+            <button class="btn btn-submit" style="background:var(--brand-orange); height:40px;" onclick="saveSplitLocations()">บันทึกการแยกเก็บ</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <script>
+    // Live Mock Data mirroring V1 structures
+    const poDatabase = {
+      'PO-2026-06-001': {
+        vendor: 'บจก. เพียวฟู้ดส์',
+        wh: 'W2',
+        poDate: '22/06/2026',
+        planDate: '22/06/2026',
+        daysUntil: 0,
+        status: 'Pending GR',
+        items: [
+          { code: 'P-00432', name: 'มายองเนสรสชีส PureFoods 920g', qty: 50, expectedDate: '22/06/2026', planSource: 'confirmed' },
+          { code: 'P-00912', name: 'น้ำสลัดครีม PureFoods 1kg', qty: 30, expectedDate: '22/06/2026', planSource: 'confirmed' }
+        ]
+      },
+      'PO-2026-06-002': {
+        vendor: 'ไทยเบฟฯ (ตัวแทน)',
+        wh: 'W1',
+        poDate: '21/06/2026',
+        planDate: '23/06/2026',
+        daysUntil: 1,
+        status: 'Pending GR',
+        items: [
+          { code: 'P-00212', name: 'น้ำดื่มตราช้าง 600ml', qty: 100, plannedDate: '23/06/2026', planSource: 'estimated_p75' }
+        ]
+      },
+      'PO-2026-06-003': {
+        vendor: 'บจก. เอก-ชัย ดีสทริบิวชั่น',
+        wh: 'W5',
+        poDate: '19/06/2026',
+        planDate: '24/06/2026',
+        daysUntil: 2,
+        status: 'Pending GR',
+        items: [
+          { code: 'P-00104', name: 'น้ำตาลทรายมิตรผล 1kg', qty: 200, expectedDate: '24/06/2026', planSource: 'confirmed' }
+        ]
+      },
+      'PO-2026-06-004': {
+        vendor: 'บจก. น้ำมันพืชไทย',
+        wh: 'W2',
+        poDate: '18/06/2026',
+        planDate: '19/06/2026',
+        daysUntil: -3,
+        status: 'Pending GR',
+        items: [
+          { code: 'P-00088', name: 'น้ำมันพืชองุ่น 1 ลิตร', qty: 120, expectedDate: '19/06/2026', planSource: 'confirmed' }
+        ]
+      },
+      'PO-2026-06-005': {
+        vendor: 'บจก. คาราด้า',
+        wh: 'W2',
+        poDate: '20/06/2026',
+        planDate: '22/06/2026',
+        daysUntil: 0,
+        status: 'Draft GR',
+        items: [
+          { code: 'P-00302', name: 'ขนมคาราด้า รสปลาหมึก 68g', qty: 300, expectedDate: '22/06/2026', planSource: 'confirmed' }
+        ]
+      },
+      'PO-2026-06-006': {
+        vendor: 'บจก. สหพัฒนพิบูล',
+        wh: 'W1',
+        poDate: '18/06/2026',
+        planDate: '23/06/2026',
+        daysUntil: 1,
+        status: 'Pending Review',
+        items: [
+          { code: 'P-00119', name: 'บะหมี่กึ่งสำเร็จรูปมาม่า รสต้มยำกุ้ง', qty: 500, expectedDate: '23/06/2026', planSource: 'confirmed' }
+        ]
+      },
+      'PO-2026-06-007': {
+        vendor: 'บจก. ไทยดริ้งค์',
+        wh: 'W2',
+        poDate: '15/06/2026',
+        planDate: '20/06/2026',
+        daysUntil: -2,
+        status: 'GR Completed',
+        items: [
+          { code: 'P-00244', name: 'เครื่องดื่มเอสโคล่า 360ml', qty: 240, expectedDate: '20/06/2026', planSource: 'confirmed' }
+        ]
+      }
+    };
+
+    // State parameters
+    let currentRole = 'ADMIN';
+    let isCalendarVisible = true;
+    let deliveryPlanFilter = ''; // 'day' or 'overdue' or ''
+    let deliveryPlanDayOffset = null;
+    let activeWarehouseFilter = '';
+    let activeGrPoId = null;
+    let activeItemId = null;
+    let itemLocations = {}; // store user configurations
+    const WAREHOUSES = ['W1', 'W2', 'W3', 'W4', 'W5', 'C1', 'C2'];
+
+    // Role modifier
+    function setRole(roleName) {
+      currentRole = roleName;
+      document.getElementById('role-display-pill').innerText = roleName;
+
+      const btns = document.querySelectorAll('.mockup-controls button');
+      btns.forEach(btn => {
+        if (btn.innerText === roleName) btn.classList.add('active');
+        else if (!btn.id.startsWith('btn-device-')) btn.classList.remove('active');
+      });
+
+      if (activeGrPoId) {
+        openReceivingDetail(activeGrPoId);
+      } else {
+        renderCalendar();
+        renderWarehouseChips();
+        filterAndRenderPoCards();
+      }
+
+      showToast(`เปลี่ยนสิทธิ์ระบบตรวจรับเป็น: ${roleName}`);
+    }
+
+    // Device size modifier
+    function setDevice(deviceType) {
+      const viewport = document.getElementById('viewport');
+      const btnMobile = document.getElementById('btn-device-mobile');
+      const btnDesktop = document.getElementById('btn-device-desktop');
+
+      if (deviceType === 'desktop') {
+        viewport.classList.add('device-desktop');
+        btnDesktop.classList.add('active');
+        btnMobile.classList.remove('active');
+      } else {
+        viewport.classList.remove('device-desktop');
+        btnDesktop.classList.remove('active');
+        btnMobile.classList.add('active');
+      }
+      showToast(`ปรับหน้าแสดงผล: ${deviceType.toUpperCase()}`);
+    }
+
+    // Toggle calendar visibility exactly like V1
+    function toggleCalendarBody() {
+      isCalendarVisible = !isCalendarVisible;
+      renderCalendar();
+    }
+
+    // Dynamic Calendar rendering
+    function getDeliveryPlanGroups() {
+      return Object.entries(poDatabase)
+        .map(([id, data]) => ({ id, ...data }))
+        .filter(g => g.status !== 'GR Completed' && g.planDate);
+    }
+
+    function formatCalendarDate(offset) {
+      const baseDate = new Date("2026-06-22T00:00:00+07:00");
+      baseDate.setDate(baseDate.getDate() + offset);
+
+      const weekdays = ['อา.', 'จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.'];
+      const dayLabel = offset === 0 ? 'วันนี้' : weekdays[baseDate.getDay()];
+      const day = String(baseDate.getDate()).padStart(2, '0');
+      const month = String(baseDate.getMonth() + 1).padStart(2, '0');
+      return {
+        label: dayLabel,
+        shortDate: `${day}/${month}`
+      };
+    }
+
+    function renderCalendarPills(dayGroups) {
+      if (!dayGroups.length) {
+        return '<span class="day-box-no-plan">ไม่มีแผน</span>';
+      }
+      return dayGroups.slice(0, 2).map(g => {
+        const isConfirmed = g.items.some(i => i.planSource === 'confirmed');
+        const cls = isConfirmed ? 'confirmed' : 'estimated';
+        const label = isConfirmed ? 'ยืนยัน' : 'คาดการณ์';
+        return `<span class="v1-vendor-pill ${cls}">${label} · ${g.vendor}</span>`;
+      }).join('') + (dayGroups.length > 2 ? `<span class="day-box-more">+${dayGroups.length - 2} บิล</span>` : '');
+    }
+
+    function renderCalendar() {
+      const planGroups = getDeliveryPlanGroups();
+      const activePOs = Object.values(poDatabase).filter(g => g.status !== 'GR Completed');
+      const overduePOs = activePOs.filter(g => g.daysUntil < 0);
+      const confirmedCount = planGroups.filter(g => g.items.some(i => i.planSource === 'confirmed')).length;
+      const estimatedCount = planGroups.length - confirmedCount;
+
+      document.getElementById('summary-confirmed-count').innerText = `Vendor ยืนยัน ${confirmedCount}`;
+      document.getElementById('summary-estimated-count').innerText = `คาดการณ์ ${estimatedCount}`;
+
+      const overdueBtn = document.getElementById('overdue-alert-btn');
+      if (overduePOs.length > 0) {
+        overdueBtn.style.display = 'flex';
+        overdueBtn.querySelector('span:first-child').innerText = `มีบิลเลยแผน ${overduePOs.length} บิล`;
+      } else {
+        overdueBtn.style.display = 'none';
+      }
+
+      let calendarHtml = '';
+      for (let offset = 0; offset < 14; offset++) {
+        const meta = formatCalendarDate(offset);
+        const dayGroups = planGroups.filter(g => g.daysUntil === offset);
+        const isActive = deliveryPlanFilter === 'day' && deliveryPlanDayOffset === offset;
+
+        calendarHtml += `
+          <button class="v1-day-box ${isActive ? 'active' : ''}" id="day-box-${offset}" onclick="setDayFilter(${offset})">
+            <div class="day-box-header">
+              <div>
+                <span class="day-box-day-lbl">${meta.label}</span>
+                <div class="day-box-date-lbl">${meta.shortDate}</div>
+              </div>
+              <span class="day-box-qty-badge">${dayGroups.length}</span>
+            </div>
+            <div class="day-box-pill-list">
+              ${renderCalendarPills(dayGroups)}
+            </div>
+          </button>
+        `;
+      }
+      document.getElementById('delivery-calendar-body').innerHTML = calendarHtml;
+
+      // Render calendar toggle actions
+      const actionsContainer = document.getElementById('calendar-header-actions');
+      let actionsHtml = '';
+      if (deliveryPlanFilter) {
+        actionsHtml += `<button class="btn-outline" style="min-height:30px; font-size:11px; padding:2px 8px; border-radius:6px; border-color: var(--brand-orange); color: var(--brand-orange); background: var(--brand-orange-light); margin-right: 8px;" onclick="clearDayFilter()">ล้างตัวกรอง</button>`;
+      }
+      actionsHtml += `
+        <button class="btn-outline" style="min-height:30px; font-size:11px; padding:2px 8px; border-radius:6px;" onclick="toggleCalendarBody()">
+          <span id="lbl-toggle-cal">${isCalendarVisible ? 'ซ่อนแผนรับสินค้า' : 'เปิดแผนรับสินค้า'}</span>
+        </button>
+      `;
+      actionsContainer.innerHTML = actionsHtml;
+      document.getElementById('delivery-calendar-body').style.display = isCalendarVisible ? 'grid' : 'none';
+    }
+
+    // Day filter triggers
+    function setDayFilter(offset) {
+      offset = Number(offset);
+      if (deliveryPlanFilter === 'day' && deliveryPlanDayOffset === offset) {
+        clearDayFilter();
+        return;
+      }
+
+      deliveryPlanFilter = 'day';
+      deliveryPlanDayOffset = offset;
+
+      renderCalendar();
+      filterAndRenderPoCards();
+
+      const meta = formatCalendarDate(offset);
+
+      // Update indicator bar text
+      document.getElementById('filter-indicator-bar').style.display = 'flex';
+      document.getElementById('filter-indicator-bar').querySelector('span').innerText = `เปิดตัวกรองปฏิทิน: วัน${meta.label} (${meta.shortDate})`;
+
+      showToast(`กรองแผนรับสินค้า: วัน${meta.label} (${meta.shortDate})`);
+    }
+
+    function clearDayFilter() {
+      deliveryPlanFilter = '';
+      deliveryPlanDayOffset = null;
+      document.getElementById('filter-indicator-bar').style.display = 'none';
+      renderCalendar();
+      filterAndRenderPoCards();
+      showToast('ล้างตัวกรองปฏิทิน');
+    }
+
+    function setFilter(type) {
+      if (type === 'overdue') {
+        if (deliveryPlanFilter === 'overdue') {
+          clearDayFilter();
+          return;
+        }
+        deliveryPlanFilter = 'overdue';
+        deliveryPlanDayOffset = null;
+
+        renderCalendar();
+        filterAndRenderPoCards();
+
+        document.getElementById('filter-indicator-bar').style.display = 'flex';
+        document.getElementById('filter-indicator-bar').querySelector('span').innerText = 'เปิดตัวกรองปฏิทิน: เลยกำหนดส่ง';
+        showToast('กรองบิลที่เลยกำหนดส่ง');
+      }
+    }
+
+    // Warehouse Count Chips Rendering
+    function renderWarehouseChips() {
+      const container = document.getElementById('wh-chips-container');
+      if (!container) return;
+
+      const activePOs = Object.values(poDatabase).filter(g => g.status !== 'GR Completed');
+      const counts = {};
+      WAREHOUSES.forEach(w => counts[w] = 0);
+      let total = 0;
+
+      activePOs.forEach(g => {
+        if (counts[g.wh] !== undefined) counts[g.wh]++;
+        total++;
+      });
+
+      const badge = (n) => `<span class="chip-badge">${n}</span>`;
+      let html = `
+        <button type="button" class="wh-filter-chip ${activeWarehouseFilter === '' ? 'active' : ''}" onclick="setWarehouseFilter('')">
+          ทั้งหมด ${badge(total)}
+        </button>
+      `;
+
+      WAREHOUSES.forEach(w => {
+        html += `
+          <button type="button" class="wh-filter-chip ${activeWarehouseFilter === w ? 'active' : ''}" onclick="setWarehouseFilter('${w}')">
+            ${w} ${badge(counts[w] || 0)}
+          </button>
+        `;
+      });
+
+      container.innerHTML = html;
+    }
+
+    function setWarehouseFilter(wh) {
+      activeWarehouseFilter = wh;
+      renderWarehouseChips();
+      filterAndRenderPoCards();
+      showToast(`กรองคลังสินค้า: ${wh ? wh : 'ทั้งหมด'}`);
+    }
+
+    // PO List filtering and dynamic rendering
+    function filterPoCards() {
+      filterAndRenderPoCards();
+    }
+
+    function filterAndRenderPoCards() {
+      const searchVal = document.getElementById('po-search').value.trim().toLowerCase();
+      const container = document.getElementById('po-cards-container');
+      container.innerHTML = '';
+
+      let filteredList = Object.entries(poDatabase).map(([id, data]) => ({ id, ...data }));
+
+      // 1. Filter by Warehouse
+      if (activeWarehouseFilter) {
+        filteredList = filteredList.filter(po => po.wh === activeWarehouseFilter);
+      }
+
+      // 2. Filter by Calendar Day / Overdue
+      if (deliveryPlanFilter === 'overdue') {
+        filteredList = filteredList.filter(po => po.status !== 'GR Completed' && po.daysUntil < 0);
+      } else if (deliveryPlanFilter === 'day') {
+        filteredList = filteredList.filter(po => po.status !== 'GR Completed' && po.daysUntil === deliveryPlanDayOffset);
+      } else {
+        if (!searchVal) {
+          filteredList = filteredList.filter(po => po.status !== 'GR Completed');
+        }
+      }
+
+      // 3. Filter by Search
+      if (searchVal) {
+        filteredList = filteredList.filter(po => {
+          const itemsText = po.items.map(item => item.name).join(' ');
+          const fullText = `${po.id} ${po.vendor} ${itemsText}`.toLowerCase();
+          return fullText.includes(searchVal);
+        });
+      }
+
+      const countEl = document.getElementById('pending-count');
+      if (countEl) {
+        countEl.innerText = `${filteredList.length} บิล`;
+      }
+
+      if (filteredList.length === 0) {
+        container.innerHTML = `
+          <div style="text-align: center; padding: 40px 20px; color: var(--muted); background: var(--surface); border-radius: var(--radius); border: 1px dashed var(--line); margin-top: 10px;">
+            <div style="font-size: 32px; margin-bottom: 8px;">📭</div>
+            <p style="font-size: 13px; font-weight: 700; color:#475569;">ไม่พบรายการบิลรับสินค้า</p>
+            <p style="font-size: 11px; color: var(--muted); margin-top: 2px;">กรุณาล้างตัวกรองหรือค้นหาด้วยคำอื่น</p>
+          </div>
+        `;
+        return;
+      }
+
+      filteredList.forEach(po => {
+        const poId = po.id;
+        const days = po.daysUntil;
+        const wh = po.wh;
+
+        let cardClass = "";
+        let statusBadge = "";
+
+        const cardStatus = po.status;
+        const isOverdue = cardStatus === 'Pending GR' && days < 0;
+
+        if (isOverdue) {
+          cardClass = "status-overdue border-l-4 border-l-red-500 bg-red-50/40";
+          statusBadge = `<span class="badge" style="background:var(--danger-light); color:var(--danger); font-weight:700; border: 1px solid var(--danger-border);">⚠️ นานผิดปกติ</span>`;
+        } else if (cardStatus === 'Pending Review') {
+          cardClass = "status-review border-l-4 border-l-brand-orange bg-brand-orange-light";
+          statusBadge = `<span class="badge" style="background:var(--brand-orange-light); color:var(--brand-orange); font-weight:700; border: 1px solid rgba(227, 82, 5, 0.2);">⏳ รอตรวจสอบ</span>`;
+        } else if (cardStatus === 'Draft GR') {
+          cardClass = "status-draft border-l-4 border-l-brand-blue bg-brand-blue-light";
+          statusBadge = `<span class="badge" style="background:var(--brand-blue-light); color:var(--brand-blue); font-weight:700; border: 1px solid var(--brand-blue-border);">📦 กำลังลงสินค้า</span>`;
+        } else if (cardStatus === 'GR Completed') {
+          cardClass = "status-completed border-l-4 border-l-emerald-500 bg-emerald-50/10";
+          statusBadge = `<span class="badge" style="background:var(--success-light); color:var(--success); font-weight:700; border: 1px solid var(--success-border);">✅ ลงสินค้าสำเร็จ</span>`;
+        } else {
+          cardClass = "status-pending border-l-4 border-l-gray-300 bg-white";
+          statusBadge = `<span class="badge" style="background:var(--soft-bg); color:var(--muted); font-weight:700; border: 1px solid var(--line);">รอสินค้าเข้า</span>`;
+        }
+
+        let itemsHtml = '<div class="po-card-items-box">';
+        po.items.slice(0, 3).forEach((item, idx) => {
+          const isItemConfirmed = item.planSource === 'confirmed';
+          const badgeClass = isItemConfirmed ? 'confirmed' : 'estimated';
+          const dateParts = item.expectedDate ? item.expectedDate.split('/') : (item.plannedDate ? item.plannedDate.split('/') : null);
+          const formattedDate = dateParts ? `${dateParts[0]}/${dateParts[1]}` : '';
+          const badgeText = isItemConfirmed ? `ยืนยัน ${formattedDate}` : `คาด ~${formattedDate}`;
+
+          itemsHtml += `
+            <div class="po-card-item-row">
+              <span class="po-card-item-name"><span style="color:var(--muted)">${idx+1}.</span> ${item.name}</span>
+              <span class="item-badge-pill ${badgeClass}">${badgeText}</span>
+            </div>
+          `;
+        });
+        if (po.items.length > 3) {
+          itemsHtml += `<p style="font-size:11px; color:var(--muted); margin-top:4px; font-style:italic;">...อีก ${po.items.length - 3} รายการ</p>`;
+        }
+        itemsHtml += '</div>';
+
+        let planBlockHtml = "";
+        if (po.planDate) {
+          const isConfirmed = po.items.some(i => i.planSource === 'confirmed');
+          const hasPartial = po.items.some(i => i.planSource === 'confirmed') && po.items.some(i => i.planSource !== 'confirmed');
+
+          if (hasPartial) {
+            const confirmedItemsCount = po.items.filter(i => i.planSource === 'confirmed').length;
+            planBlockHtml = `
+              <div class="delivery-plan-block partial" style="background: var(--brand-orange-light); border: 1px solid rgba(227,82,5,0.2); color: var(--brand-orange);">
+                <span>ยืนยัน ${confirmedItemsCount}/${po.items.length} รายการ</span>
+                <span class="font-medium opacity-80"> · เข้าไว ${po.planDate}</span>
+              </div>
+            `;
+          } else if (isConfirmed) {
+            planBlockHtml = `
+              <div class="delivery-plan-block confirmed">
+                <span>${po.planDate}</span>
+                <span class="font-medium opacity-80"> · วันที่ส่งจริง - Vendor ยืนยัน</span>
+              </div>
+            `;
+          } else {
+            planBlockHtml = `
+              <div class="delivery-plan-block estimated">
+                <span>${po.planDate}</span>
+                <span class="font-medium opacity-80"> · วันที่คาดว่าจะเข้า: คาดเข้าใน ${days} วัน</span>
+              </div>
+            `;
+          }
+        } else {
+          planBlockHtml = `
+            <div class="delivery-plan-block" style="background: var(--soft-bg); border: 1px solid var(--line); color: var(--muted);">
+              <span>ยังไม่มีแผนรับ</span>
+            </div>
+          `;
+        }
+
+        const cardHtml = `
+          <div class="v1-po-card ${cardClass}" data-po-id="${poId}">
+            <div class="po-card-top" onclick="openReceivingDetail('${poId}')">
+              <span class="po-card-no">PO: ${poId}</span>
+              ${statusBadge}
+            </div>
+
+            <div onclick="openReceivingDetail('${poId}')">
+              ${itemsHtml}
+              ${planBlockHtml}
+            </div>
+
+            <div class="po-card-footer">
+              <div onclick="openReceivingDetail('${poId}')" style="flex:1; cursor:pointer;">
+                <p class="footer-vendor-lbl">🏢 ${po.vendor}</p>
+                <span>สั่งเมื่อ: ${po.poDate}</span>
+              </div>
+              <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
+                <span class="wh-badge wh-${wh.toLowerCase()}">${wh}</span>
+                <span class="open-po-action-lbl" onclick="openReceivingDetail('${poId}')">เปิดบิล ➔</span>
+              </div>
+            </div>
+          </div>
+        `;
+        container.insertAdjacentHTML('beforeend', cardHtml);
+      });
+    }
+
+    // Open active receiving detail screen
+    function openReceivingDetail(poId) {
+      if (currentRole === 'GUEST') {
+        showToast('❌ สิทธิ์ประเภท GUEST ถูกล็อกการทำรายการ');
+        return;
+      }
+      activeGrPoId = poId;
+      const data = poDatabase[poId];
+      if (!data) return;
+
+      document.getElementById('view-dashboard').classList.remove('active');
+      document.getElementById('view-receiving').classList.add('active');
+      document.getElementById('btn-back-header').style.display = 'block';
+
+      document.getElementById('header-main-txt').innerText = `รับสินค้า ${poId}`;
+      document.getElementById('header-sub-txt').innerText = data.vendor;
+
+      document.getElementById('rec-vendor-lbl').innerText = data.vendor;
+      document.getElementById('rec-po-lbl').innerText = poId;
+      document.getElementById('rec-wh-badge').innerText = data.wh;
+      document.getElementById('rec-wh-badge').className = `wh-badge wh-${data.wh.toLowerCase()}`;
+      document.getElementById('rec-po-date').innerText = data.poDate;
+      document.getElementById('rec-plan-date').innerText = data.planDate;
+
+      // Populate item inputs
+      const container = document.getElementById('item-cards-receiving-container');
+      container.innerHTML = '';
+
+      // Initialize default locations if not exists
+      data.items.forEach((item, index) => {
+        const itemId = `item-${index}`;
+        if (!itemLocations[itemId]) {
+          if (item.locIn) {
+            if (item.locIn.includes('|')) {
+              const parts = item.locIn.split(' | ');
+              const values = parts.map(p => {
+                const match = p.match(/(.+)\((.+)\)/);
+                return match ? { loc: match[1], qty: parseInt(match[2]) || 0 } : { loc: p, qty: 0 };
+              });
+              itemLocations[itemId] = { type: 'split', values };
+            } else {
+              itemLocations[itemId] = { type: 'single', value: item.locIn };
+            }
+          } else {
+            itemLocations[itemId] = { type: 'single', value: `${data.wh}-1F-1` };
+          }
+        }
+
+        const isSavedData = data.status === 'Draft GR' || data.status === 'Pending Review' || data.status === 'GR Completed';
+        const grQty = isSavedData && item.grQty !== undefined ? item.grQty : item.qty;
+
+        const locConfig = itemLocations[itemId];
+        let locText = "";
+        let locClass = "";
+        if (locConfig.type === 'single') {
+          locText = `📍 คลังจัดเก็บ: ${locConfig.value}`;
+        } else {
+          locText = `🥞 แยกคลัง: ` + locConfig.values.map(v => `${v.loc}(${v.qty})`).join(' | ');
+          locClass = "split";
+        }
+
+        const div = document.createElement('div');
+        div.className = 'item-card';
+        div.id = `card-${itemId}`;
+        div.innerHTML = `
+          <div style="font-weight:700; font-size:14px; color:#1e293b;">${item.name}</div>
+          <div style="font-size:12px; color:var(--muted); margin-bottom:10px;">
+            รหัส: <b>${item.code}</b> | ยอดสั่ง: <span style="font-weight:700; color:var(--brand-blue);">${item.qty}</span>
+          </div>
+
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
+            <span style="font-size:12px; font-weight:700; color:var(--muted)">จำนวนรับเข้าจริง</span>
+            <div class="qty-counter">
+              <button class="qty-btn" onclick="adjustItemQty('${itemId}', -1)">-</button>
+              <input type="number" id="qty-${itemId}" class="qty-val" value="${grQty}" min="0">
+              <button class="qty-btn" onclick="adjustItemQty('${itemId}', 1)">+</button>
+            </div>
+          </div>
+
+          <div style="margin-top:8px; display:flex; align-items:center; gap:8px;">
+            <span style="font-size:12px; font-weight:700; color:var(--muted); width:80px;">วันหมดอายุ:</span>
+            <input type="date" class="form-input" style="height:32px; padding:0 8px; flex:1;" value="2027-06-22">
+          </div>
+
+          <button id="loc-btn-${itemId}" class="structured-location-btn ${locClass}" onclick="openLocDrawer('${itemId}')">
+            <span id="loc-lbl-${itemId}">${locText}</span>
+            <span>กำหนดพิกัด ➔</span>
+          </button>
+        `;
+        container.appendChild(div);
+      });
+
+      // Restore remarks and lift details
+      document.getElementById('gr-remarks').value = data.remark || '';
+      document.getElementById('gr-lift-rounds').value = data.liftRounds || '1';
+      document.getElementById('gr-lift-payment').value = data.liftPayment || (data.vendor.includes('เพียวฟู้ดส์') ? 'เชื่อ' : 'โอน');
+
+      // Manage buttons visibility and inputs disabled state based on role and status
+      const btnDraft = document.getElementById('btn-draft');
+      const btnReview = document.getElementById('btn-review');
+      const btnConfirm = document.getElementById('btn-confirm');
+      const btnRecall = document.getElementById('btn-recall');
+      const btnReset = document.getElementById('btn-reset');
+
+      btnDraft.style.display = 'none';
+      btnReview.style.display = 'none';
+      btnConfirm.style.display = 'none';
+      btnRecall.style.display = 'none';
+      btnReset.style.display = 'none';
+
+      const isAdmin = (currentRole === 'ADMIN');
+      const status = data.status;
+
+      if (status === 'GR Completed') {
+        if (isAdmin) {
+          btnRecall.style.display = 'block';
+          btnReset.style.display = 'block';
+        }
+        setInputDisabledStatus(true);
+      } else if (status === 'Pending Review') {
+        if (isAdmin) {
+          btnConfirm.style.display = 'block';
+          btnRecall.style.display = 'block';
+          btnReset.style.display = 'block';
+        }
+        setInputDisabledStatus(true);
+      } else { // Pending GR or Draft GR
+        btnDraft.style.display = 'block';
+        btnReview.style.display = 'block';
+        if (status === 'Draft GR' && isAdmin) {
+          btnReset.style.display = 'block';
+        }
+        setInputDisabledStatus(false);
+      }
+    }
+
+    function adjustItemQty(itemId, step) {
+      const input = document.getElementById(`qty-${itemId}`);
+      if (!input || input.disabled) return;
+      let val = parseInt(input.value) || 0;
+      val = Math.max(0, val + step);
+      input.value = val;
+    }
+
+    function closeReceivingDetail() {
+      document.getElementById('view-receiving').classList.remove('active');
+      document.getElementById('view-success').classList.remove('active');
+      document.getElementById('view-dashboard').classList.add('active');
+      document.getElementById('btn-back-header').style.display = 'none';
+
+      document.getElementById('header-main-txt').innerText = 'แผนรับสินค้า (GR)';
+      document.getElementById('header-sub-txt').innerText = 'คลังสาขาและระบบสั่งจัดซื้อกลาง';
+      activeGrPoId = null;
+    }
+
+    // Location Sheets
+    function openLocDrawer(itemId) {
+      const data = poDatabase[activeGrPoId];
+      if (data && (data.status === 'GR Completed' || data.status === 'Pending Review')) return; // Gated
+
+      activeItemId = itemId;
+      const overlay = document.getElementById('sheet-location-overlay');
+      const drawer = document.getElementById('sheet-location');
+
+      const config = itemLocations[itemId];
+      if (config && config.type === 'single') {
+        const parts = config.value.split('-');
+        document.getElementById('field-wh').value = parts[0] || 'W2';
+        document.getElementById('field-floor').value = parts[1] || '1F';
+        document.getElementById('field-zone').value = parts[2] || '1';
+      }
+
+      overlay.style.display = 'block';
+      setTimeout(() => {
+        overlay.style.opacity = '1';
+        drawer.classList.add('open');
+      }, 50);
+    }
+
+    function closeLocDrawer() {
+      const overlay = document.getElementById('sheet-location-overlay');
+      const drawer = document.getElementById('sheet-location');
+
+      drawer.classList.remove('open');
+      overlay.style.opacity = '0';
+      setTimeout(() => overlay.style.display = 'none', 200);
+    }
+
+    function saveSingleLocation() {
+      const wh = document.getElementById('field-wh').value;
+      const floor = document.getElementById('field-floor').value;
+      const zone = document.getElementById('field-zone').value || '1';
+      const locKey = `${wh}-${floor}-${zone}`;
+
+      itemLocations[activeItemId] = { type: 'single', value: locKey };
+
+      const btn = document.getElementById(`loc-btn-${activeItemId}`);
+      const lbl = document.getElementById(`loc-lbl-${activeItemId}`);
+      btn.classList.remove('split');
+      lbl.innerText = `📍 คลังจัดเก็บ: ${locKey}`;
+
+      closeLocDrawer();
+      showToast(`ระบุพิกัด: ${locKey}`);
+    }
+
+    // Split Storage Sheets
+    function triggerSplitStorageSheet() {
+      closeLocDrawer();
+      setTimeout(() => {
+        openSplitDrawer();
+      }, 200);
+    }
+
+    let splitRowCounter = 0;
+
+    function openSplitDrawer() {
+      const overlay = document.getElementById('sheet-split-overlay');
+      const drawer = document.getElementById('sheet-split');
+
+      const data = poDatabase[activeGrPoId];
+      const index = parseInt(activeItemId.split('-')[1]);
+      const itemObj = data.items[index];
+
+      document.getElementById('lbl-split-limit').innerText = `${itemObj.qty} หน่วย`;
+
+      const container = document.getElementById('split-inputs-container');
+      container.innerHTML = '';
+
+      const current = itemLocations[activeItemId];
+      if (current && current.type === 'split') {
+        current.values.forEach(val => {
+          addSplitInputRow(val.loc, val.qty);
+        });
+      } else {
+        addSplitInputRow(`${data.wh}-1F-1`, itemObj.qty);
+      }
+
+      recalcSplitTotal();
+
+      overlay.style.display = 'block';
+      setTimeout(() => {
+        overlay.style.opacity = '1';
+        drawer.classList.add('open');
+      }, 50);
+    }
+
+    function closeSplitDrawer() {
+      const overlay = document.getElementById('sheet-split-overlay');
+      const drawer = document.getElementById('sheet-split');
+
+      drawer.classList.remove('open');
+      overlay.style.opacity = '0';
+      setTimeout(() => overlay.style.display = 'none', 200);
+    }
+
+    function addSplitInputRow(loc = 'W2-1F-1', qty = 0) {
+      const container = document.getElementById('split-inputs-container');
+      const id = `split-row-${splitRowCounter++}`;
+
+      const div = document.createElement('div');
+      div.className = 'split-input-row';
+      div.id = id;
+      div.innerHTML = `
+        <select class="form-select split-select-loc" style="height:36px; font-size:12px; padding:0 6px; border-radius:6px;">
+          <option value="W2-1F-1" ${loc === 'W2-1F-1' ? 'selected' : ''}>W2 - ชั้น 1 (1F)</option>
+          <option value="W2-2F-1" ${loc === 'W2-2F-1' ? 'selected' : ''}>W2 - ชั้น 2 (2F)</option>
+          <option value="W5-1F-1" ${loc === 'W5-1F-1' ? 'selected' : ''}>W5 - คลังเบิกห้าง</option>
+          <option value="W1-1F-1" ${loc === 'W1-1F-1' ? 'selected' : ''}>W1 - คลัง TRD</option>
+        </select>
+        <input type="number" class="form-input split-input-val" value="${qty}" min="0" oninput="recalcSplitTotal()" style="height:36px; padding:0 6px; font-weight:700;">
+        <button class="btn-remove-row" style="font-size:15px; color:var(--danger);" onclick="removeSplitInputRow('${id}')">✕</button>
+      `;
+      container.appendChild(div);
+      recalcSplitTotal();
+    }
+
+    function removeSplitInputRow(id) {
+      document.getElementById(id).remove();
+      recalcSplitTotal();
+    }
+
+    function recalcSplitTotal() {
+      const rows = document.querySelectorAll('.split-input-row');
+      let sum = 0;
+      rows.forEach(r => {
+        sum += parseInt(r.querySelector('.split-input-val').value) || 0;
+      });
+      document.getElementById('lbl-split-current').innerText = `${sum} หน่วย`;
+    }
+
+    function saveSplitLocations() {
+      const rows = document.querySelectorAll('.split-input-row');
+      const values = [];
+      let total = 0;
+
+      rows.forEach(r => {
+        const loc = r.querySelector('.split-select-loc').value;
+        const qty = parseInt(r.querySelector('.split-input-val').value) || 0;
+        values.push({ loc, qty });
+        total += qty;
+      });
+
+      // Update input quantity
+      document.getElementById(`qty-${activeItemId}`).value = total;
+
+      itemLocations[activeItemId] = { type: 'split', values };
+
+      const btn = document.getElementById(`loc-btn-${activeItemId}`);
+      const lbl = document.getElementById(`loc-lbl-${activeItemId}`);
+      btn.classList.add('split');
+
+      const splitText = values.map(v => `${v.loc}(${v.qty})`).join(' | ');
+      lbl.innerText = `🥞 แยกคลัง: ${splitText}`;
+
+      closeSplitDrawer();
+      showToast('บันทึกยอดแบ่งจัดเก็บคลังสินค้า');
+    }
+
+    // Submit Receipt GR (Completed state LINE summary layout helper)
+    function submitGrReceipt() {
+      const data = poDatabase[activeGrPoId];
+
+      // Update LINE layout values
+      document.getElementById('line-po-no').innerText = activeGrPoId;
+      document.getElementById('line-vendor').innerText = data.vendor;
+      document.getElementById('line-wh').innerText = `คลัง ${data.wh} (${data.wh === 'W1' ? 'TRD' : 'AKRA'})`;
+
+      const listContainer = document.getElementById('line-items-box');
+      listContainer.innerHTML = '';
+
+      data.items.forEach((item, index) => {
+        const itemId = `item-${index}`;
+        const actualQty = document.getElementById(`qty-${itemId}`).value;
+        const locConfig = itemLocations[itemId];
+        let locString = '';
+        if (locConfig.type === 'single') locString = `📍 ${locConfig.value}`;
+        else locString = `🥞 แยกเก็บ: ` + locConfig.values.map(v => `${v.loc}(${v.qty})`).join(', ');
+
+        const row = document.createElement('div');
+        row.className = 'line-item-row';
+        row.innerHTML = `
+          <div style="font-weight:bold;">${item.name}</div>
+          <div style="display:flex; justify-content:space-between; color:#555; margin-top:2px;">
+            <span>รับจริง: <b>${actualQty}</b> / สั่ง: ${item.qty}</span>
+            <span>${locString}</span>
+          </div>
+        `;
+        listContainer.appendChild(row);
+      });
+
+      // Update Lift details
+      const payment = document.getElementById('gr-lift-payment').value;
+      const rounds = document.getElementById('gr-lift-rounds').value;
+      const remarks = document.getElementById('gr-remarks').value || '-';
+
+      // Save to database
+      data.liftPayment = payment;
+      data.liftRounds = rounds;
+      data.remark = remarks;
+
+      let liftText = '';
+      if (payment !== 'ไม่มี') {
+        liftText = ` [ค่าลิฟท์: ${payment} ${rounds} รอบ]`;
+      }
+      document.getElementById('line-remark-summary').innerText = `💬 หมายเหตุ: ${remarks}${liftText}`;
+
+      // Update status on dashboard row
+      const card = Array.from(document.querySelectorAll('.v1-po-card')).find(c => c.querySelector('.po-card-no').innerText.includes(activeGrPoId));
+      if (card) {
+        card.className = 'v1-po-card status-completed';
+        card.querySelector('.badge').className = 'badge badge-success';
+        card.querySelector('.badge').innerText = 'ลงสินค้าสำเร็จ';
+        card.querySelector('.open-po-action-lbl').style.color = 'var(--success)';
+      }
+
+      // Switch view
+      document.getElementById('view-receiving').classList.remove('active');
+      document.getElementById('view-success').classList.add('active');
+
+      showToast('🚀 ส่งผลลัพธ์ LINE และปรับปรุงสต๊อกใน Postgres สำเร็จ');
+    }
+
+    // Helper alerts
+    function showToast(message) {
+      // Clean existing notifications first
+      const old = document.querySelector('.toast-banner');
+      if (old) old.remove();
+
+      const toast = document.createElement('div');
+      toast.className = 'toast-banner';
+      toast.style.cssText = `
+        position: fixed;
+        bottom: 90px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #0f172a;
+        color: #fff;
+        padding: 10px 16px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 700;
+        z-index: 2000;
+        white-space: nowrap;
+        box-shadow: var(--shadow-lg);
+        animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      `;
+      toast.innerHTML = `<span>📦</span> <span style="margin-left:6px;">${message}</span>`;
+
+      const sheetStyles = document.createElement('style');
+      sheetStyles.innerHTML = `
+        @keyframes slideUp {
+          from { transform: translate(-50%, 10px); opacity: 0; }
+          to { transform: translate(-50%, 0); opacity: 1; }
+        }
+      `;
+      document.head.appendChild(sheetStyles);
+      document.body.appendChild(toast);
+
+      setTimeout(() => {
+        toast.remove();
+      }, 2500);
+    }
+  </script>
+</body>
+</html>

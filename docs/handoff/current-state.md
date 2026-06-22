@@ -14,11 +14,36 @@ Last updated: 2026-06-22
   on `/picking/[id]`, `V2-0025`) are all implemented and verified against
   staging. Main portal redesign (`V2-0017`) is also complete and verified
   against staging. Picking LINE notification/failure recovery (`V2-0027`) is
-  also complete: notification outcome is an event-only record (never changes
-  requisition status), disabled/dry-run by default, with a writer/admin
-  retry action; real LINE sends remain unproven. A Thai management summary
-  for supervisor presentation is available at
-  `docs/project-management/executive-summary-th.md`.
+  also complete. The Picking cutover package (`V2-0034`) is **prepared but not
+  approved** — see `docs/migration/picking-cutover-package.md` for the real
+  staging reconciliation (now reproducible via
+  `npm run picking:verify-cutover-reconciliation`), UAT checklist, filled
+  cutover checklist, a cutover runbook (section 5a), and the open user-gated
+  items: deployed Vercel verification, combined human UAT pass, a fresh
+  reference-data export/recheck against live V1 (section 3a), and the
+  runbook steps themselves. The 2026-06-22 closeout resolved the final
+  wording mismatch around pre-commit status and includes the evidence package
+  plus reproducible tooling in the pushed work set. `Review: V2-0034`
+  (2026-06-22) found 5 real gaps
+  (1 blocker, 1 high, 3 medium), all verified accurate and addressed except
+  the two that are inherently user/business actions. A Thai management
+  summary is at
+  `docs/project-management/executive-summary-th.md`. A static UI/UX mock-up is
+  at `docs/mockups/v2-ui-ux-mockup.html`, and `FRONTEND_CONDUCTOR.md` /
+  `Gemini.md` define the frontend UI/UX lane. Plan `V2-0032` (Frontend UI/UX
+  roadmap), `V2-0033` (PO Frontend Mockup at `docs/mockups/po-ui-ux-mockup.html`),
+  `V2-0035` (GR Mobile-first Mockup at `docs/mockups/gr-ui-ux-mockup.html`),
+  `V2-0037` (PR Frontend Mockup at `docs/mockups/pr-ui-ux-mockup.html`), and
+  `V2-0038` (KPI Frontend Mockup at `docs/mockups/kpi-ui-ux-mockup.html`) are complete.
+  `V2-0036` drafts the PR/PO/GR foundation plan and has executed its first
+  slice (source profiling + dry-run report, 2026-06-22): confirmed a live V1
+  `PR` sheet with no CSV export yet, and
+  `scripts/pr-po-gr-import-dry-run.mjs` profiled `PO`/`GR`/`ProductName`/
+  `Vendor` against staging shared catalog/vendor/warehouse tables (0
+  blockers, 7 warnings — see `docs/migration/pr-po-gr-v1-mapping.md` and
+  `import-reports/pr-po-gr-dry-run-report.md`). Schema/RLS design and
+  staging migration are not started. `V2-0037` separately added a PR
+  frontend mock-up (`docs/mockups/pr-ui-ux-mockup.html`).
 - Production impact: None
 - V1 reference path: `C:\dev\WEBAPP`
 
@@ -70,11 +95,23 @@ Plan IDs:
 - `V2-0026` (`docs/plans/V2-0026-database-data-flow-html.md`)
 - `V2-0028` (`docs/plans/V2-0028-management-executive-summary.md`)
 - `V2-0027` (`docs/plans/V2-0027-picking-line-notification-failure-recovery.md`)
+- `V2-0029` (`docs/plans/V2-0029-ui-ux-mockup.md`)
+- `V2-0030` (`docs/plans/V2-0030-frontend-conductor-and-shortcuts.md`)
+- `V2-0031` (`docs/plans/V2-0031-gemini-frontend-instructions.md`)
+- `V2-0032` (`docs/plans/V2-0032-frontend-ui-ux-module-roadmap.md`)
+- `V2-0033` (`docs/plans/V2-0033-po-frontend-mockup.md`)
+- `V2-0034` (`docs/plans/V2-0034-picking-cutover-package.md`)
+- `V2-0035` (`docs/plans/V2-0035-gr-frontend-mockup.md`)
+- `V2-0036` (`docs/plans/V2-0036-pr-po-gr-foundation.md`)
+- `V2-0037` (`docs/plans/V2-0037-pr-frontend-mockup.md`)
+- `V2-0038` (`docs/plans/V2-0038-kpi-frontend-mockup.md`)
 
 Goal: Continue Phase 3 from the verified Picking read-only/create baseline
 toward a full V1 replacement roadmap. `V2-0022` now frames the remaining work
 as module waves: Main/Core portal, Picking closeout, PR/PO/GR, TRDAKRA/W5,
-Returnitem, KPITracker, and full hardening/cutover.
+Returnitem, KPITracker, and full hardening/cutover. UI/UX work now has a
+frontend sub-conductor lane, but it remains tied to the same migration board
+and module order.
 
 Status:
 
@@ -597,6 +634,43 @@ Status:
     `docs/handoff/archive/work-log-2026-06-20-status-transitions-through-operating-model.md`
     to bring the active log back under its context budget.
   - No V1 production files changed.
+- Executed `V2-0034` on 2026-06-22 (bare `Go:` / "go now", plan drafted inline
+  per the `V2-0017`/`V2-0023`/`V2-0025`/`V2-0027` precedent): Picking cutover
+  package.
+  - Wrote a temporary read-only script
+    (`scripts/_tmp-picking-reconciliation.mjs`, deleted after use) and queried
+    staging directly rather than reciting prior handoff claims: 4
+    `picking_requisitions` rows total, all `legacy_source = "v2_fixture"`
+    (the `V2-0019` seed fixtures), zero `"v2_app"` rows — confirms every
+    browser-test requisition from `V2-0020`/`0023`/`0025`/`0027` verification
+    really was deleted afterward. `picking_problem_reports` and
+    `picking_requisition_secrets` are both empty.
+  - Found one pre-existing, low-priority data quirk during that query: the
+    `V2-0019` seed fixture for the `line_push_failed` bill writes a
+    `problem_reported` lifecycle event but never inserts a matching
+    `picking_problem_reports` row (a seed-script gap, not a regression in any
+    real flow). Left unfixed, noted in the package and the decision board.
+  - Checked `git log origin/main..main`: local `main` is 2 commits ahead of
+    `origin/main` (`V2-0027`, `V2-0028`) — the deployed Vercel build does not
+    yet include the LINE retry feature. Did not push (shared-state action,
+    not pre-authorized).
+  - Added `docs/migration/picking-cutover-package.md`: answers the V1 history
+    archive question (V1 Picking stays live/unmodified for pre-cutover
+    lookups; V2 never imports or reconciles against it), the reconciliation
+    findings above, a UAT checklist (the combined create -> pick -> send ->
+    problem -> LINE-retry script has never been run as one continuous human
+    pass, only per-slice agent-run Playwright), a fully filled instance of
+    `docs/migration/cutover-checklist.md`, and a rollback plan (V1 stays the
+    fallback since it has never been modified).
+  - Explicitly did **not** check off "Vercel Preview verified" or "User
+    approval received" in the filled checklist — named both as open,
+    user-gated decisions instead of marking them done. Reason: the agent
+    cannot exercise a deployed build even after a push (local `vercel` CLI is
+    logged in as `akra-web`, which cannot reach the real project's team scope
+    `akrapanich-3912s-projects` — see memory note `vercel-project-location`).
+  - Documentation-only; no `src/` files, Supabase schema, staging data, V1
+    production files, GAS deployments, Sheets, URLs, LINE tokens, or secrets
+    changed. `git diff --check` passes. No commits pushed.
 
 ## Next Actions
 
@@ -613,18 +687,24 @@ Status:
 7. ~~Execute Picking LINE notification/failure recovery.~~ Done 2026-06-22
    (`V2-0027`). Real LINE sends remain unproven pending credentials and
    explicit approval.
-8. Prepare the Picking cutover package next (per `V2-0022`'s next-step
-   chain): V1 history archive documentation, data reconciliation, UAT
-   checklist, Vercel Preview/Development verification, rollback plan, and
-   explicit user approval gate. See
-   `docs/project-management/decision-board.md` for the current decision pack.
-9. After the Picking cutover package, plan PR/PO/GR foundation before
-   implementing PR, PO, or GR UI.
-10. Keep `docs/plans/index.md` updated whenever a plan status or next action
+8. ~~Prepare the Picking cutover package.~~ Done 2026-06-22 (`V2-0034`,
+   `docs/migration/picking-cutover-package.md`). User authorized committing
+   and pushing today's work on 2026-06-22. **Not approved for cutover** —
+   remaining gates are: personally exercise the deployed Vercel
+   Preview/Development build or accept staging/local verification as
+   sufficient; run one combined human UAT pass versus relying on per-slice
+   automated checks only; run a fresh V1 reference export/recheck; and execute
+   the cutover runbook steps.
+9. Execute `V2-0036` in the smallest implementation slice: source profiling
+   and the dry-run report only. The plan is drafted; no PR/PO/GR runtime UI or
+   staging schema has been implemented yet.
+10. ~~Execute `V2-0037`: design and implement the Purchase Requisitions (PR) frontend mockup (`docs/mockups/pr-ui-ux-mockup.html`).~~ Done 2026-06-22.
+11. ~~Execute `V2-0038`: design and implement the KPI Tracker frontend mockup (`docs/mockups/kpi-ui-ux-mockup.html`).~~ Done 2026-06-22.
+12. Keep `docs/plans/index.md` updated whenever a plan status or next action
     changes.
-11. Keep `docs/handoff/work-log.md` as the active recent log; archive older
+13. Keep `docs/handoff/work-log.md` as the active recent log; archive older
     entries under `docs/handoff/archive/` when it becomes long again.
-12. Use `docs/project-management/executive-summary-th.md` when the user needs
+14. Use `docs/project-management/executive-summary-th.md` when the user needs
     a supervisor-friendly project summary.
 
 

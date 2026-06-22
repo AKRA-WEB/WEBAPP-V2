@@ -64,6 +64,14 @@ Use `Architect:` to request a detailed plan before implementation. The agent
 must draft or update a plan file, update `docs/plans/index.md`, and wait for an
 execution command such as `Go:` before changing runtime code.
 
+For UI/UX work, use `FRONTEND_CONDUCTOR.md` and shortcuts such as
+`Frontend:`, `Frontend Architect:`, `Frontend Mockup:`, `Frontend Go:`,
+`Frontend Review:`, `Responsive Check:`, and `Design System:`. Frontend work is
+a lane inside the same migration plan board, not a separate backlog.
+
+When Gemini is used for frontend design, UI/UX critique, or mock-up support,
+use `Gemini.md` as the Gemini-specific companion to `FRONTEND_CONDUCTOR.md`.
+
 The default plan format lives at
 `docs/plans/templates/architect-plan-template.md`.
 

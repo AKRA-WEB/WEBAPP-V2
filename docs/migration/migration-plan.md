@@ -127,9 +127,13 @@ Current notes:
   import, and atomic daily bill-number allocation. The status-transition slice
   (`V2-0023`) is implemented and verified: writer/admin-only
   `pending -> picked -> sent` actions backed by an atomic server-only RPC.
-  Current staging requisitions are staging-only fixtures and transient
-  app-created test rows, not V1 `Requisition` history. Problem reporting,
-  LINE integration/failure recovery, and a Picking cutover package remain.
+  Current staging requisitions are staging-only fixtures only (4 rows,
+  `legacy_source = "v2_fixture"`; reconciliation under `V2-0034` found zero
+  leftover transient app-created test rows), not V1 `Requisition` history.
+  Problem reporting (`V2-0025`) and LINE integration/failure recovery
+  (`V2-0027`) are complete. The Picking cutover package (`V2-0034`,
+  `docs/migration/picking-cutover-package.md`) is prepared but not approved
+  — deployed Vercel verification and a combined human UAT pass are open.
 - Shared catalog/warehouse schema and staging snapshot import are available for
   the Picking catalog bridge and later modules.
 - V1 production Picking app, GAS deployment, Sheets, URLs, and LINE tokens were
@@ -155,6 +159,13 @@ Exit criteria:
 - Legacy `DIRECT` and UID fallback behavior is mapped.
 - Vendor delivery insights are reproduced.
 - GR receiving state transitions are transaction-safe.
+
+Current notes:
+
+- `V2-0036` source profiling + dry-run report slice is complete
+  (2026-06-22): see `docs/migration/pr-po-gr-v1-mapping.md` and
+  `import-reports/pr-po-gr-dry-run-report.md`. No schema or migration exists
+  yet for `purchasing`/`receiving`.
 
 ## Phase 5 - Warehouse And Returns
 

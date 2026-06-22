@@ -63,6 +63,22 @@ When the user says `Let's work`, treat it as a context-saving resume shortcut:
   includes `Architect:`, `Go:`, or `Review:`, handle that command after the
   resume step.
 
+## 2.2 Frontend Shortcuts
+
+When the user starts a message with `Frontend:`, `FE:`,
+`Frontend Architect:`, `Frontend Mockup:`, `Frontend Go:`,
+`Frontend Review:`, `Responsive Check:`, or `Design System:`, read
+`FRONTEND_CONDUCTOR.md` after `CONDUCTOR.md` and follow its command rules.
+
+Frontend work is a sub-conductor lane inside the same migration plan board. Do
+not maintain a separate frontend source of truth, and do not change runtime code
+from frontend resume/planning/mock-up commands unless the user also gives an
+execution command such as `Frontend Go:` or `Go:`.
+
+When the user asks to use Gemini for frontend, UI, UX, design exploration, or
+mock-up work, also read `Gemini.md`. Treat it as Gemini-specific guidance under
+the frontend sub-conductor, not as a replacement for the main project rules.
+
 ## 3. Handoff Discipline
 
 Every non-trivial change must update handoff files before final response:

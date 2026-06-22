@@ -1,0 +1,2064 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AKRA WEBAPP V2 - PO (Purchasing Orders) UI/UX Mockup</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+Thai:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: light;
+      --primary-hsl: 238, 72%, 33%;
+      --primary: hsl(var(--primary-hsl));
+      --primary-hover: hsl(238, 72%, 26%);
+      --primary-light: hsl(238, 72%, 96%);
+
+      --accent-hsl: 21, 95%, 45%;
+      --accent: hsl(var(--accent-hsl));
+      --accent-hover: hsl(21, 95%, 38%);
+      --accent-light: hsl(21, 95%, 96%);
+
+      --ink: #0f172a;
+      --muted: #64748b;
+      --soft-bg: #f8fafc;
+      --surface: #ffffff;
+      --line: #e2e8f0;
+
+      --danger: #ef4444;
+      --danger-light: #fef2f2;
+      --warning: #f59e0b;
+      --warning-light: #fefbeb;
+      --success: #10b981;
+      --success-light: #ecfdf5;
+
+      --radius-sm: 6px;
+      --radius: 12px;
+      --radius-lg: 16px;
+
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+      --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+
+      --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: #f1f5f9;
+      color: var(--ink);
+      font-family: 'Inter', 'Noto Sans Thai', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 15px;
+      line-height: 1.5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    /* Device Preview Mode Wrapper */
+    .viewport-container {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 24px;
+      transition: var(--transition);
+      width: 100%;
+    }
+
+    .viewport-container.device-mobile {
+      padding: 40px 20px;
+    }
+
+    /* Simulated Mobile Frame */
+    .device-wrapper {
+      width: 100%;
+      max-width: 1200px;
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lg);
+      overflow: hidden;
+      border: 1px solid var(--line);
+      transition: var(--transition);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .viewport-container.device-mobile .device-wrapper {
+      width: 390px;
+      height: 844px;
+      border-radius: 40px;
+      border: 12px solid #000;
+      box-shadow: 0 0 0 4px #27272a, var(--shadow-lg);
+      position: relative;
+    }
+
+    /* Mobile status bar simulation */
+    .mobile-status-bar {
+      display: none;
+      background: #000;
+      color: #fff;
+      font-size: 12px;
+      padding: 6px 24px;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 600;
+      z-index: 100;
+    }
+
+    .viewport-container.device-mobile .mobile-status-bar {
+      display: flex;
+    }
+
+    /* Header styling */
+    header {
+      background: linear-gradient(135deg, var(--primary) 0%, #0d1052 100%);
+      color: #ffffff;
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      position: relative;
+    }
+
+    .viewport-container.device-mobile header {
+      padding: 12px 16px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-logo {
+      width: 36px;
+      height: 36px;
+      background: var(--accent);
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      color: #fff;
+      font-size: 18px;
+      box-shadow: 0 2px 10px rgba(227, 82, 5, 0.3);
+    }
+
+    .brand-title {
+      font-weight: 700;
+      font-size: 18px;
+      letter-spacing: -0.5px;
+    }
+
+    .brand-sub {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.6);
+      display: block;
+    }
+
+    /* User Profile Info */
+    .user-profile {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .user-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+      border: 2px solid var(--accent);
+      display: grid;
+      place-items: center;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .user-details {
+      text-align: right;
+    }
+
+    .user-name {
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .user-role-badge {
+      display: inline-block;
+      font-size: 10px;
+      background: var(--accent);
+      padding: 1px 6px;
+      border-radius: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+
+    .viewport-container.device-mobile .user-details {
+      display: none;
+    }
+
+    /* Tab navigation */
+    .tabs-nav {
+      background: var(--surface);
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      padding: 0 16px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .tabs-nav::-webkit-scrollbar {
+      display: none;
+    }
+
+    .tab-btn {
+      padding: 16px 20px;
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-weight: 600;
+      cursor: pointer;
+      position: relative;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+      min-height: auto;
+    }
+
+    .tab-btn:hover {
+      color: var(--primary);
+    }
+
+    .tab-btn.active {
+      color: var(--primary);
+    }
+
+    .tab-btn.active::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: var(--primary);
+      border-radius: 3px 3px 0 0;
+    }
+
+    .viewport-container.device-mobile .tab-btn {
+      padding: 12px 14px;
+      font-size: 13px;
+    }
+
+    /* Content Area */
+    .content-area {
+      padding: 24px;
+      background: var(--soft-bg);
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .viewport-container.device-mobile .content-area {
+      padding: 16px;
+      max-height: 710px; /* viewport minus header, sub-nav, etc. */
+    }
+
+    /* Hidden Tabs */
+    .tab-panel {
+      display: none;
+    }
+
+    .tab-panel.active {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 8px 16px;
+      border-radius: var(--radius-sm);
+      font-weight: 600;
+      font-size: 14px;
+      transition: var(--transition);
+      min-height: 40px;
+      border: 1px solid transparent;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-hover);
+    }
+
+    .btn-accent {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .btn-accent:hover {
+      background: var(--accent-hover);
+    }
+
+    .btn-outline {
+      border-color: var(--line);
+      background: var(--surface);
+      color: var(--ink);
+    }
+
+    .btn-outline:hover {
+      background: var(--soft-bg);
+      border-color: var(--muted);
+    }
+
+    .btn-danger {
+      background: var(--danger-light);
+      color: var(--danger);
+      border-color: rgba(239, 68, 68, 0.2);
+    }
+
+    .btn-danger:hover {
+      background: var(--danger);
+      color: #fff;
+    }
+
+    .btn:disabled, .btn.disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    /* Dashboard Layout */
+    .dashboard-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      gap: 16px;
+    }
+
+    .viewport-container.device-mobile .dashboard-header {
+      flex-direction: column;
+      align-items: stretch;
+      margin-bottom: 16px;
+    }
+
+    .page-title {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      color: var(--ink);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Grid Stats Cards */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .viewport-container.device-mobile .stats-grid {
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      padding: 16px;
+      border-radius: var(--radius);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+      background: var(--primary);
+    }
+
+    .stat-card.accent::before { background: var(--accent); }
+    .stat-card.success::before { background: var(--success); }
+    .stat-card.warning::before { background: var(--warning); }
+
+    .stat-label {
+      font-size: 13px;
+      color: var(--muted);
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .stat-val {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--ink);
+      line-height: 1.2;
+    }
+
+    .stat-desc {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    /* Filter Bar */
+    .filter-bar {
+      background: var(--surface);
+      padding: 16px;
+      border-radius: var(--radius);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      margin-bottom: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .viewport-container.device-mobile .filter-bar {
+      padding: 12px;
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .search-input-wrapper {
+      flex: 1;
+      position: relative;
+      min-width: 200px;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 10px 16px 10px 40px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--line);
+      background: var(--soft-bg);
+      font-size: 14px;
+      transition: var(--transition);
+    }
+
+    .search-input:focus {
+      background: #fff;
+      border-color: var(--primary);
+      outline: none;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      pointer-events: none;
+    }
+
+    .select-dropdown {
+      padding: 10px 16px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--line);
+      background: var(--surface);
+      font-size: 14px;
+      min-width: 150px;
+      cursor: pointer;
+    }
+
+    /* Dense Premium Table */
+    .table-container {
+      background: var(--surface);
+      border-radius: var(--radius);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+
+    .responsive-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    .responsive-table th {
+      background: var(--soft-bg);
+      padding: 14px 16px;
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--muted);
+      border-bottom: 1px solid var(--line);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .responsive-table td {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+      vertical-align: middle;
+      font-size: 14px;
+    }
+
+    .responsive-table tbody tr:hover {
+      background: var(--primary-light);
+    }
+
+    .po-id-link {
+      color: var(--primary);
+      font-weight: 700;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+
+    .po-id-link:hover {
+      text-decoration: underline;
+    }
+
+    /* Status Pills */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      border-radius: 20px;
+      font-weight: 700;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      width: fit-content;
+    }
+
+    .badge-draft { background: #f1f5f9; color: #475569; }
+    .badge-pending { background: var(--warning-light); color: var(--warning); }
+    .badge-approved { background: var(--success-light); color: var(--success); }
+    .badge-closed { background: #f1f5f9; color: #64748b; border: 1px solid var(--line); }
+    .badge-apv { background: var(--primary-light); color: var(--primary); }
+
+    /* Custom Mobile Collapse CSS */
+    .viewport-container.device-mobile .responsive-table thead {
+      display: none; /* Hide headers on mobile */
+    }
+
+    .viewport-container.device-mobile .responsive-table tbody tr {
+      display: flex;
+      flex-direction: column;
+      padding: 12px;
+      border-bottom: 8px solid var(--soft-bg);
+    }
+
+    .viewport-container.device-mobile .responsive-table td {
+      padding: 4px 0;
+      border-bottom: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+    }
+
+    .viewport-container.device-mobile .responsive-table td::before {
+      content: attr(data-label);
+      font-weight: 700;
+      color: var(--muted);
+      margin-right: 8px;
+    }
+
+    /* PO Detail Grid Layout */
+    .detail-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 24px;
+    }
+
+    .viewport-container.device-mobile .detail-grid {
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+
+    .card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+
+    .viewport-container.device-mobile .card {
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .card-title {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 10px;
+      color: var(--primary);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .meta-list {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .viewport-container.device-mobile .meta-list {
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+
+    .meta-item {
+      font-size: 14px;
+    }
+
+    .meta-lbl {
+      color: var(--muted);
+      font-weight: 600;
+      display: block;
+      font-size: 12px;
+      text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+
+    .meta-val {
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    /* Requisition Items Table */
+    .items-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 16px;
+    }
+
+    .items-table th {
+      text-align: left;
+      padding: 10px;
+      border-bottom: 2px solid var(--line);
+      font-weight: 700;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .items-table td {
+      padding: 12px 10px;
+      border-bottom: 1px solid var(--line);
+      font-size: 14px;
+    }
+
+    .total-bar {
+      margin-top: 16px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 40px;
+      font-weight: 700;
+      font-size: 16px;
+      padding: 16px 10px;
+      background: var(--soft-bg);
+      border-radius: var(--radius-sm);
+    }
+
+    .viewport-container.device-mobile .total-bar {
+      flex-direction: column;
+      gap: 8px;
+      align-items: flex-end;
+    }
+
+    /* Timeline Widget */
+    .timeline {
+      position: relative;
+      padding-left: 24px;
+      margin-left: 8px;
+      border-left: 2px dashed var(--line);
+    }
+
+    .timeline-event {
+      position: relative;
+      margin-bottom: 20px;
+    }
+
+    .timeline-dot {
+      position: absolute;
+      left: -31px;
+      top: 4px;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--line);
+      border: 2px solid var(--surface);
+    }
+
+    .timeline-dot.active {
+      background: var(--accent);
+      box-shadow: 0 0 0 4px var(--accent-light);
+    }
+
+    .timeline-dot.success {
+      background: var(--success);
+      box-shadow: 0 0 0 4px var(--success-light);
+    }
+
+    .timeline-time {
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .timeline-title {
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--ink);
+    }
+
+    .timeline-desc {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    /* PR Matching Bridge Info */
+    .match-status-wrapper {
+      padding: 8px 12px;
+      border-radius: var(--radius-sm);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .match-status-matched {
+      background: var(--success-light);
+      color: var(--success);
+    }
+
+    .match-status-unmatched {
+      background: var(--danger-light);
+      color: var(--danger);
+    }
+
+    /* Create/Edit Form grid */
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-label {
+      display: block;
+      font-weight: 600;
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 10px 14px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--line);
+      background: var(--soft-bg);
+      transition: var(--transition);
+    }
+
+    .form-control:focus {
+      background: #fff;
+      border-color: var(--primary);
+      outline: none;
+    }
+
+    /* Editable Multi-row Grid */
+    .edit-grid-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+
+    .edit-grid-table th {
+      background: var(--soft-bg);
+      padding: 8px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--muted);
+      text-align: left;
+    }
+
+    .edit-grid-table td {
+      padding: 8px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .btn-remove-row {
+      color: var(--danger);
+      background: none;
+      border: none;
+      padding: 4px;
+      min-height: auto;
+      cursor: pointer;
+    }
+
+    /* Floating View Toggles (Mockup Controls) */
+    .mockup-controls {
+      position: fixed;
+      bottom: 24px;
+      left: 24px;
+      background: rgba(15, 23, 42, 0.9);
+      backdrop-filter: blur(10px);
+      color: #fff;
+      padding: 16px;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lg);
+      z-index: 999;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      max-width: 320px;
+    }
+
+    .mockup-ctrl-title {
+      font-size: 13px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--accent);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+      padding-bottom: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .mockup-desc {
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .mockup-btn-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .mockup-ctrl-btn {
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      border-radius: var(--radius-sm);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      cursor: pointer;
+      text-align: center;
+      transition: var(--transition);
+      min-height: 32px;
+    }
+
+    .mockup-ctrl-btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .mockup-ctrl-btn:hover:not(.active) {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    /* CSS Leadtime Analytics Charts */
+    .analytics-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .viewport-container.device-mobile .analytics-grid {
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+
+    .chart-container {
+      margin-top: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .chart-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .chart-label {
+      width: 100px;
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+    }
+
+    .chart-bar-wrapper {
+      flex: 1;
+      height: 24px;
+      background: var(--soft-bg);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .chart-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary) 0%, #3b82f6 100%);
+      border-radius: var(--radius-sm);
+      transition: width 1s ease-in-out;
+      width: 0; /* Animated with JS */
+    }
+
+    .chart-val {
+      font-size: 12px;
+      font-weight: 700;
+      width: 45px;
+      text-align: right;
+    }
+
+    /* V1 vs V2 info panel */
+    .info-badge {
+      background: rgba(23, 28, 143, 0.1);
+      color: var(--primary);
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      margin-bottom: 8px;
+    }
+
+    .info-badge-v1 {
+      background: rgba(227, 82, 5, 0.1);
+      color: var(--accent);
+    }
+
+    /* Alert Banner */
+    .alert-banner {
+      padding: 12px 16px;
+      border-radius: var(--radius-sm);
+      border: 1px solid;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 13px;
+    }
+
+    .alert-banner-warning {
+      background: var(--warning-light);
+      border-color: rgba(245, 158, 11, 0.2);
+      color: var(--warning);
+    }
+
+    .alert-banner-danger {
+      background: var(--danger-light);
+      border-color: rgba(239, 68, 68, 0.2);
+      color: var(--danger);
+    }
+
+    .alert-banner-success {
+      background: var(--success-light);
+      border-color: rgba(16, 185, 129, 0.2);
+      color: var(--success);
+    }
+
+    /* Toast Notification */
+    .toast-container {
+      position: fixed;
+      top: 24px;
+      right: 24px;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .toast {
+      background: #0f172a;
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: var(--radius-sm);
+      box-shadow: var(--shadow-lg);
+      font-size: 14px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      opacity: 0;
+      transform: translateY(-20px);
+    }
+
+    @keyframes slideIn {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .chevron-right-icon {
+      width: 16px;
+      height: 16px;
+    }
+
+    /* Autocomplete overlay */
+    .autocomplete-wrapper {
+      position: relative;
+    }
+    .autocomplete-list {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      box-shadow: var(--shadow-lg);
+      z-index: 200;
+      max-height: 200px;
+      overflow-y: auto;
+      margin-top: 2px;
+      display: none;
+    }
+    .autocomplete-item {
+      padding: 8px 12px;
+      cursor: pointer;
+      font-size: 13px;
+      border-bottom: 1px solid var(--soft-bg);
+      display: flex;
+      justify-content: space-between;
+    }
+    .autocomplete-item:hover {
+      background: var(--primary-light);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Floating Mockup Panel for User Feedback -->
+  <div class="mockup-controls">
+    <div class="mockup-ctrl-title">
+      <span>PO Mockup Controls</span>
+      <span style="font-size: 9px; background: var(--accent); color: #fff; padding: 1px 4px; border-radius: 4px;">STATIC V2</span>
+    </div>
+    <div class="mockup-desc">
+      ทดลองสลับสิทธิ์การทำงานและมุมมองอุปกรณ์เพื่อดูความยืดหยุ่นของ UI/UX ที่ปรับปรุงใหม่
+    </div>
+
+    <div>
+      <span class="form-label" style="color: #cbd5e1;">1. สลับสิทธิ์ผู้ใช้งาน (Role Matrix)</span>
+      <div class="mockup-btn-grid">
+        <button class="mockup-ctrl-btn active" onclick="setRole('ADMIN')">ADMIN</button>
+        <button class="mockup-ctrl-btn" onclick="setRole('SUPERVISOR')">SUPERVISOR</button>
+        <button class="mockup-ctrl-btn" onclick="setRole('PURCHASING')">OFFICER</button>
+        <button class="mockup-ctrl-btn" onclick="setRole('GUEST')">GUEST</button>
+      </div>
+    </div>
+
+    <div>
+      <span class="form-label" style="color: #cbd5e1;">2. ขนาดอุปกรณ์ (Responsive Simulation)</span>
+      <div class="mockup-btn-grid">
+        <button id="dev-desktop" class="mockup-ctrl-btn active" onclick="setDevice('desktop')">DESKTOP</button>
+        <button id="dev-mobile" class="mockup-ctrl-btn" onclick="setDevice('mobile')">MOBILE (390px)</button>
+      </div>
+    </div>
+
+    <div style="font-size: 10px; color: #94a3b8; border-top: 1px solid rgba(255,255,255,0.15); padding-top: 8px;">
+      💡 <b>สิทธิ์การปิด PO / APV</b> จะซ่อนอัตโนมัติตามสิทธิ์ผู้ใช้ และตารางสินค้าจะยุบตัวลงเมื่อสลับไปมุมมองมือถือ 390px
+    </div>
+  </div>
+
+  <!-- Toast notification container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Main Viewport Wrap -->
+  <div id="viewport" class="viewport-container">
+
+    <div class="device-wrapper">
+
+      <!-- Mobile Top Bar Simulation -->
+      <div class="mobile-status-bar">
+        <span>12:59</span>
+        <div style="display: flex; gap: 4px;">
+          <span>📶</span>
+          <span>🔋 85%</span>
+        </div>
+      </div>
+
+      <!-- App Header -->
+      <header>
+        <div class="brand">
+          <div class="brand-logo">📦</div>
+          <div class="brand-text">
+            <span class="brand-title">AKRA V2</span>
+            <span class="brand-sub">Purchasing System</span>
+          </div>
+        </div>
+
+        <div class="user-profile">
+          <div class="user-details">
+            <div id="user-display-name" class="user-name">สมชาย รักดี</div>
+            <div id="user-role-label" class="user-role-badge">ADMIN</div>
+          </div>
+          <div class="user-avatar" id="user-avatar-initial">S</div>
+        </div>
+      </header>
+
+      <!-- Sub tabs nav -->
+      <nav class="tabs-nav">
+        <button class="tab-btn active" onclick="switchTab('dashboard-tab')">
+          <svg style="width:16px;height:16px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4zM14 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2v-4z"></path></svg>
+          แดชบอร์ด PO
+        </button>
+        <button id="detail-tab-nav" class="tab-btn" onclick="switchTab('detail-tab')">
+          <svg style="width:16px;height:16px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+          บิล PO-2026-06-001
+        </button>
+        <button id="form-tab-nav" class="tab-btn" onclick="switchTab('form-tab')">
+          <svg style="width:16px;height:16px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          สร้าง PO ใหม่
+        </button>
+        <button class="tab-btn" onclick="switchTab('insights-tab')">
+          <svg style="width:16px;height:16px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2z"></path></svg>
+          ข้อมูลระยะเวลาส่ง (Insights)
+        </button>
+      </nav>
+
+      <!-- App Main Content Wrapper -->
+      <div class="content-area">
+
+        <!-- 1. DASHBOARD TAB -->
+        <div id="dashboard-tab" class="tab-panel active">
+
+          <div class="dashboard-header">
+            <div>
+              <h1 class="page-title">ระบบสั่งซื้อ (Purchase Orders)</h1>
+              <p style="font-size: 13px; color: var(--muted); margin-top: 4px;">ตรวจสอบและดำเนินการจัดซื้อสินค้าเข้าคลังสาขาและสำนักงานใหญ่</p>
+            </div>
+            <div>
+              <button class="btn btn-primary role-write" onclick="openCreateForm()">
+                <svg style="width:16px;height:16px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                สร้างบิลจัดซื้อ (PO)
+              </button>
+            </div>
+          </div>
+
+          <!-- Quick Stats -->
+          <div class="stats-grid">
+            <div class="stat-card">
+              <span class="stat-label">บิลรออนุมัติ</span>
+              <span class="stat-val">3 บิล</span>
+              <span class="stat-desc">รอ Supervisor อนุมัติเบิก</span>
+            </div>
+            <div class="stat-card accent">
+              <span class="stat-label">สั่งซื้อค้างรับ</span>
+              <span class="stat-val">8 บิล</span>
+              <span class="stat-desc">ของกำลังขนส่งเข้าคลังรับ</span>
+            </div>
+            <div class="stat-card success">
+              <span class="stat-label">รับเข้าสำเร็จ (เดือนนี้)</span>
+              <span class="stat-val">42 บิล</span>
+              <span class="stat-desc">รับของเรียบร้อย ปิดใบงาน</span>
+            </div>
+            <div class="stat-card warning">
+              <span class="stat-label">ส่งล่าช้าเกินแผน</span>
+              <span class="stat-val">2 บิล</span>
+              <span class="stat-desc">ซัพพลายเออร์ยังไม่ยืนยัน</span>
+            </div>
+          </div>
+
+          <!-- Filters -->
+          <div class="filter-bar">
+            <div class="search-input-wrapper">
+              <span class="search-icon">🔍</span>
+              <input type="text" class="search-input" placeholder="ค้นหาเลขที่บิล PO, รหัส PR, ซัพพลายเออร์...">
+            </div>
+            <select class="select-dropdown">
+              <option value="">ทุกคลังสินค้า</option>
+              <option value="W1">คลัง TRD (W1)</option>
+              <option value="W2">คลัง AKRA (W2)</option>
+              <option value="W5">คลัง AKRA (W5)</option>
+            </select>
+            <select class="select-dropdown">
+              <option value="">ทุกสถานะ</option>
+              <option value="draft">ร่าง (Draft)</option>
+              <option value="pending">รออนุมัติ (Pending)</option>
+              <option value="approved">สั่งซื้อแล้ว (Approved)</option>
+              <option value="closed">รับเสร็จสิ้น (Closed)</option>
+              <option value="apv">ลงบัญชี (APV)</option>
+            </select>
+          </div>
+
+          <!-- PO List Table -->
+          <div class="table-container">
+            <table class="responsive-table">
+              <thead>
+                <tr>
+                  <th>เลขที่บิล PO</th>
+                  <th>วันที่สั่งซื้อ</th>
+                  <th>ซัพพลายเออร์</th>
+                  <th>คลังรับสินค้า</th>
+                  <th>ยอดเงินรวม</th>
+                  <th>สถานะ</th>
+                  <th style="text-align: right;">การจัดการ</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td data-label="เลขที่บิล PO">
+                    <span class="po-id-link" onclick="viewPoDetail('PO-2026-06-001', 'บจก. เพียวฟู้ดส์', 'W2 - AKRA', '7,450.00', 'pending')">
+                      PO-2026-06-001
+                    </span>
+                  </td>
+                  <td data-label="วันที่สั่งซื้อ">22/06/2026</td>
+                  <td data-label="ซัพพลายเออร์">บจก. เพียวฟู้ดส์</td>
+                  <td data-label="คลังรับสินค้า"><span style="font-weight:600;">W2</span> - คลังหลัก AKRA</td>
+                  <td data-label="ยอดเงินรวม">฿7,450.00</td>
+                  <td data-label="สถานะ"><span class="badge badge-pending">รออนุมัติ</span></td>
+                  <td data-label="การจัดการ" style="text-align: right;">
+                    <button class="btn btn-outline" style="min-height:30px; padding:2px 8px; font-size:12px;" onclick="viewPoDetail('PO-2026-06-001', 'บจก. เพียวฟู้ดส์', 'W2 - AKRA', '7,450.00', 'pending')">ดูรายละเอียด</button>
+                  </td>
+                </tr>
+                <tr>
+                  <td data-label="เลขที่บิล PO">
+                    <span class="po-id-link" onclick="viewPoDetail('PO-2026-06-002', 'ไทยเบฟฯ (ตัวแทน)', 'W1 - TRD', '15,200.00', 'approved')">
+                      PO-2026-06-002
+                    </span>
+                  </td>
+                  <td data-label="วันที่สั่งซื้อ">21/06/2026</td>
+                  <td data-label="ซัพพลายเออร์">ไทยเบฟฯ (ตัวแทน)</td>
+                  <td data-label="คลังรับสินค้า"><span style="font-weight:600;">W1</span> - คลัง TRD</td>
+                  <td data-label="ยอดเงินรวม">฿15,200.00</td>
+                  <td data-label="สถานะ"><span class="badge badge-approved">สั่งซื้อแล้ว</span></td>
+                  <td data-label="การจัดการ" style="text-align: right;">
+                    <button class="btn btn-outline" style="min-height:30px; padding:2px 8px; font-size:12px;" onclick="viewPoDetail('PO-2026-06-002', 'ไทยเบฟฯ (ตัวแทน)', 'W1 - TRD', '15,200.00', 'approved')">ดูรายละเอียด</button>
+                  </td>
+                </tr>
+                <tr>
+                  <td data-label="เลขที่บิล PO">
+                    <span class="po-id-link" onclick="viewPoDetail('PO-2026-06-003', 'บจก. เอก-ชัย ดีสทริบิวชั่น', 'W5 - AKRA', '4,280.00', 'closed')">
+                      PO-2026-06-003
+                    </span>
+                  </td>
+                  <td data-label="วันที่สั่งซื้อ">19/06/2026</td>
+                  <td data-label="ซัพพลายเออร์">บจก. เอก-ชัย ดีสทริบิวชั่น</td>
+                  <td data-label="คลังรับสินค้า"><span style="font-weight:600;">W5</span> - คลังคอยหยิบ</td>
+                  <td data-label="ยอดเงินรวม">฿4,280.00</td>
+                  <td data-label="สถานะ"><span class="badge badge-closed">รับสินค้าครบแล้ว</span></td>
+                  <td data-label="การจัดการ" style="text-align: right;">
+                    <button class="btn btn-outline" style="min-height:30px; padding:2px 8px; font-size:12px;" onclick="viewPoDetail('PO-2026-06-003', 'บจก. เอก-ชัย ดีสทริบิวชั่น', 'W5 - AKRA', '4,280.00', 'closed')">ดูรายละเอียด</button>
+                  </td>
+                </tr>
+                <tr>
+                  <td data-label="เลขที่บิล PO">
+                    <span class="po-id-link" onclick="viewPoDetail('PO-2026-06-004', 'บจก. น้ำมันพืชไทย', 'W2 - AKRA', '12,900.00', 'apv')">
+                      PO-2026-06-004
+                    </span>
+                  </td>
+                  <td data-label="วันที่สั่งซื้อ">18/06/2026</td>
+                  <td data-label="ซัพพลายเออร์">บจก. น้ำมันพืชไทย</td>
+                  <td data-label="คลังรับสินค้า"><span style="font-weight:600;">W2</span> - คลังหลัก AKRA</td>
+                  <td data-label="ยอดเงินรวม">฿12,900.00</td>
+                  <td data-label="สถานะ"><span class="badge badge-apv">ลงบัญชี (APV)</span></td>
+                  <td data-label="การจัดการ" style="text-align: right;">
+                    <button class="btn btn-outline" style="min-height:30px; padding:2px 8px; font-size:12px;" onclick="viewPoDetail('PO-2026-06-004', 'บจก. น้ำมันพืชไทย', 'W2 - AKRA', '12,900.00', 'apv')">ดูรายละเอียด</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+        </div>
+
+        <!-- 2. DETAIL TAB -->
+        <div id="detail-tab" class="tab-panel">
+
+          <div class="dashboard-header" style="margin-bottom: 16px;">
+            <div>
+              <span class="info-badge">V2 IMPROVEMENT: แสดงความคืบหน้าแบบ Real-time</span>
+              <h1 class="page-title">
+                บิลสั่งซื้อสินค้า <span id="det-po-id" style="color: var(--accent); margin-left: 8px;">PO-2026-06-001</span>
+                <span id="det-badge" style="margin-left: 12px;"></span>
+              </h1>
+            </div>
+            <div style="display: flex; gap: 8px;">
+              <button class="btn btn-outline" onclick="switchTab('dashboard-tab')">ย้อนกลับ</button>
+
+              <!-- Role aware actions -->
+              <button id="btn-approve" class="btn btn-accent role-approve" onclick="approvePO()">
+                <svg style="width:16px;height:16px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                อนุมัติสั่งเบิก (Approve)
+              </button>
+              <button id="btn-close-po" class="btn btn-outline role-close-po" onclick="closePO()">
+                <svg style="width:16px;height:16px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                ปิดใบงาน (Close PO)
+              </button>
+              <button id="btn-apv" class="btn btn-primary role-apv" onclick="markAPV()">
+                ลงบัญชี (APV)
+              </button>
+            </div>
+          </div>
+
+          <div class="detail-grid">
+
+            <!-- Left Panel: Info and Item Grid -->
+            <div>
+              <div class="card">
+                <div class="card-title">ข้อมูลทั่วไปของบิล</div>
+
+                <div class="meta-list">
+                  <div class="meta-item">
+                    <span class="meta-lbl">ซัพพลายเออร์</span>
+                    <span id="det-vendor" class="meta-val">บจก. เพียวฟู้ดส์</span>
+                  </div>
+                  <div class="meta-item">
+                    <span class="meta-lbl">คลังรับสินค้า</span>
+                    <span id="det-wh" class="meta-val">W2 - คลังหลัก AKRA</span>
+                  </div>
+                  <div class="meta-item">
+                    <span class="meta-lbl">วันที่สร้างเอกสาร</span>
+                    <span class="meta-val">22/06/2026 12:49</span>
+                  </div>
+                  <div class="meta-item">
+                    <span class="meta-lbl">วันที่คาดว่าจะเข้าส่ง (Expected Date)</span>
+                    <span class="meta-val" style="color: var(--accent);">24/06/2026 · ใน 2 วัน</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card">
+                <div class="card-title">รายการสินค้าสั่งซื้อ</div>
+
+                <table class="items-table">
+                  <thead>
+                    <tr>
+                      <th>รหัส/ชื่อสินค้า</th>
+                      <th>อ้างอิงใบขอซื้อ (PR)</th>
+                      <th>จำนวนสั่งซื้อ</th>
+                      <th>ราคาต่อหน่วย</th>
+                      <th style="text-align: right;">ราคารวม</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>
+                        <span style="font-weight:700; display:block;">P-00432</span>
+                        <span style="font-size:12px; color:var(--muted)">มายองเนสรสชีส PureFoods 920g</span>
+                      </td>
+                      <td>
+                        <div class="match-status-wrapper match-status-matched">
+                          <span>✅ PR-2026-06-088</span>
+                        </div>
+                      </td>
+                      <td>50 ถุง</td>
+                      <td>฿89.00</td>
+                      <td style="text-align: right; font-weight: 700;">฿4,450.00</td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <span style="font-weight:700; display:block;">P-00912</span>
+                        <span style="font-size:12px; color:var(--muted)">น้ำสลัดครีม PureFoods 1kg</span>
+                      </td>
+                      <td>
+                        <div class="match-status-wrapper match-status-matched">
+                          <span>✅ PR-2026-06-088</span>
+                        </div>
+                      </td>
+                      <td>30 ถุง</td>
+                      <td>฿100.00</td>
+                      <td style="text-align: right; font-weight: 700;">฿3,000.00</td>
+                    </tr>
+                  </tbody>
+                </table>
+
+                <div class="total-bar">
+                  <div>
+                    <span style="color: var(--muted); font-size: 13px; font-weight: 600;">ยอดเงินสุทธิ (Net Total)</span>
+                    <span id="det-total" style="color: var(--primary); font-size: 20px; font-weight: 800; margin-left: 10px;">฿7,450.00</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right Panel: Timeline History -->
+            <div>
+              <div class="card">
+                <div class="card-title">บันทึกขั้นตอนการดำเนินการ</div>
+
+                <div class="timeline">
+                  <div class="timeline-event">
+                    <div class="timeline-dot active"></div>
+                    <div class="timeline-time">22/06/2026 12:49</div>
+                    <div class="timeline-title">สร้างบิลจัดซื้อ (PO-2026-06-001)</div>
+                    <div class="timeline-desc">ผู้สร้าง: สมชาย (Purchasing Officer) อ้างอิงยอดขอซื้อจาก PR-2026-06-088</div>
+                  </div>
+                  <div class="timeline-event">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-time">22/06/2026 12:49</div>
+                    <div class="timeline-title">ระบบแจ้งเตือน LINE (ส่งใบขอทบทวน)</div>
+                    <div class="timeline-desc">แจ้งอนุมัติไปยังไลน์กลุ่มผู้อนุมัติเบิก</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card">
+                <div class="card-title">V1 UX Parity Rule</div>
+                <div class="info-badge info-badge-v1">UX PARITY: DIRECT PO ISOLATION</div>
+                <p style="font-size:12px; color:var(--muted)">
+                  บิล Direct PO ที่สั่งซื้อเข้ามาโดยตรงในคลังเดียวกัน ซัพพลายเออร์เดียวกัน ในวันเดียวกัน จะถูกแยกเก็บเป็นคนละบิล (Composite key: `DIRECT-UUID` หรือ `refPrUid`) ไม่นำมารวมยอดกันเพื่อป้องกันปัญหาระบบบัญชีสับสนเมื่อรับของ
+                </p>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- 3. CREATE FORM TAB -->
+        <div id="form-tab" class="tab-panel">
+
+          <div class="dashboard-header" style="margin-bottom: 16px;">
+            <div>
+              <span class="info-badge">V2 IMPROVEMENT: ค้นหาสินค้ารายแถวพร้อม Autocomplete</span>
+              <h1 class="page-title">สร้างใบสั่งซื้อสินค้าใหม่ (New PO)</h1>
+            </div>
+          </div>
+
+          <!-- Alert Guard for permissions -->
+          <div id="form-permission-alert" class="alert-banner alert-banner-danger" style="display:none;">
+            <span>⚠️ <b>ระดับสิทธิ์ของคุณไม่เพียงพอในการสร้างเอกสาร:</b> บัญชีผู้ใช้ประเภท GUEST ถูกล็อกให้อ่านรายละเอียดประวัติบิลจัดซื้อได้อย่างเดียวเท่านั้น</span>
+          </div>
+
+          <div class="card" id="form-card-container">
+            <div class="meta-list">
+              <div class="form-group">
+                <label class="form-label">ซัพพลายเออร์ (Vendor)</label>
+                <select id="form-vendor-select" class="select-dropdown" style="width:100%;">
+                  <option value="บจก. เพียวฟู้ดส์">บจก. เพียวฟู้ดส์</option>
+                  <option value="ไทยเบฟฯ (ตัวแทน)">ไทยเบฟฯ (ตัวแทน)</option>
+                  <option value="บจก. เอก-ชัย ดีสทริบิวชั่น">บจก. เอก-ชัย ดีสทริบิวชั่น</option>
+                  <option value="บจก. น้ำมันพืชไทย">บจก. น้ำมันพืชไทย</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">คลังรับสินค้า (Destination Warehouse)</label>
+                <select id="form-wh-select" class="select-dropdown" style="width:100%;">
+                  <option value="W1 - TRD">คลัง W1 - TRD</option>
+                  <option value="W2 - AKRA">คลัง W2 - AKRA</option>
+                  <option value="W5 - AKRA">คลัง W5 - AKRA</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">อ้างอิงบิลใบขอจัดซื้อ (PR ID)</label>
+                <input id="form-pr-id" type="text" class="form-control" placeholder="ใส่รหัส PR (เช่น PR-2026-06-088) หรือเว้นว่างหากเป็น Direct PO">
+              </div>
+              <div class="form-group">
+                <label class="form-label">วันที่ยืนยันจัดส่ง (Expected Delivery Date)</label>
+                <input id="form-exp-date" type="date" class="form-control" value="2026-06-24">
+              </div>
+            </div>
+
+            <!-- Grid lines editing -->
+            <div style="margin-top:24px;">
+              <span class="form-label">รายการสินค้าสั่งจัดซื้อ</span>
+
+              <table class="edit-grid-table">
+                <thead>
+                  <tr>
+                    <th>ค้นหา/รหัสสินค้า</th>
+                    <th style="width: 120px;">จำนวนสั่งซื้อ</th>
+                    <th style="width: 140px;">ราคา/หน่วย (฿)</th>
+                    <th style="width: 140px; text-align: right;">ราคารวม (฿)</th>
+                    <th style="width: 50px;"></th>
+                  </tr>
+                </thead>
+                <tbody id="form-item-tbody">
+                  <!-- JS dynamically inserts rows here -->
+                </tbody>
+              </table>
+
+              <button class="btn btn-outline" onclick="addFormRow()">
+                <svg style="width:14px;height:14px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                เพิ่มรายการสินค้า
+              </button>
+
+              <div class="total-bar" style="margin-top:20px;">
+                <div>
+                  <span style="color: var(--muted); font-size: 13px; font-weight: 600;">ยอดเงินรวมบิลจัดซื้อ</span>
+                  <span id="form-grand-total" style="color: var(--accent); font-size: 20px; font-weight: 800; margin-left: 10px;">฿0.00</span>
+                </div>
+              </div>
+
+              <div style="margin-top:24px; display:flex; justify-content:flex-end; gap:8px;">
+                <button class="btn btn-outline" onclick="switchTab('dashboard-tab')">ยกเลิก</button>
+                <button class="btn btn-primary" onclick="submitPoForm()">บันทึกออกบิลจัดซื้อ (Submit)</button>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+
+        <!-- 4. INSIGHTS TAB -->
+        <div id="insights-tab" class="tab-panel">
+
+          <div class="dashboard-header" style="margin-bottom: 16px;">
+            <div>
+              <span class="info-badge">V2 IMPROVEMENT: การวิเคราะห์สถิติเพื่อจัดตารางรถเข้าคลัง</span>
+              <h1 class="page-title">วิเคราะห์ความรวดเร็วการส่งของ (Vendor Delivery Insights)</h1>
+              <p style="font-size: 13px; color: var(--muted); margin-top: 4px;">สถิติระยะเวลาขนส่งเฉลี่ย (Lead Time) นับตั้งแต่วันออกใบสั่งซื้อ (PO) จนถึงวันรับเข้าคลังสินค้าจริง (GR)</p>
+            </div>
+          </div>
+
+          <div class="analytics-grid">
+
+            <div class="card">
+              <div class="card-title">ระยะเวลาส่งมอบเฉลี่ย 30 วันย้อนหลัง (Lead Time P75)</div>
+
+              <div class="chart-container">
+                <div class="chart-row">
+                  <div class="chart-label">บจก. เพียวฟู้ดส์</div>
+                  <div class="chart-bar-wrapper">
+                    <div id="bar-vendor-1" class="chart-bar" style="background:#10b981;"></div>
+                  </div>
+                  <div class="chart-val">2 วัน</div>
+                </div>
+                <div class="chart-row">
+                  <div class="chart-label">ไทยเบฟฯ (ตัวแทน)</div>
+                  <div class="chart-bar-wrapper">
+                    <div id="bar-vendor-2" class="chart-bar" style="background:#f59e0b;"></div>
+                  </div>
+                  <div class="chart-val">4 วัน</div>
+                </div>
+                <div class="chart-row">
+                  <div class="chart-label">บจก. เอก-ชัย ดีสฯ</div>
+                  <div class="chart-bar-wrapper">
+                    <div id="bar-vendor-3" class="chart-bar" style="background:#10b981;"></div>
+                  </div>
+                  <div class="chart-val">1.5 วัน</div>
+                </div>
+                <div class="chart-row">
+                  <div class="chart-label">บจก. น้ำมันพืชไทย</div>
+                  <div class="chart-bar-wrapper">
+                    <div id="bar-vendor-4" class="chart-bar" style="background:#ef4444;"></div>
+                  </div>
+                  <div class="chart-val">7 วัน</div>
+                </div>
+              </div>
+
+              <div style="font-size:11px; color:var(--muted); margin-top: 16px;">
+                ℹ️ <b>P75 (75th Percentile Leadtime)</b>: แสดงความสามารถสูงสุดในการส่งของใน 75% ของประวัติทั้งหมด เป็นเกณฑ์วัดความแม่นยำในการวางแผนจัดหาสินค้า
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-title">แดชบอร์ดคาดการณ์สินค้ารับเข้าส่ง</div>
+
+              <div class="alert-banner alert-banner-warning">
+                <div>
+                  <span style="font-weight:700; display:block;">⚠️ แผนการส่งสินค้าคลาดเคลื่อน</span>
+                  <span style="font-size:12px;">บจก. น้ำมันพืชไทย (PO-2026-06-004) ส่งของล่าช้ากว่ากำหนด 2 วันตามสถิติประวัติ P75</span>
+                </div>
+              </div>
+
+              <table class="items-table" style="font-size:12px;">
+                <thead>
+                  <tr>
+                    <th>ซัพพลายเออร์</th>
+                    <th>วันที่อนุมัติ PO</th>
+                    <th>วันเข้าส่งคาดการณ์</th>
+                    <th>สถานะการส่ง</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>บจก. เพียวฟู้ดส์</td>
+                    <td>22/06/2026</td>
+                    <td>24/06/2026</td>
+                    <td><span class="badge badge-pending">ตามแผนกำหนด</span></td>
+                  </tr>
+                  <tr>
+                    <td>ไทยเบฟฯ (ตัวแทน)</td>
+                    <td>21/06/2026</td>
+                    <td>25/06/2026</td>
+                    <td><span class="badge badge-pending">ตามแผนกำหนด</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <script>
+    // Mock Product Database for autocomplete
+    const productCatalog = [
+      { code: 'P-00432', name: 'มายองเนสรสชีส PureFoods 920g', price: 89.00 },
+      { code: 'P-00912', name: 'น้ำสลัดครีม PureFoods 1kg', price: 100.00 },
+      { code: 'P-00104', name: 'ซอสมะเขือเทศไฮนซ์ 600g', price: 42.00 },
+      { code: 'P-00088', name: 'น้ำมันพืชองุ่น 1 ลิตร', price: 65.00 },
+      { code: 'P-00213', name: 'น้ำตาลทรายมิตรผล 1kg', price: 28.00 }
+    ];
+
+    // Global Roles configuration
+    let currentRole = 'ADMIN';
+
+    // Set Role and toggle access controls
+    function setRole(roleName) {
+      currentRole = roleName;
+
+      // Update UI Header details
+      const userDisplayName = document.getElementById('user-display-name');
+      const userRoleLabel = document.getElementById('user-role-label');
+      const userAvatarInitial = document.getElementById('user-avatar-initial');
+
+      // Setup Role Labels
+      if (roleName === 'ADMIN') {
+        userDisplayName.innerText = 'สมชาย รักดี';
+        userRoleLabel.innerText = 'ADMIN';
+        userRoleLabel.style.background = 'var(--accent)';
+        userAvatarInitial.innerText = 'S';
+      } else if (roleName === 'SUPERVISOR') {
+        userDisplayName.innerText = 'ผู้จัดการ แผนกจัดซื้อ';
+        userRoleLabel.innerText = 'SUPERVISOR';
+        userRoleLabel.style.background = 'var(--primary)';
+        userAvatarInitial.innerText = 'M';
+      } else if (roleName === 'PURCHASING') {
+        userDisplayName.innerText = 'พิชัย ขยันงาน';
+        userRoleLabel.innerText = 'OFFICER';
+        userRoleLabel.style.background = '#64748b';
+        userAvatarInitial.innerText = 'P';
+      } else if (roleName === 'GUEST') {
+        userDisplayName.innerText = 'ผู้เข้าชมภายนอก';
+        userRoleLabel.innerText = 'GUEST';
+        userRoleLabel.style.background = '#94a3b8';
+        userAvatarInitial.innerText = 'G';
+      }
+
+      // 1. Write actions (Create PO button on dashboard)
+      const writeElements = document.querySelectorAll('.role-write');
+      writeElements.forEach(el => {
+        if (roleName === 'GUEST') {
+          el.classList.add('disabled');
+          el.disabled = true;
+        } else {
+          el.classList.remove('disabled');
+          el.disabled = false;
+        }
+      });
+
+      // 2. Form guard visual alert
+      const formAlert = document.getElementById('form-permission-alert');
+      const formCard = document.getElementById('form-card-container');
+      if (roleName === 'GUEST') {
+        formAlert.style.display = 'flex';
+        formCard.style.opacity = '0.4';
+        formCard.style.pointerEvents = 'none';
+      } else {
+        formAlert.style.display = 'none';
+        formCard.style.opacity = '1';
+        formCard.style.pointerEvents = 'auto';
+      }
+
+      // 3. Approval actions on Detail screen
+      const btnApprove = document.getElementById('btn-approve');
+      const btnClosePo = document.getElementById('btn-close-po');
+      const btnApv = document.getElementById('btn-apv');
+
+      // Toggle buttons according to role
+      if (roleName === 'ADMIN') {
+        btnApprove.style.display = 'inline-flex';
+        btnClosePo.style.display = 'inline-flex';
+        btnApv.style.display = 'inline-flex';
+        btnApprove.disabled = false;
+        btnClosePo.disabled = false;
+        btnApv.disabled = false;
+      } else if (roleName === 'SUPERVISOR') {
+        btnApprove.style.display = 'inline-flex';
+        btnClosePo.style.display = 'inline-flex';
+        btnApv.style.display = 'none'; // Only Admin marks APV
+        btnApprove.disabled = false;
+        btnClosePo.disabled = false;
+      } else if (roleName === 'PURCHASING') {
+        btnApprove.style.display = 'none'; // Purchasing cannot Approve
+        btnClosePo.style.display = 'none';
+        btnApv.style.display = 'none';
+      } else if (roleName === 'GUEST') {
+        btnApprove.style.display = 'none';
+        btnClosePo.style.display = 'none';
+        btnApv.style.display = 'none';
+      }
+
+      // Update control button classes
+      const btns = document.querySelectorAll('.mockup-controls button');
+      btns.forEach(btn => {
+        if (btn.innerText === roleName || (roleName === 'PURCHASING' && btn.innerText === 'OFFICER')) {
+          btn.classList.add('active');
+        } else if (!btn.id.startsWith('dev-')) {
+          btn.classList.remove('active');
+        }
+      });
+
+      showToast(`สลับโหมดผู้ใช้งานเป็น: ${roleName}`);
+    }
+
+    // Toggle simulated mobile/desktop frame
+    function setDevice(deviceType) {
+      const viewport = document.getElementById('viewport');
+      const devDesktopBtn = document.getElementById('dev-desktop');
+      const devMobileBtn = document.getElementById('dev-mobile');
+
+      if (deviceType === 'desktop') {
+        viewport.classList.remove('device-mobile');
+        devDesktopBtn.classList.add('active');
+        devMobileBtn.classList.remove('active');
+      } else {
+        viewport.classList.add('device-mobile');
+        devDesktopBtn.classList.remove('active');
+        devMobileBtn.classList.add('active');
+      }
+
+      showToast(`เปลี่ยนขนาดจำลองเป็น: ${deviceType.toUpperCase()}`);
+    }
+
+    // Switch Tabs helper
+    function switchTab(tabId) {
+      const panels = document.querySelectorAll('.tab-panel');
+      const tabBtns = document.querySelectorAll('.tab-btn');
+
+      panels.forEach(p => p.classList.remove('active'));
+      tabBtns.forEach(btn => btn.classList.remove('active'));
+
+      document.getElementById(tabId).classList.add('active');
+
+      // Highlight correct tab navigation button
+      let btnIndex = 0;
+      if (tabId === 'dashboard-tab') btnIndex = 0;
+      else if (tabId === 'detail-tab') btnIndex = 1;
+      else if (tabId === 'form-tab') btnIndex = 2;
+      else if (tabId === 'insights-tab') btnIndex = 3;
+
+      tabBtns[btnIndex].classList.add('active');
+
+      // Trigger bar animations in insights
+      if (tabId === 'insights-tab') {
+        setTimeout(() => {
+          document.getElementById('bar-vendor-1').style.width = '30%';
+          document.getElementById('bar-vendor-2').style.width = '60%';
+          document.getElementById('bar-vendor-3').style.width = '20%';
+          document.getElementById('bar-vendor-4').style.width = '95%';
+        }, 150);
+      }
+    }
+
+    // Load PO details dynamically in mockup
+    function viewPoDetail(poId, vendor, warehouse, totalAmount, status) {
+      document.getElementById('det-po-id').innerText = poId;
+      document.getElementById('det-vendor').innerText = vendor;
+      document.getElementById('det-wh').innerText = warehouse;
+      document.getElementById('det-total').innerText = '฿' + totalAmount;
+
+      const detBadge = document.getElementById('det-badge');
+      const detailTabNavBtn = document.getElementById('detail-tab-nav');
+
+      detailTabNavBtn.innerText = `บิล ${poId}`;
+
+      // Reset badges
+      detBadge.className = 'badge';
+      if (status === 'pending') {
+        detBadge.innerText = 'รออนุมัติ';
+        detBadge.classList.add('badge-pending');
+      } else if (status === 'approved') {
+        detBadge.innerText = 'สั่งซื้อแล้ว';
+        detBadge.classList.add('badge-approved');
+      } else if (status === 'closed') {
+        detBadge.innerText = 'รับสินค้าครบแล้ว';
+        detBadge.classList.add('badge-closed');
+      } else if (status === 'apv') {
+        detBadge.innerText = 'ลงบัญชี (APV)';
+        detBadge.classList.add('badge-apv');
+      }
+
+      switchTab('detail-tab');
+      showToast(`โหลดรายละเอียดบิล: ${poId}`);
+    }
+
+    // Open create form tab
+    function openCreateForm() {
+      if (currentRole === 'GUEST') {
+        showToast('❌ สิทธิ์ประเภท GUEST ไม่สามารถกรอกใบสั่งซื้อใหม่ได้');
+        return;
+      }
+      switchTab('form-tab');
+    }
+
+    // Editable Grid Logic
+    let rowIdCounter = 0;
+
+    function addFormRow() {
+      const tbody = document.getElementById('form-item-tbody');
+      const rowId = `form-row-${rowIdCounter++}`;
+
+      const tr = document.createElement('tr');
+      tr.id = rowId;
+      tr.innerHTML = `
+        <td>
+          <div class="autocomplete-wrapper">
+            <input type="text" class="form-control item-search-input" placeholder="ค้นหาหรือพิมพ์ชื่อสินค้า..." oninput="handleItemSearch(this, '${rowId}')">
+            <div class="autocomplete-list"></div>
+            <input type="hidden" class="row-product-code" value="">
+          </div>
+        </td>
+        <td>
+          <input type="number" class="form-control row-qty" value="1" min="1" oninput="recalcFormTotal()" style="padding: 10px 8px;">
+        </td>
+        <td>
+          <input type="number" class="form-control row-price" value="0" min="0" step="0.5" oninput="recalcFormTotal()" style="padding: 10px 8px;">
+        </td>
+        <td style="text-align: right; font-weight: 700; padding-right: 12px; font-size: 14px;" class="row-total-val">
+          ฿0.00
+        </td>
+        <td style="text-align: center;">
+          <button class="btn-remove-row" onclick="removeFormRow('${rowId}')">✕</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+      recalcFormTotal();
+    }
+
+    function removeFormRow(rowId) {
+      const tr = document.getElementById(rowId);
+      if (tr) {
+        tr.remove();
+        recalcFormTotal();
+      }
+    }
+
+    // Auto complete product matching inside Grid Row
+    function handleItemSearch(inputEl, rowId) {
+      const query = inputEl.value.toLowerCase();
+      const listEl = inputEl.nextElementSibling; // autocomplete-list
+
+      if (!query) {
+        listEl.style.display = 'none';
+        return;
+      }
+
+      const matches = productCatalog.filter(p => p.name.toLowerCase().includes(query) || p.code.toLowerCase().includes(query));
+
+      if (matches.length === 0) {
+        listEl.style.display = 'none';
+        return;
+      }
+
+      listEl.innerHTML = '';
+      matches.forEach(prod => {
+        const item = document.createElement('div');
+        item.className = 'autocomplete-item';
+        item.innerHTML = `
+          <span><b>${prod.code}</b> ${prod.name}</span>
+          <span style="color:var(--accent); font-weight:700;">฿${prod.price.toFixed(2)}</span>
+        `;
+        item.onclick = () => {
+          inputEl.value = prod.name;
+          const tr = document.getElementById(rowId);
+          tr.querySelector('.row-product-code').value = prod.code;
+          tr.querySelector('.row-price').value = prod.price;
+          listEl.style.display = 'none';
+          recalcFormTotal();
+        };
+        listEl.appendChild(item);
+      });
+
+      listEl.style.display = 'block';
+    }
+
+    // Recalculate Form Grand Total
+    function recalcFormTotal() {
+      const tbody = document.getElementById('form-item-tbody');
+      const rows = tbody.querySelectorAll('tr');
+      let grandTotal = 0;
+
+      rows.forEach(tr => {
+        const qty = parseFloat(tr.querySelector('.row-qty').value) || 0;
+        const price = parseFloat(tr.querySelector('.row-price').value) || 0;
+        const total = qty * price;
+        grandTotal += total;
+
+        tr.querySelector('.row-total-val').innerText = '฿' + total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      });
+
+      document.getElementById('form-grand-total').innerText = '฿' + grandTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    // Submit mock PO form
+    function submitPoForm() {
+      const vendor = document.getElementById('form-vendor-select').value;
+      const wh = document.getElementById('form-wh-select').value;
+      const totalAmount = document.getElementById('form-grand-total').innerText.replace('฿', '');
+
+      if (totalAmount === '0.00') {
+        showToast('❌ ไม่สามารถสร้างบิลจัดซื้อที่มียอดเป็น 0 ได้ กรุณาเพิ่มสินค้าก่อน');
+        return;
+      }
+
+      // Add to mock table log
+      const tbody = document.querySelector('.responsive-table tbody');
+      const newTr = document.createElement('tr');
+      const newPoId = `PO-2026-06-00${tbody.querySelectorAll('tr').length + 1}`;
+
+      newTr.innerHTML = `
+        <td data-label="เลขที่บิล PO">
+          <span class="po-id-link" onclick="viewPoDetail('${newPoId}', '${vendor}', '${wh}', '${totalAmount}', 'pending')">
+            ${newPoId}
+          </span>
+        </td>
+        <td data-label="วันที่สั่งซื้อ">22/06/2026</td>
+        <td data-label="ซัพพลายเออร์">${vendor}</td>
+        <td data-label="คลังรับสินค้า"><span style="font-weight:600;">${wh.split(' ')[0]}</span> - ${wh.split(' - ')[1]}</td>
+        <td data-label="ยอดเงินรวม">฿${totalAmount}</td>
+        <td data-label="สถานะ"><span class="badge badge-pending">รออนุมัติ</span></td>
+        <td data-label="การจัดการ" style="text-align: right;">
+          <button class="btn btn-outline" style="min-height:30px; padding:2px 8px; font-size:12px;" onclick="viewPoDetail('${newPoId}', '${vendor}', '${wh}', '${totalAmount}', 'pending')">ดูรายละเอียด</button>
+        </td>
+      `;
+
+      tbody.insertBefore(newTr, tbody.firstChild);
+      showToast(`📝 ออกบิลจัดซื้อสำเร็จ: ${newPoId}`);
+
+      // Clear Form items
+      document.getElementById('form-item-tbody').innerHTML = '';
+      addFormRow();
+
+      // Navigate to dashboard
+      switchTab('dashboard-tab');
+    }
+
+    // Actions under detail view
+    function approvePO() {
+      const poId = document.getElementById('det-po-id').innerText;
+      document.getElementById('det-badge').className = 'badge badge-approved';
+      document.getElementById('det-badge').innerText = 'สั่งซื้อแล้ว';
+      showToast(`✅ อนุมัติสั่งจัดซื้อบิล: ${poId} เรียบร้อยแล้ว`);
+
+      // Update entry in dashboard list
+      updateDashboardRowStatus(poId, 'badge badge-approved', 'สั่งซื้อแล้ว');
+    }
+
+    function closePO() {
+      const poId = document.getElementById('det-po-id').innerText;
+      document.getElementById('det-badge').className = 'badge badge-closed';
+      document.getElementById('det-badge').innerText = 'รับสินค้าครบแล้ว';
+      showToast(`🔒 ปิดใบงานจัดซื้อบิล: ${poId} เสร็จสิ้น`);
+
+      updateDashboardRowStatus(poId, 'badge badge-closed', 'รับสินค้าครบแล้ว');
+    }
+
+    function markAPV() {
+      const poId = document.getElementById('det-po-id').innerText;
+      document.getElementById('det-badge').className = 'badge badge-apv';
+      document.getElementById('det-badge').innerText = 'ลงบัญชี (APV)';
+      showToast(`🏛️ ลงประวัติบัญชี (APV) บิล: ${poId} สำเร็จ`);
+
+      updateDashboardRowStatus(poId, 'badge badge-apv', 'ลงบัญชี (APV)');
+    }
+
+    function updateDashboardRowStatus(poId, badgeClass, labelText) {
+      const links = document.querySelectorAll('.po-id-link');
+      links.forEach(lnk => {
+        if (lnk.innerText.trim() === poId) {
+          const row = lnk.closest('tr');
+          const badge = row.querySelector('.badge');
+          badge.className = badgeClass;
+          badge.innerText = labelText;
+        }
+      });
+    }
+
+    // Toast notification helper
+    function showToast(message) {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.innerHTML = `
+        <span style="font-size:16px;">💡</span>
+        <span>${message}</span>
+      `;
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.style.animation = 'slideIn 0.3s reverse forwards';
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
+    // Initialize Page
+    window.onload = function() {
+      // Add first row to create form automatically
+      addFormRow();
+
+      // Run initial role configuration
+      setRole('ADMIN');
+
+      // Click outside to hide autocomplete lists
+      document.addEventListener('click', function(e) {
+        if (!e.target.classList.contains('item-search-input')) {
+          const lists = document.querySelectorAll('.autocomplete-list');
+          lists.forEach(l => l.style.display = 'none');
+        }
+      });
+    };
+  </script>
+</body>
+</html>

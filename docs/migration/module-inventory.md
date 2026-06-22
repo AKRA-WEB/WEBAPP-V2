@@ -91,7 +91,21 @@ For each module, capture:
   requisition status, a deliberate divergence from the schema's reserved
   `line_push_failed` status value (V1's own push failure is non-blocking).
   Real LINE sends remain unproven (no staging credentials). The Picking
-  cutover package remains.
+  cutover package (`V2-0034`) is prepared
+  (`docs/migration/picking-cutover-package.md`) but not approved: deployed
+  Vercel Preview/Development verification and one combined human UAT pass
+  are open, user-gated items.
+
+- `purchasing` / `receiving` (PR/PO/GR): no schema/migration yet. `V2-0036`'s
+  first slice (2026-06-22) profiled V1 sources read-only: confirmed a live
+  V1 `PR` sheet exists (same spreadsheet as `PO`/`GR`) but has no CSV export
+  in `import-data/po-pr-gr/` yet; documented V1's own PO bill-grouping key
+  and the bare-`DIRECT`-vs-`DIRECT-<uuid>` distinction; found the exported
+  `PO.csv` is missing an `Expected_Date` column that the V1 code documents;
+  ran `scripts/pr-po-gr-import-dry-run.mjs` against staging (0 blockers, 7
+  warnings — see `docs/migration/pr-po-gr-v1-mapping.md` and
+  `import-reports/pr-po-gr-dry-run-report.md`). No `public.purchasing_*` /
+  `public.receiving_*` tables exist yet.
 
 ## Notes From V1 Context
 

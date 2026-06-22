@@ -1,0 +1,956 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AKRA WEBAPP V2 UI/UX Mock-up</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --brand-blue: #171c8f;
+      --brand-orange: #e35205;
+      --line-green: #06c755;
+      --ink: #172033;
+      --muted: #667085;
+      --soft: #f4f6f9;
+      --surface: #ffffff;
+      --line: #d9e0ea;
+      --danger: #b42318;
+      --warning: #b54708;
+      --success: #067647;
+      --radius: 8px;
+      --shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+
+    html { min-block-size: 100%; scroll-behavior: smooth; }
+
+    body {
+      min-block-size: 100%;
+      margin: 0;
+      background: var(--soft);
+      color: var(--ink);
+      font-family: "Inter", "Noto Sans Thai", "Segoe UI", Tahoma, sans-serif;
+      font-size: 16px;
+      line-height: 1.55;
+    }
+
+    button, input, select, textarea { font: inherit; }
+
+    button {
+      min-block-size: 44px;
+      border: 0;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    button:focus-visible,
+    input:focus-visible,
+    select:focus-visible,
+    textarea:focus-visible,
+    a:focus-visible {
+      outline: 3px solid color-mix(in srgb, var(--brand-orange) 70%, white);
+      outline-offset: 2px;
+    }
+
+    .topbar {
+      position: sticky;
+      inset-block-start: 0;
+      z-index: 10;
+      border-block-end: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(10px);
+    }
+
+    .topbar__inner,
+    .container {
+      inline-size: min(1180px, calc(100% - 32px));
+      margin-inline: auto;
+    }
+
+    .topbar__inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding-block: 12px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-inline-size: 0;
+      font-weight: 800;
+    }
+
+    .brand__mark {
+      display: grid;
+      place-items: center;
+      inline-size: 40px;
+      block-size: 40px;
+      border-radius: var(--radius);
+      background: var(--brand-blue);
+      color: #fff;
+      font-weight: 900;
+    }
+
+    .brand__text { min-inline-size: 0; }
+
+    .brand__text span {
+      display: block;
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+
+    .toolbar,
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      justify-content: flex-end;
+    }
+
+    .container { padding-block: 24px 56px; }
+
+    .intro {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(260px, 360px);
+      gap: 16px;
+      align-items: start;
+      padding-block-end: 20px;
+    }
+
+    .intro h1 {
+      margin: 0 0 8px;
+      font-size: clamp(1.45rem, 2vw, 2rem);
+      line-height: 1.25;
+    }
+
+    .intro p {
+      max-inline-size: 72ch;
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .principles {
+      display: grid;
+      gap: 8px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .principles li {
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+    }
+
+    .principles b { color: var(--brand-blue); }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-block-size: 28px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--muted);
+      font-size: 0.8rem;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .pill--blue {
+      border-color: color-mix(in srgb, var(--brand-blue) 24%, white);
+      background: color-mix(in srgb, var(--brand-blue) 8%, white);
+      color: var(--brand-blue);
+    }
+
+    .pill--orange {
+      border-color: color-mix(in srgb, var(--brand-orange) 25%, white);
+      background: color-mix(in srgb, var(--brand-orange) 8%, white);
+      color: #a64000;
+    }
+
+    .pill--green {
+      border-color: color-mix(in srgb, var(--success) 25%, white);
+      background: color-mix(in srgb, var(--success) 8%, white);
+      color: var(--success);
+    }
+
+    .pill--red {
+      border-color: color-mix(in srgb, var(--danger) 25%, white);
+      background: color-mix(in srgb, var(--danger) 8%, white);
+      color: var(--danger);
+    }
+
+    .mock-shell {
+      display: grid;
+      grid-template-columns: 240px minmax(0, 1fr);
+      min-block-size: 680px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+
+    .mock-nav {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      padding: 18px;
+      border-inline-end: 1px solid var(--line);
+      background: #f8fafc;
+    }
+
+    .mock-nav__label {
+      color: var(--muted);
+      font-size: 0.76rem;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .screen-tabs { display: grid; gap: 8px; }
+
+    .tab {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 10px;
+      inline-size: 100%;
+      border-radius: var(--radius);
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--ink);
+      padding: 10px 12px;
+      text-align: start;
+      font-weight: 750;
+    }
+
+    .tab[aria-selected="true"] {
+      border-color: color-mix(in srgb, var(--brand-blue) 26%, white);
+      background: #fff;
+      color: var(--brand-blue);
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+    }
+
+    .tab__dot {
+      inline-size: 10px;
+      block-size: 10px;
+      border-radius: 999px;
+      background: var(--line);
+      flex: 0 0 auto;
+    }
+
+    .tab[aria-selected="true"] .tab__dot { background: var(--brand-orange); }
+
+    .mock-nav__note {
+      margin-block-start: auto;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fff;
+      color: var(--muted);
+      font-size: 0.86rem;
+    }
+
+    .screen {
+      display: none;
+      min-inline-size: 0;
+      padding: 20px;
+      background: #fff;
+    }
+
+    .screen.is-active { display: block; }
+
+    .screen-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 14px;
+      padding-block-end: 16px;
+      border-block-end: 1px solid var(--line);
+    }
+
+    .screen-header h2 {
+      margin: 0 0 4px;
+      font-size: clamp(1.2rem, 2vw, 1.7rem);
+      line-height: 1.25;
+    }
+
+    .screen-header p {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border-radius: var(--radius);
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--ink);
+      padding: 10px 14px;
+      font-weight: 800;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .btn--primary {
+      border-color: var(--brand-blue);
+      background: var(--brand-blue);
+      color: #fff;
+    }
+
+    .btn--orange {
+      border-color: var(--brand-orange);
+      background: var(--brand-orange);
+      color: #fff;
+    }
+
+    .btn--line {
+      border-color: var(--line-green);
+      background: var(--line-green);
+      color: #073b1d;
+    }
+
+    .btn--ghost {
+      background: #f8fafc;
+      color: var(--muted);
+    }
+
+    .grid { display: grid; gap: 12px; }
+
+    .grid--modules {
+      grid-template-columns: repeat(auto-fit, minmax(min(230px, 100%), 1fr));
+      margin-block-start: 18px;
+    }
+
+    .grid--stats {
+      grid-template-columns: repeat(auto-fit, minmax(min(160px, 100%), 1fr));
+      margin-block: 18px;
+    }
+
+    .grid--two {
+      grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.65fr);
+      align-items: start;
+      margin-block-start: 18px;
+    }
+
+    .module-card,
+    .stat,
+    .panel,
+    .bill-row,
+    .timeline-item {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+    }
+
+    .module-card {
+      display: grid;
+      gap: 10px;
+      padding: 14px;
+      min-inline-size: 0;
+    }
+
+    .module-card__top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .module-card h3,
+    .panel h3 {
+      margin: 0;
+      font-size: 1rem;
+      line-height: 1.35;
+    }
+
+    .module-card p,
+    .panel p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .module-card[aria-disabled="true"] {
+      background: #f8fafc;
+      color: #667085;
+    }
+
+    .stat { padding: 14px; }
+
+    .stat span {
+      display: block;
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+
+    .stat strong {
+      display: block;
+      margin-block-start: 4px;
+      font-size: 1.55rem;
+      line-height: 1.1;
+    }
+
+    .panel {
+      padding: 16px;
+      min-inline-size: 0;
+    }
+
+    .panel + .panel { margin-block-start: 12px; }
+
+    .bill-list {
+      display: grid;
+      gap: 10px;
+      margin-block-start: 14px;
+    }
+
+    .bill-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 12px;
+      align-items: center;
+      padding: 12px;
+      min-inline-size: 0;
+    }
+
+    .bill-row h3 {
+      margin: 0 0 2px;
+      font-size: 1rem;
+    }
+
+    .bill-row p {
+      margin: 0;
+      color: var(--muted);
+      overflow-wrap: anywhere;
+    }
+
+    .segmented {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+      margin-block: 12px 16px;
+    }
+
+    .segment {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fff;
+      color: var(--ink);
+      padding: 10px 8px;
+      font-weight: 800;
+      white-space: normal;
+    }
+
+    .segment.is-active {
+      border-color: var(--brand-blue);
+      background: color-mix(in srgb, var(--brand-blue) 8%, white);
+      color: var(--brand-blue);
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .field {
+      display: grid;
+      gap: 6px;
+      min-inline-size: 0;
+    }
+
+    label {
+      color: #344054;
+      font-size: 0.84rem;
+      font-weight: 800;
+    }
+
+    input, select, textarea {
+      inline-size: 100%;
+      min-block-size: 48px;
+      border: 1px solid #b8c2d2;
+      border-radius: var(--radius);
+      background: #fff;
+      color: var(--ink);
+      padding: 10px 12px;
+    }
+
+    .line-editor {
+      display: grid;
+      gap: 10px;
+      margin-block-start: 16px;
+    }
+
+    .line-item {
+      display: grid;
+      grid-template-columns: minmax(180px, 1.4fr) 96px 96px 44px;
+      gap: 8px;
+      align-items: end;
+      min-inline-size: 0;
+    }
+
+    .line-remove {
+      inline-size: 44px;
+      min-inline-size: 44px;
+      padding: 0;
+      border-color: #f3c9c5;
+      color: var(--danger);
+      background: #fff7f6;
+    }
+
+    .line-preview {
+      display: grid;
+      gap: 10px;
+      margin-block-start: 12px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #f8fafc;
+    }
+
+    .line-preview__item {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      min-inline-size: 0;
+      font-size: 0.92rem;
+    }
+
+    .line-preview__item span:first-child {
+      min-inline-size: 0;
+      overflow-wrap: anywhere;
+    }
+
+    .status-board {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(140px, 100%), 1fr));
+      gap: 10px;
+      margin-block-start: 18px;
+    }
+
+    .timeline {
+      display: grid;
+      gap: 10px;
+      margin-block-start: 12px;
+    }
+
+    .timeline-item { padding: 12px; }
+    .timeline-item strong { display: block; margin-block-end: 2px; }
+
+    .compare {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-block-start: 18px;
+    }
+
+    .compare ul { margin: 10px 0 0; padding-inline-start: 20px; }
+
+    .phone-stage {
+      display: grid;
+      place-items: center;
+      padding: 16px;
+      background: #f8fafc;
+      border: 1px dashed #b8c2d2;
+      border-radius: var(--radius);
+    }
+
+    .phone {
+      inline-size: min(360px, 100%);
+      border: 1px solid #98a2b3;
+      border-radius: 22px;
+      background: #fff;
+      box-shadow: 0 14px 40px rgba(15, 23, 42, 0.14);
+      overflow: hidden;
+    }
+
+    .phone__bar {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 12px;
+      border-block-end: 1px solid var(--line);
+      background: #f8fafc;
+      font-size: 0.82rem;
+      font-weight: 800;
+    }
+
+    .phone__content {
+      display: grid;
+      gap: 10px;
+      padding: 12px;
+    }
+
+    .mobile-action {
+      position: sticky;
+      inset-block-end: 0;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      padding: 12px;
+      border-block-start: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.96);
+    }
+
+    .design-note {
+      margin-block-start: 18px;
+      padding: 14px 16px;
+      border-inline-start: 4px solid var(--brand-orange);
+      background: #fff;
+      border-radius: var(--radius);
+      color: #344054;
+    }
+
+    .screen-footer {
+      margin-block-start: 18px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 920px) {
+      .topbar__inner, .container { inline-size: min(100% - 24px, 1180px); }
+      .intro, .mock-shell, .grid--two, .compare { grid-template-columns: 1fr; }
+      .mock-nav { border-inline-end: 0; border-block-end: 1px solid var(--line); }
+      .screen-tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 620px) {
+      .topbar__inner { align-items: flex-start; flex-direction: column; }
+      .toolbar { justify-content: flex-start; }
+      .screen { padding: 14px; }
+      .screen-tabs, .segmented, .form-grid, .line-item { grid-template-columns: 1fr; }
+      .bill-row { grid-template-columns: 1fr; }
+      .actions { justify-content: stretch; }
+      .actions .btn, .btn--mobile-full { inline-size: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar__inner">
+      <div class="brand" aria-label="AKRA WEBAPP V2">
+        <div class="brand__mark" aria-hidden="true">AK</div>
+        <div class="brand__text">
+          AKRA WEBAPP V2 Mock-up
+          <span>UX เหมือน V1, UI ปรับให้รองรับระบบรวมและมือถือ</span>
+        </div>
+      </div>
+      <div class="toolbar" aria-label="Mock-up status">
+        <span class="pill pill--blue">Static HTML</span>
+        <span class="pill">ไม่เชื่อมต่อฐานข้อมูล</span>
+        <span class="pill pill--orange">Review Draft</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="intro" aria-labelledby="mockup-title">
+      <div>
+        <h1 id="mockup-title">V2 UI/UX Mock-up สำหรับรีวิวทิศทางก่อนทำจริง</h1>
+        <p>
+          แนวทางนี้รักษา UX เดิมของ V1 เช่น portal, module launcher, Picking create,
+          LINE preview, ประวัติ, เลขบิล และ problem report แต่ปรับ UI ให้เป็นระบบกลางที่อ่านง่าย,
+          รองรับมือถือจริง, แยกสิทธิ์ชัด และเห็นสถานะงานเร็วขึ้น
+        </p>
+      </div>
+      <ul class="principles" aria-label="Design principles">
+        <li><b>UX baseline:</b> ผู้ใช้ทำงานตามทางเดิมของ V1 ให้มากที่สุด</li>
+        <li><b>UI improvement:</b> จัด hierarchy, status, action และ responsive ใหม่</li>
+        <li><b>Safety:</b> mock-up นี้ไม่แก้ production, ไม่ส่ง LINE, ไม่แตะ secret</li>
+      </ul>
+    </section>
+
+    <section class="mock-shell" aria-label="AKRA V2 mock-up screens">
+      <nav class="mock-nav" aria-label="Mock-up screen navigation">
+        <div>
+          <div class="mock-nav__label">Screens</div>
+          <div class="screen-tabs" role="tablist" aria-label="Mock-up screens">
+            <button class="tab" type="button" role="tab" aria-selected="true" aria-controls="screen-portal" data-screen="portal"><span class="tab__dot" aria-hidden="true"></span>Main Portal</button>
+            <button class="tab" type="button" role="tab" aria-selected="false" aria-controls="screen-picking-list" data-screen="picking-list"><span class="tab__dot" aria-hidden="true"></span>Picking Board</button>
+            <button class="tab" type="button" role="tab" aria-selected="false" aria-controls="screen-picking-new" data-screen="picking-new"><span class="tab__dot" aria-hidden="true"></span>New Requisition</button>
+            <button class="tab" type="button" role="tab" aria-selected="false" aria-controls="screen-picking-detail" data-screen="picking-detail"><span class="tab__dot" aria-hidden="true"></span>Detail + Problem</button>
+            <button class="tab" type="button" role="tab" aria-selected="false" aria-controls="screen-mobile" data-screen="mobile"><span class="tab__dot" aria-hidden="true"></span>Mobile Preview</button>
+            <button class="tab" type="button" role="tab" aria-selected="false" aria-controls="screen-ux-notes" data-screen="ux-notes"><span class="tab__dot" aria-hidden="true"></span>UX Notes</button>
+          </div>
+        </div>
+        <div class="mock-nav__note">ใช้คุย design direction ก่อน implement ใน Next.js จริง ข้อมูลทั้งหมดเป็นตัวอย่าง</div>
+      </nav>
+
+      <div class="mock-content">
+        <section class="screen is-active" id="screen-portal" role="tabpanel" data-screen-panel="portal">
+          <div class="screen-header">
+            <div>
+              <h2>ระบบปฏิบัติการ AKRA-TRD</h2>
+              <p>Launcher กลางแบบ V1 แต่แสดงโมดูลตามสิทธิ์และแยกสถานะ migration ให้ชัด</p>
+            </div>
+            <div class="actions">
+              <button class="btn btn--ghost" type="button">ผู้ใช้: SOMCHAI</button>
+              <button class="btn btn--primary" type="button">จัดการสิทธิ์</button>
+            </div>
+          </div>
+
+          <div class="grid grid--stats" aria-label="Portal summary">
+            <div class="stat"><span>โมดูลที่ใช้งานได้</span><strong>3</strong></div>
+            <div class="stat"><span>โมดูลรอ migrate</span><strong>5</strong></div>
+            <div class="stat"><span>สถานะ Pilot</span><strong>Picking</strong></div>
+            <div class="stat"><span>Production impact</span><strong>None</strong></div>
+          </div>
+
+          <div class="grid grid--modules" aria-label="Module launcher">
+            <article class="module-card">
+              <div class="module-card__top"><h3>บิลเบิกสินค้า Picking</h3><span class="pill pill--green">Pilot Ready</span></div>
+              <p>สร้างใบเบิก, ติดตามสถานะ, รายงานปัญหา และ LINE dry-run/retry</p>
+              <button class="btn btn--primary btn--mobile-full" type="button">เข้า Picking</button>
+            </article>
+            <article class="module-card">
+              <div class="module-card__top"><h3>ขอสั่งซื้อสินค้า PR</h3><span class="pill">Planned</span></div>
+              <p>คง workflow ขอซื้อแบบ V1 แต่เชื่อมกับ PO/GR ในระบบเดียว</p>
+              <button class="btn btn--ghost btn--mobile-full" type="button">ดูแผนงาน</button>
+            </article>
+            <article class="module-card">
+              <div class="module-card__top"><h3>ตรวจรับเข้าสินค้า GR</h3><span class="pill">Planned</span></div>
+              <p>รับสินค้า, split location, reset/recall และ audit trail</p>
+              <button class="btn btn--ghost btn--mobile-full" type="button">ดูแผนงาน</button>
+            </article>
+            <article class="module-card" aria-disabled="true">
+              <div class="module-card__top"><h3>KPI Tracker</h3><span class="pill pill--orange">ต้องขอสิทธิ์</span></div>
+              <p>ผู้ใช้ทั่วไปเห็นว่ามีโมดูลนี้ แต่กดเข้าไม่ได้ถ้าไม่มี permission</p>
+              <button class="btn btn--ghost btn--mobile-full" type="button" disabled>ยังไม่มีสิทธิ์</button>
+            </article>
+          </div>
+          <p class="screen-footer">คง UX แบบ V1: login ครั้งเดียวแล้วเลือกแอปจาก portal. UI ที่ดีขึ้น: เห็นสิทธิ์, สถานะ pilot และ next action ทันที</p>
+        </section>
+
+        <section class="screen" id="screen-picking-list" role="tabpanel" data-screen-panel="picking-list">
+          <div class="screen-header">
+            <div>
+              <h2>บิลเบิกสินค้า AKRA</h2>
+              <p>List + dashboard ของ Picking เพิ่มจาก V1 เพื่อให้เห็น backlog เร็วขึ้น</p>
+            </div>
+            <div class="actions">
+              <button class="btn btn--primary" type="button">สร้างใบเบิกใหม่</button>
+              <button class="btn" type="button">รีเฟรช</button>
+            </div>
+          </div>
+
+          <div class="status-board" aria-label="Picking status summary">
+            <div class="stat"><span>รอจัด</span><strong>8</strong></div>
+            <div class="stat"><span>จัดเสร็จ</span><strong>3</strong></div>
+            <div class="stat"><span>ส่งแล้ว</span><strong>12</strong></div>
+            <div class="stat"><span>มีปัญหา</span><strong>2</strong></div>
+            <div class="stat"><span>LINE failed</span><strong>1</strong></div>
+          </div>
+
+          <div class="grid grid--two">
+            <section class="panel" aria-labelledby="bill-list-title">
+              <h3 id="bill-list-title">รายการล่าสุด</h3>
+              <div class="bill-list">
+                <article class="bill-row"><div><h3>#018 บิลด่วน · Chen</h3><p>3 รายการ · requester SOMCHAI · วันนี้ 10:42</p></div><span class="pill pill--orange">รอจัด</span></article>
+                <article class="bill-row"><div><h3>#017 บิลจัด · Chen</h3><p>12 รายการ · มีรายงานของขาด 1 รายการ</p></div><span class="pill pill--blue">จัดเสร็จ</span></article>
+                <article class="bill-row"><div><h3>#016 จัดเตรียมไว้ก่อน · Chen</h3><p>5 รายการ · ส่งแล้วโดย WareHouse</p></div><span class="pill pill--green">ส่งแล้ว</span></article>
+              </div>
+            </section>
+            <aside class="panel" aria-labelledby="improve-title">
+              <h3 id="improve-title">ข้อเสนอ UI ที่ดีกว่า V1</h3>
+              <p>เพิ่ม status summary ด้านบนเพื่อให้ supervisor เห็น backlog โดยไม่ต้องเปิดทุกบิล</p>
+              <div class="design-note">UX ยังเหมือน V1: กดสร้างบิล, ดูประวัติ, เข้า detail. UI เพิ่ม: filter/status, failed LINE indicator และ action ตามสิทธิ์</div>
+            </aside>
+          </div>
+        </section>
+
+        <section class="screen" id="screen-picking-new" role="tabpanel" data-screen-panel="picking-new">
+          <div class="screen-header">
+            <div>
+              <h2>สร้างใบเบิกใหม่</h2>
+              <p>คง multi-row entry, bill type และ LINE preview แบบ V1 แต่จัด form ให้อ่านง่ายขึ้น</p>
+            </div>
+            <div class="actions">
+              <button class="btn" type="button">บันทึก draft</button>
+              <button class="btn btn--line" type="button">ส่งเข้า LINE กลุ่ม</button>
+            </div>
+          </div>
+
+          <div class="grid grid--two">
+            <section class="panel" aria-labelledby="form-title">
+              <h3 id="form-title">ข้อมูลใบเบิก</h3>
+              <div class="segmented" aria-label="Bill type">
+                <button class="segment is-active" type="button">บิลจัด</button>
+                <button class="segment" type="button">บิลด่วน</button>
+                <button class="segment" type="button">บิลเรียง</button>
+                <button class="segment" type="button">จัดเตรียม</button>
+              </div>
+              <div class="form-grid">
+                <div class="field"><label for="mock-requester">ผู้ขอเบิก</label><input id="mock-requester" value="SOMCHAI" readonly></div>
+                <div class="field"><label for="mock-assignee">ผู้จัดสินค้า</label><select id="mock-assignee"><option>Chen</option><option>WareHouse</option></select></div>
+              </div>
+              <div class="line-editor" aria-label="Bill lines">
+                <div class="line-item">
+                  <div class="field"><label for="mock-product-1">สินค้า #1</label><input id="mock-product-1" value="น้ำดื่ม 600ml แพ็ค"></div>
+                  <div class="field"><label for="mock-qty-1">จำนวน</label><input id="mock-qty-1" inputmode="decimal" value="12"></div>
+                  <div class="field"><label for="mock-unit-1">หน่วย</label><input id="mock-unit-1" value="แพ็ค"></div>
+                  <button class="btn line-remove" type="button" aria-label="ลบสินค้าแถว 1">ลบ</button>
+                </div>
+                <div class="line-item">
+                  <div class="field"><label for="mock-product-2">สินค้า #2</label><input id="mock-product-2" value="สินค้าพิเศษสำหรับหน้าร้าน"></div>
+                  <div class="field"><label for="mock-qty-2">จำนวน</label><input id="mock-qty-2" inputmode="decimal" value="3"></div>
+                  <div class="field"><label for="mock-unit-2">หน่วย</label><input id="mock-unit-2" value="ลัง"></div>
+                  <button class="btn line-remove" type="button" aria-label="ลบสินค้าแถว 2">ลบ</button>
+                </div>
+              </div>
+              <div class="actions" style="justify-content:flex-start;margin-block-start:12px">
+                <button class="btn" type="button">เพิ่มแถวสินค้า</button>
+                <button class="btn btn--line" type="button">ส่งเข้า LINE กลุ่ม</button>
+              </div>
+            </section>
+
+            <aside class="panel" aria-labelledby="line-preview-title">
+              <h3 id="line-preview-title">ตัวอย่าง LINE</h3>
+              <p>Preview แยกจาก form ช่วยลดการส่งผิด และต่อยอดเป็น dry-run ได้</p>
+              <div class="line-preview">
+                <strong>เบิกสินค้า #019 (บิลจัด)</strong>
+                <div class="line-preview__item"><span>น้ำดื่ม 600ml แพ็ค</span><b>12 แพ็ค</b></div>
+                <div class="line-preview__item"><span>สินค้าพิเศษสำหรับหน้าร้าน</span><b>3 ลัง</b></div>
+                <span class="pill pill--orange">รอจัด</span>
+              </div>
+              <div class="design-note">UX คงเดิม: สร้างบิลแล้วส่ง LINE. UI ดีขึ้น: ปุ่มหลักชัด, form มี label ครบ, mobile keyboard ใช้งานง่ายขึ้น</div>
+            </aside>
+          </div>
+        </section>
+
+        <section class="screen" id="screen-picking-detail" role="tabpanel" data-screen-panel="picking-detail">
+          <div class="screen-header">
+            <div>
+              <h2>#018 บิลด่วน · Chen</h2>
+              <p>รายละเอียดบิล, action ตามสถานะ, timeline และ problem report ในหน้าเดียว</p>
+            </div>
+            <div class="actions">
+              <button class="btn btn--primary" type="button">Mark picked</button>
+              <button class="btn btn--orange" type="button">Report problem</button>
+              <button class="btn" type="button">Retry LINE</button>
+            </div>
+          </div>
+
+          <div class="grid grid--two">
+            <section class="panel" aria-labelledby="detail-lines-title">
+              <h3 id="detail-lines-title">รายการสินค้า</h3>
+              <div class="bill-list">
+                <article class="bill-row"><div><h3>น้ำดื่ม 600ml แพ็ค</h3><p>ขอ 12 แพ็ค · จัดได้ 12 แพ็ค</p></div><span class="pill pill--green">ครบ</span></article>
+                <article class="bill-row"><div><h3>สินค้าโปรโมชั่นหน้าร้าน</h3><p>ขอ 3 ลัง · จัดได้ 1 ลัง · หมายเหตุ: ของคงเหลือไม่พอ</p></div><span class="pill pill--red">ของขาด</span></article>
+              </div>
+              <div class="panel" style="margin-block-start:12px">
+                <h3>Problem report</h3>
+                <p>บันทึกจำนวนจริงโดย WareHouse วันนี้ 10:55. สถานะบิลยังไม่ถูกเปลี่ยนอัตโนมัติ เพื่อให้เหมาะกับ decision ของ V2</p>
+              </div>
+            </section>
+            <aside class="panel" aria-labelledby="timeline-title">
+              <h3 id="timeline-title">Lifecycle timeline</h3>
+              <div class="timeline">
+                <div class="timeline-item"><strong>Created</strong><span>วันนี้ 10:42 · SOMCHAI</span></div>
+                <div class="timeline-item"><strong>LINE notification skipped</strong><span>Dry-run mode, ยังไม่ส่งจริง</span></div>
+                <div class="timeline-item"><strong>Problem reported</strong><span>วันนี้ 10:55 · WareHouse</span></div>
+              </div>
+              <div class="design-note">UX คง V1: มีปุ่มจัดเสร็จ, ส่งแล้ว, แจ้งปัญหา. UI ดีขึ้น: เห็น timeline และ failure recovery ได้ในหน้าเดียว</div>
+            </aside>
+          </div>
+        </section>
+
+        <section class="screen" id="screen-mobile" role="tabpanel" data-screen-panel="mobile">
+          <div class="screen-header">
+            <div>
+              <h2>Mobile-first Preview</h2>
+              <p>ตัวอย่างการย่อให้คนใช้งานบนมือถือโดยไม่ต้องซูมและไม่ล้นแนวนอน</p>
+            </div>
+          </div>
+
+          <div class="phone-stage">
+            <div class="phone" aria-label="Mobile mock-up">
+              <div class="phone__bar"><span>Picking #018</span><span class="pill pill--orange">รอจัด</span></div>
+              <div class="phone__content">
+                <div class="stat"><span>ผู้จัดสินค้า</span><strong>Chen</strong></div>
+                <article class="bill-row"><div><h3>น้ำดื่ม 600ml แพ็ค</h3><p>12 แพ็ค · ครบ</p></div><span class="pill pill--green">ครบ</span></article>
+                <article class="bill-row"><div><h3>สินค้าโปรโมชั่นหน้าร้าน</h3><p>ขอ 3 ลัง · จัดได้ 1 ลัง</p></div><span class="pill pill--red">ขาด</span></article>
+              </div>
+              <div class="mobile-action">
+                <button class="btn btn--primary" type="button">จัดเสร็จ</button>
+                <button class="btn btn--orange" type="button">แจ้งปัญหา</button>
+              </div>
+            </div>
+          </div>
+          <p class="screen-footer">ปุ่มหลักอยู่ล่างและมีขนาดแตะง่าย 44px+, ข้อความยาว wrap ได้, ไม่มี layout ที่ต้องเลื่อนซ้ายขวา</p>
+        </section>
+
+        <section class="screen" id="screen-ux-notes" role="tabpanel" data-screen-panel="ux-notes">
+          <div class="screen-header">
+            <div>
+              <h2>UX เหมือน V1, UI เสนอให้ดีกว่าเดิม</h2>
+              <p>สรุปหลักคิดสำหรับ review กับผู้ใช้ก่อน implement</p>
+            </div>
+          </div>
+
+          <div class="compare">
+            <section class="panel">
+              <h3>ต้องคงให้เหมือน V1</h3>
+              <ul>
+                <li>Main เป็น portal เลือกแอปตามสิทธิ์</li>
+                <li>Picking มีประเภทบิลเดิม: บิลจัด, บิลด่วน, บิลเรียง, จัดเตรียม</li>
+                <li>สร้างบิลหลายรายการในครั้งเดียว</li>
+                <li>มี LINE preview และ flow แจ้งกลุ่ม</li>
+                <li>ประวัติและเลขบิลแบบ `#NNN` ต้องจำง่าย</li>
+                <li>Problem report ใส่จำนวนจริงรายสินค้า</li>
+              </ul>
+            </section>
+            <section class="panel">
+              <h3>เสนอปรับ UI ให้ดีกว่า V1</h3>
+              <ul>
+                <li>Dashboard สรุป pending/picked/sent/problem/LINE failed</li>
+                <li>Action แสดงตามสิทธิ์และสถานะจริง ลดการกดผิด</li>
+                <li>Timeline เห็นว่าใครทำอะไรเมื่อไร</li>
+                <li>Mobile sticky action สำหรับงานที่ต้องกดบ่อย</li>
+                <li>Form label ชัด, input ใหญ่, error อยู่ใกล้ช่องที่ผิด</li>
+                <li>Responsive ใช้ grid/flex ที่ wrap ได้ ไม่ fix width จนล้น</li>
+              </ul>
+            </section>
+          </div>
+          <div class="design-note">ข้อเสนอนี้ยังไม่ใช่ implementation สุดท้าย ขั้นต่อไปควรให้ผู้ใช้ V1 review ว่า workflow คุ้นมือพอหรือไม่ แล้วค่อยล็อก design standard สำหรับ PR/PO/GR และโมดูลอื่น</div>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const tabs = Array.from(document.querySelectorAll("[data-screen]"));
+    const panels = Array.from(document.querySelectorAll("[data-screen-panel]"));
+
+    function activateScreen(screen) {
+      tabs.forEach((tab) => {
+        const active = tab.dataset.screen === screen;
+        tab.setAttribute("aria-selected", String(active));
+      });
+      panels.forEach((panel) => {
+        panel.classList.toggle("is-active", panel.dataset.screenPanel === screen);
+      });
+    }
+
+    tabs.forEach((tab) => {
+      tab.addEventListener("click", () => activateScreen(tab.dataset.screen));
+    });
+  </script>
+</body>
+</html>
