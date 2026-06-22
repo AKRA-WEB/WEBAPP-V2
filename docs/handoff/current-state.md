@@ -13,8 +13,12 @@ Last updated: 2026-06-22
   reporting slice (`/picking/[id]/problem` + a "Problem reports" read section
   on `/picking/[id]`, `V2-0025`) are all implemented and verified against
   staging. Main portal redesign (`V2-0017`) is also complete and verified
-  against staging. A Thai management summary for supervisor presentation is
-  available at `docs/project-management/executive-summary-th.md`.
+  against staging. Picking LINE notification/failure recovery (`V2-0027`) is
+  also complete: notification outcome is an event-only record (never changes
+  requisition status), disabled/dry-run by default, with a writer/admin
+  retry action; real LINE sends remain unproven. A Thai management summary
+  for supervisor presentation is available at
+  `docs/project-management/executive-summary-th.md`.
 - Production impact: None
 - V1 reference path: `C:\dev\WEBAPP`
 
@@ -65,6 +69,7 @@ Plan IDs:
 - `V2-0025` (`docs/plans/V2-0025-picking-problem-reporting.md`)
 - `V2-0026` (`docs/plans/V2-0026-database-data-flow-html.md`)
 - `V2-0028` (`docs/plans/V2-0028-management-executive-summary.md`)
+- `V2-0027` (`docs/plans/V2-0027-picking-line-notification-failure-recovery.md`)
 
 Goal: Continue Phase 3 from the verified Picking read-only/create baseline
 toward a full V1 replacement roadmap. `V2-0022` now frames the remaining work
@@ -521,6 +526,77 @@ Status:
   staging data, V1 production files, GAS deployments, Sheets, URLs, LINE
   tokens, or secrets were changed by this documentation task. Existing local
   uncommitted LINE notification files were not edited or marked complete.
+- Executed `V2-0027` on 2026-06-22 (bare `Go:`, plan drafted inline per the
+  `V2-0017`/`V2-0023`/`V2-0025` precedent): Picking LINE notification and
+  failure recovery.
+  - Consulted advisor before writing the migration: the schema reserves a
+    `line_push_failed` **status** value (migration `0004`), which would
+    suggest blocking the requisition until a retry succeeds, but that
+    conflicts with `0010` (only `pending -> picked`) and with V1's own
+    non-blocking push-failure behavior (`Code.gs.txt`: saves with a warning,
+    `lineStatus` stays `pending`). Adopted Option B: notification outcome is
+    event-only and never touches `picking_requisitions.status`. The reserved
+    status value stays unused.
+  - Migration `0012_picking_line_notifications.sql`: widens
+    `picking_requisition_events_type_check` to add
+    `line_notification_sent`/`line_notification_skipped`
+    (`line_push_failed` already existed). No new tables/RPC — the outcome is
+    a single admin-client event insert (plus an optional
+    `picking_requisition_secrets` upsert on a real-send success), since
+    `service_role` already holds insert grants on both tables from `0005`.
+    Applied and verified on staging (`npm run check:migrations`,
+    `npm run db:verify-staging-schema`).
+  - Added `src/modules/picking/line-notification.ts`
+    (`sendPickingLineNotification`): defaults to dry-run
+    (`PICKING_LINE_PUSH_ENABLED !== "true"`) -> `line_notification_skipped`
+    event, no network call; enabled without
+    `LINE_CHANNEL_TOKEN`/`LINE_GROUP_ID` -> `line_push_failed` event, no
+    network call (mirrors V1's own `pushLineMessages` guard); enabled and
+    configured -> attempts a real `fetch` push, recording
+    `line_notification_sent` (capturing `quoteToken`) on success or
+    `line_push_failed` on a non-2xx/network error — this branch is
+    type-checked but unproven, no staging LINE credentials exist.
+  - Added `src/modules/picking/line-notification-action.ts`
+    (`retryPickingLineNotification`, `picking.write`-gated, redirects back to
+    `/picking/[id]`).
+  - Hooked the send into `src/modules/picking/create-action.ts` after a
+    successful `create_picking_requisition` call, in its own `try/catch`,
+    placed **before** `redirect()` (not wrapping it, since `redirect()`
+    works by throwing).
+  - Added a "Retry LINE notification" button to
+    `src/app/picking/[id]/page.tsx`, writer/admin-only, shown when the
+    latest LINE-related lifecycle event is `line_push_failed`, independent
+    of the requisition's own status.
+  - Added `.env.example` placeholders: `PICKING_LINE_PUSH_ENABLED`,
+    `LINE_CHANNEL_TOKEN`, `LINE_GROUP_ID`.
+  - Verified end to end through the real running app (sign-in ->
+    `/picking/new` -> `/picking/[id]`), not just direct DB calls, using a
+    temporary local Playwright install (removed after; user approved
+    resetting `test-admin`/`test-picker-writer`/`test-picker-reader`
+    passwords via `AskUserQuestion` first, not recorded in any committed
+    file, same pattern as prior slices): default-disabled path
+    (`line_notification_skipped`, no button); enabled-without-credentials
+    failure path (`line_push_failed`, zero network calls, button shown to
+    writer, confirmed hidden for reader); repeated failure while still
+    misconfigured (idempotent, button stays); retry after reverting the
+    flag (recovers to `line_notification_skipped`, button disappears). Zero
+    horizontal overflow at 390px and no console errors throughout. A direct
+    DB smoke test separately confirmed the widened constraint accepts all
+    three event types and still rejects garbage, with `status` unchanged
+    after every insert.
+  - `lint`, `typecheck`, `build`, `git diff --check`, `check:migrations`,
+    `db:verify-staging-schema` all pass. Both browser-test requisitions were
+    deleted after; Playwright was removed; `.env.local`'s temporary
+    `PICKING_LINE_PUSH_ENABLED=true` line was reverted.
+  - Found this session's `V2-0028` (documentation-only) had concurrently
+    modified this file, `docs/plans/index.md`, and
+    `docs/handoff/work-log.md` without touching the in-progress LINE files;
+    per "do not revert work you did not make," this slice's handoff edits
+    were layered on top instead of overwriting `V2-0028`'s changes.
+  - Also archived 5 older active-log entries into
+    `docs/handoff/archive/work-log-2026-06-20-status-transitions-through-operating-model.md`
+    to bring the active log back under its context budget.
+  - No V1 production files changed.
 
 ## Next Actions
 
@@ -534,17 +610,21 @@ Status:
 5. ~~Execute Picking status transitions (`pending -> picked -> sent`).~~ Done
    2026-06-20 (`V2-0023`).
 6. ~~Execute Picking problem reporting.~~ Done 2026-06-20 (`V2-0025`).
-7. Execute Picking LINE notification/failure recovery next, then Picking
-   cutover package (per `V2-0022`'s next-step chain). See
-   `docs/project-management/decision-board.md` for the current decision pack
-   and resolved Picking defaults.
-8. After Picking cutover package, plan PR/PO/GR foundation before implementing
-   PR, PO, or GR UI.
-9. Keep `docs/plans/index.md` updated whenever a plan status or next action
-   changes.
-10. Keep `docs/handoff/work-log.md` as the active recent log; archive older
+7. ~~Execute Picking LINE notification/failure recovery.~~ Done 2026-06-22
+   (`V2-0027`). Real LINE sends remain unproven pending credentials and
+   explicit approval.
+8. Prepare the Picking cutover package next (per `V2-0022`'s next-step
+   chain): V1 history archive documentation, data reconciliation, UAT
+   checklist, Vercel Preview/Development verification, rollback plan, and
+   explicit user approval gate. See
+   `docs/project-management/decision-board.md` for the current decision pack.
+9. After the Picking cutover package, plan PR/PO/GR foundation before
+   implementing PR, PO, or GR UI.
+10. Keep `docs/plans/index.md` updated whenever a plan status or next action
+    changes.
+11. Keep `docs/handoff/work-log.md` as the active recent log; archive older
     entries under `docs/handoff/archive/` when it becomes long again.
-11. Use `docs/project-management/executive-summary-th.md` when the user needs
+12. Use `docs/project-management/executive-summary-th.md` when the user needs
     a supervisor-friendly project summary.
 
 

@@ -8,6 +8,7 @@ import { requirePermission } from "@/modules/auth/guard";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { PICKING_BILL_TYPES } from "@/modules/picking/format";
+import { sendPickingLineNotification } from "@/modules/picking/line-notification";
 
 export type CreateRequisitionLineInput = {
   productName: string;
@@ -133,5 +134,13 @@ export async function createPickingRequisition(
     return { status: "error", message: error?.message ?? "Could not create requisition." };
   }
 
-  redirect(`/picking/${data[0].id}`);
+  const requisitionId = data[0].id;
+
+  try {
+    await sendPickingLineNotification(requisitionId, { profileId: user.id, name: requesterName });
+  } catch {
+    // Best-effort: a LINE notification failure must never block the create.
+  }
+
+  redirect(`/picking/${requisitionId}`);
 }

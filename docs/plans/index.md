@@ -21,12 +21,18 @@ flow with a shared-catalog product bridge, an atomic
 also complete: an atomic `public.report_picking_problem(...)` transaction
 records per-line requested-vs-actual quantities without changing requisition
 status (ADR `0018`), surfaced via a guarded `/picking/[id]/problem` form and a
-"Problem reports" read section on `/picking/[id]`. LINE notification/failure
-recovery remains deferred. `V2-0017` Main portal redesign is now complete (`/`
+"Problem reports" read section on `/picking/[id]`. Picking LINE
+notification/failure recovery (`V2-0027`) is also complete: notification
+outcome (`sent`/`skipped`/`failed`) is recorded as a lifecycle event only and
+never changes requisition status (a deliberate V1-faithful divergence from
+the schema's reserved `line_push_failed` status value), defaulting to
+disabled/dry-run with a writer/admin "Retry LINE notification" action on
+`/picking/[id]`; real LINE sends remain unproven pending real credentials and
+explicit approval. `V2-0017` Main portal redesign is now complete (`/`
 is permission-filtered, Thai-first, with a signed-out portal state). `V2-0022`
 now records the full module-by-module timeline to reach V1 operational
-replacement and full parity closeout; per that plan's next-step chain, LINE
-notification/failure recovery is the recommended next slice.
+replacement and full parity closeout; per that plan's next-step chain, the
+Picking cutover package is the recommended next slice.
 Project management has also been standardized in `V2-0024`: active status
 belongs in this index and `docs/handoff/current-state.md`, the active work log
 is capped to recent entries, and `docs/project-management/decision-board.md`
@@ -230,6 +236,33 @@ status, current capabilities, stack, and roadmap to supervisors.
      code, schema, staging data, V1 production files, secrets, or LINE tokens
      changed.
    - File: `docs/plans/V2-0028-management-executive-summary.md`
+20. `V2-0027` - Picking LINE notification and failure recovery
+   - Status: Complete on 2026-06-22.
+   - Outcome: migration `0012` widens `picking_requisition_events_type_check`
+     to add `line_notification_sent`/`line_notification_skipped`
+     (`line_push_failed` already existed). No new tables/RPC — outcome is a
+     single admin-client event insert (plus an optional
+     `picking_requisition_secrets` upsert on a real-send success). Per an
+     advisor-flagged decision, notification failure never changes
+     `picking_requisitions.status` (V1-faithful: V1's own push failure is
+     non-blocking); the reserved `line_push_failed` status value stays
+     unused. Added `src/modules/picking/line-notification.ts`
+     (`sendPickingLineNotification`: dry-run by default via
+     `PICKING_LINE_PUSH_ENABLED`, fails cleanly with zero network calls when
+     enabled without `LINE_CHANNEL_TOKEN`/`LINE_GROUP_ID`, real-send branch
+     unproven) and `src/modules/picking/line-notification-action.ts`
+     (`retryPickingLineNotification`, `picking.write`-gated). Hooked into
+     `create-action.ts` after a successful create (own `try/catch`, before
+     `redirect()`). Added a "Retry LINE notification" button to
+     `/picking/[id]` shown when the latest LINE event is `line_push_failed`.
+     Verified end to end through the real app (not just direct DB calls)
+     with a temporary local Playwright install: default-disabled path,
+     enabled-without-credentials failure path (zero network calls), repeated
+     failure (idempotent), and retry-after-fix recovery (button disappears)
+     all confirmed; role gating (`PICKING_READER` never sees the button) and
+     390px/no-console-error checks passed. Also archived 5 older work-log
+     entries to stay under the context budget.
+   - File: `docs/plans/V2-0027-picking-line-notification-failure-recovery.md`
 
 ## Completed Or Baseline Plans
 
@@ -248,8 +281,9 @@ status, current capabilities, stack, and roadmap to supervisors.
   V2 closeout commits or switch to PRs.
 - Whether V1 users without email addresses receive synthetic staging emails or a
   different identity bridge.
-- Whether LINE notification follows create requisition immediately or waits
-  until in-app status/problem flows are proven.
+- Resolved (`V2-0027`, 2026-06-22): LINE notification is attempted at create
+  time, dry-run/disabled by default; in-app status/problem flows were already
+  proven first (`V2-0023`/`V2-0025`).
 - Whether Vercel Preview/Development should receive a server-only `DATABASE_URL`
   for transactional create verification, or create testing stays local until a
   private RPC/transaction path is added.

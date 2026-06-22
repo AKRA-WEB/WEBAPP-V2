@@ -7,6 +7,7 @@ import { requirePermission } from "@/modules/auth/guard";
 import { can } from "@/modules/auth/permissions";
 import { getRequisitionDetail } from "@/modules/picking/read-model";
 import { transitionPickingRequisitionStatus } from "@/modules/picking/transition-action";
+import { retryPickingLineNotification } from "@/modules/picking/line-notification-action";
 import {
   formatBillLabel,
   formatDateTime,
@@ -17,6 +18,12 @@ import {
 
 // Auth-gated, per-user data: never statically cache this page.
 export const dynamic = "force-dynamic";
+
+const LINE_EVENT_TYPES = new Set([
+  "line_notification_sent",
+  "line_notification_skipped",
+  "line_push_failed",
+]);
 
 export const metadata = {
   title: "Requisition · Picking · AKRA WEBAPP V2",
@@ -89,6 +96,10 @@ export default async function PickingRequisitionDetailPage({
 
   const { requisition } = result;
   const canTransition = can(guard.snapshot, "picking.write");
+  const latestLineEvent = [...requisition.events]
+    .reverse()
+    .find((event) => LINE_EVENT_TYPES.has(event.eventType));
+  const lineNotificationFailed = latestLineEvent?.eventType === "line_push_failed";
 
   return (
     <AppShell activeHref="/picking">
@@ -120,6 +131,13 @@ export default async function PickingRequisitionDetailPage({
             <Link className="secondary-button" href={`/picking/${requisition.id}/problem`}>
               Report problem
             </Link>
+          )}
+          {canTransition && lineNotificationFailed && (
+            <form action={retryPickingLineNotification.bind(null, requisition.id)}>
+              <button className="secondary-button" type="submit">
+                Retry LINE notification
+              </button>
+            </form>
           )}
           <StatusPill tone={pickingStatusTone(requisition.status)}>
             {formatPickingStatusLabel(requisition.status)}

@@ -81,8 +81,17 @@ For each module, capture:
   "Problem reports" read section on `/picking/[id]`) backed by
   service-role-only `public.report_picking_problem(...)`, which records
   per-line requested-vs-actual quantities without changing requisition
-  status (ADR `0018`). LINE integration/failure recovery and the Picking
-  cutover package remain.
+  status (ADR `0018`). Fifth UI/action slice (plan `V2-0027`) is implemented
+  and verified: a writer/admin-only "Retry LINE notification" action on
+  `/picking/[id]`, backed by `src/modules/picking/line-notification.ts`,
+  which attempts a LINE push at create time (disabled/dry-run by default per
+  ADR `0018`) and records the outcome (`line_notification_sent` /
+  `line_notification_skipped` / `line_push_failed`) as a
+  `picking_requisition_events` row only — notification outcome never changes
+  requisition status, a deliberate divergence from the schema's reserved
+  `line_push_failed` status value (V1's own push failure is non-blocking).
+  Real LINE sends remain unproven (no staging credentials). The Picking
+  cutover package remains.
 
 ## Notes From V1 Context
 

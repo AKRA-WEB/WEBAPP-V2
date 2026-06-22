@@ -95,6 +95,8 @@ V2 additionally reserves:
 - Problem reporting does not change a `pending` requisition to `picked`
   (ADR `0018`).
 - LINE staging starts with disabled send/dry-run behavior; real sends require
-  later explicit approval (ADR `0018`).
+  later explicit approval (ADR `0018`). Implemented in `V2-0027`: failure is
+  an event-only record and never changes requisition status, matching V1's
+  own non-blocking push-failure behavior.
 - V1 Picking history remains a read-only archive for the first cutover package
   rather than being imported into V2 (ADR `0018`).
