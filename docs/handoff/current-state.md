@@ -1,6 +1,6 @@
 # Current State
 
-Last updated: 2026-06-20
+Last updated: 2026-06-22
 
 ## Project
 
@@ -13,7 +13,8 @@ Last updated: 2026-06-20
   reporting slice (`/picking/[id]/problem` + a "Problem reports" read section
   on `/picking/[id]`, `V2-0025`) are all implemented and verified against
   staging. Main portal redesign (`V2-0017`) is also complete and verified
-  against staging.
+  against staging. A Thai management summary for supervisor presentation is
+  available at `docs/project-management/executive-summary-th.md`.
 - Production impact: None
 - V1 reference path: `C:\dev\WEBAPP`
 
@@ -63,6 +64,7 @@ Plan IDs:
 - `V2-0024` (`docs/plans/V2-0024-project-management-operating-model.md`)
 - `V2-0025` (`docs/plans/V2-0025-picking-problem-reporting.md`)
 - `V2-0026` (`docs/plans/V2-0026-database-data-flow-html.md`)
+- `V2-0028` (`docs/plans/V2-0028-management-executive-summary.md`)
 
 Goal: Continue Phase 3 from the verified Picking read-only/create baseline
 toward a full V1 replacement roadmap. `V2-0022` now frames the remaining work
@@ -512,6 +514,13 @@ Status:
     both routes after the fix; no console errors. `lint`/`typecheck`/`build`/
     `git diff --check`/`check:migrations`/`db:verify-staging-schema` all
     pass. No V1 production files changed.
+- Added `V2-0028` on 2026-06-22 as a documentation-only management summary:
+  `docs/project-management/executive-summary-th.md` explains the V2 purpose,
+  stack, staging-verified capabilities, unfinished areas, simplified roadmap,
+  and presentation talking points in Thai. No runtime code, Supabase schema,
+  staging data, V1 production files, GAS deployments, Sheets, URLs, LINE
+  tokens, or secrets were changed by this documentation task. Existing local
+  uncommitted LINE notification files were not edited or marked complete.
 
 ## Next Actions
 
@@ -535,6 +544,8 @@ Status:
    changes.
 10. Keep `docs/handoff/work-log.md` as the active recent log; archive older
     entries under `docs/handoff/archive/` when it becomes long again.
+11. Use `docs/project-management/executive-summary-th.md` when the user needs
+    a supervisor-friendly project summary.
 
 
 ## Open Questions

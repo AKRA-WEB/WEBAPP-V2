@@ -1,6 +1,6 @@
 # V2 Plan Index
 
-Last updated: 2026-06-20
+Last updated: 2026-06-22
 
 This is the central plan board for AKRA WEBAPP V2. It is the first file to read
 after `CONDUCTOR.md` when another agent needs to continue work.
@@ -32,8 +32,10 @@ belongs in this index and `docs/handoff/current-state.md`, the active work log
 is capped to recent entries, and `docs/project-management/decision-board.md`
 tracks recommendations for user review.
 `V2-0026` adds a static HTML database/data-flow reference for the current
-implemented schema, local in-progress Picking problem-reporting objects, and
-planned app/module flows.
+implemented schema and planned app/module flows. `V2-0028` adds a
+management-friendly Thai executive summary at
+`docs/project-management/executive-summary-th.md` for presenting the project
+status, current capabilities, stack, and roadmap to supervisors.
 
 ## Active Queue
 
@@ -219,6 +221,15 @@ planned app/module flows.
      fixed a real 2px mobile-overflow regression caused by a long unbroken
      test-account email inside a `white-space: nowrap` class.
    - File: `docs/plans/V2-0025-picking-problem-reporting.md`
+19. `V2-0028` - Management executive summary
+   - Status: Complete on 2026-06-22.
+   - Outcome: added `docs/project-management/executive-summary-th.md`, a
+     Thai, management-friendly overview explaining the project purpose, stack,
+     current staging-verified capabilities, unfinished areas, roadmap, and
+     supervisor presentation talking points. Documentation-only; no runtime
+     code, schema, staging data, V1 production files, secrets, or LINE tokens
+     changed.
+   - File: `docs/plans/V2-0028-management-executive-summary.md`
 
 ## Completed Or Baseline Plans
 

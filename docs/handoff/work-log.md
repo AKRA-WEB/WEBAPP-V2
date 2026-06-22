@@ -523,3 +523,33 @@ Verification:
     `package.json`/`package-lock.json` show no diff afterward.
 - No V1 production apps, GAS deployments, Sheets, URLs, LINE tokens, or
   production data were touched.
+
+## 2026-06-22 - Management Executive Summary (V2-0028)
+
+Context:
+
+- User asked for a central, easy-to-understand project summary file for
+  presenting AKRA WEBAPP V2 to a supervisor: what the project uses, what it
+  contains, what it can do, and how far it has progressed.
+- Read the compact source-of-truth docs plus target architecture, migration
+  plan, module inventory, full parity timeline, recent Picking plans, and the
+  existing in-progress LINE notification plan file. The workspace already has
+  local uncommitted LINE notification runtime files; this task did not edit
+  those files or mark that slice complete.
+
+Changes:
+
+- Added `docs/project-management/executive-summary-th.md`, a Thai
+  supervisor-facing summary covering project purpose, stack, implemented
+  modules, current staging-verified capabilities, unfinished areas, roadmap,
+  presentation talking points, future decisions, and safety notes.
+- Added `docs/plans/V2-0028-management-executive-summary.md`.
+- Updated `docs/plans/index.md` and `docs/handoff/current-state.md` so the
+  summary is discoverable from the normal resume path.
+
+Verification:
+
+- Documentation-only change. `git diff --check` passed; Git only printed an
+  existing working-copy line-ending warning for `.env.example`.
+- No runtime app code, Supabase schema, staging data, V1 production apps, GAS
+  deployments, Sheets, URLs, LINE tokens, or secrets changed.
