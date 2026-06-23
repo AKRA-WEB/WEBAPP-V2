@@ -1,7 +1,10 @@
 import { notFound } from "next/navigation";
 
 import { AppShell } from "@/components/app-shell";
+import { AccessDenied } from "@/components/access-denied";
 import { StatusPill } from "@/components/status-pill";
+import { requirePermission } from "@/modules/auth/guard";
+import type { AppPermission } from "@/modules/auth/permissions";
 import { getAppRegistry, type AppRegistryItem } from "@/modules/core/app-registry";
 
 const moduleNotes: Record<string, string[]> = {
@@ -49,6 +52,30 @@ export async function ModuleLandingPage({ appKey }: { appKey: string }) {
 
   if (!app || !app.route) {
     notFound();
+  }
+
+  // app.requiredPermission is sourced from public.apps.required_permission,
+  // which check-migrations.mjs already asserts matches the AppPermission
+  // union in src/modules/auth/permissions.ts, so this cast is safe.
+  if (app.requiredPermission) {
+    const guard = await requirePermission({
+      permission: app.requiredPermission as AppPermission,
+    });
+
+    if (guard.status !== "allowed") {
+      return (
+        <AccessDenied
+          reason={guard.reason}
+          activeHref={app.route}
+          eyebrow={app.name}
+          body={
+            guard.reason === "forbidden"
+              ? `You need the ${app.requiredPermission} permission to view this page.`
+              : undefined
+          }
+        />
+      );
+    }
   }
 
   const notes = moduleNotes[app.key] ?? ["Module route is reserved for future V2 work."];

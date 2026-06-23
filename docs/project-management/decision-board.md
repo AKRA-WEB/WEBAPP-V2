@@ -45,9 +45,10 @@ both pass (36 public tables, 34 policies), and a live anon Data API call
 returned `HTTP 401` on the new tables. Picking cutover remains unaffected
 by this PR/PO/GR work.
 
-No specific next PR/PO/GR command is queued: further work (data import,
-runtime UI) needs a fresh PR CSV export and a release-shape decision first
-(see Open Decisions below).
+`V2-0039` accepts the release-shape decision (ADR `0021`): grouped PR/PO/GR
+operational cutover after end-to-end staging UAT, while still implementing in
+small slices. `V2-0040` is now the next PR/PO/GR plan: get a fresh live V1
+`PR` CSV export and run a read-only PR -> PO -> GR reconciliation dry-run.
 
 ## Near-Term Queue
 
@@ -56,10 +57,19 @@ runtime UI) needs a fresh PR CSV export and a release-shape decision first
 | 1 | Picking problem reporting | Completes shortage/exception workflow before LINE | Done (`V2-0025`, 2026-06-20): pending/picked bills stay in their current status when a problem is reported |
 | 2 | Picking LINE notification/failure recovery | Needed before realistic pilot/cutover | Done (`V2-0027`, 2026-06-22): disabled/dry-run by default, event-only failure (status untouched), retry action; real sends still unproven |
 | 3 | Picking cutover package | Lets user decide whether V2 Picking can replace V1 Picking | Prepared (`V2-0034`, 2026-06-22); review (2026-06-22) found 5 gaps, 3 closed (reproducible reconciliation script, runbook section 5a, freshness section 3a); 4 open user decisions remain: deployed-build verification, combined human UAT pass, fresh V1 reference-data export, runbook execution |
-| 4 | PR/PO/GR foundation | Next dependency group after Picking | Done (`V2-0036`, ADR `0020`, 2026-06-22): source profiling, dry-run report, schema/RLS lock, migration `0013` drafted and applied to staging, verified. Next step (data import/UI) needs a fresh PR CSV export + release-shape decision |
-| 5 | Placeholder route guard pass | Prevents future route content from inheriting open placeholders | Can be bundled before non-Picking real content |
+| 4 | Fresh PR CSV reconciliation | Required before PR/PO/GR data import/runtime UI | Drafted (`V2-0040`, 2026-06-23): user exports fresh live V1 `PR` CSV, then run read-only PR -> PO -> GR reconciliation dry-run |
+| 5 | Placeholder route guard pass | Prevents future route content from inheriting open placeholders | Done (`V2-0041`, 2026-06-23): `ModuleLandingPage` now guards all 5 non-Picking routes with `requirePermission()` |
 
 ## Resolved Decisions
+
+### PR/PO/GR Release Shape
+
+Decision: use a grouped PR/PO/GR operational release gate after end-to-end
+PR -> PO -> GR staging UAT, while still implementing in small internal slices.
+
+Implication: data import and runtime UI can be built incrementally, but
+production cutover should not split PR/PO from GR unless a separate
+bridge/writeback ADR is accepted first.
 
 ### Picking Problem Behavior
 
@@ -101,26 +111,19 @@ staging LINE credentials exist yet.
 
 ## Open Decisions
 
-### PR/PO/GR Release Shape
+### PR/PO/GR Import Scope
 
-Recommended: design PR/PO/GR schema together, but release only after an
-end-to-end PR -> PO -> GR staging flow passes.
+Recommended next: run `V2-0040` first, then decide whether the first staging
+import should include all historical rows in the snapshots or active/open rows
+first.
 
-Why: V1 behavior is tightly coupled around direct PO identity, receiving, and
-matching.
-
-Current plan: `V2-0036` treats grouped schema/source profiling as the
-foundation, while keeping implementation sliced. The authoritative PR source
-question is resolved as a finding (2026-06-22): a live V1 `PR` sheet exists
-in the same spreadsheet as `PO`/`GR`, but no CSV of it has ever been
-exported into `import-data/po-pr-gr`. Full PR-row import is blocked on that
-export, not on missing source data. ADR `0020` locks the schema/RLS foundation
-so migration `0013` can proceed without importing PR rows yet.
+The authoritative PR source question is resolved as a finding (2026-06-22): a
+live V1 `PR` sheet exists in the same spreadsheet as `PO`/`GR`, but no CSV of
+it has ever been exported into `import-data/po-pr-gr`. Full PR-row import is
+blocked on that export, not on missing source data.
 
 ## Watch List
 
-- Non-Picking placeholder routes are currently reachable by direct URL and
-  should receive server-side guards before real content is added.
 - Vercel deployed-create was noted as not separately exercised through a
   deployed Preview/Development build after `V2-0020`; the same caveat now
   also applies to the LINE real-send branch added in `V2-0027`. Today's work

@@ -28,6 +28,105 @@ Context budget:
 
 ## Active Recent Entries
 
+## 2026-06-23 - Placeholder Route Guard Pass (V2-0041)
+
+Context:
+
+- User sent bare `Go`, no plan ID given. Picked up the decision board's
+  unblocked Near-Term Queue item 5 / Watch List entry: non-Picking
+  placeholder routes had no server-side permission guard, unlike the
+  PR/PO/GR planning work (`V2-0039`/`V2-0040`) which is blocked on a user
+  decision/export. Drafted the plan inline as part of execution, same
+  pattern as `V2-0017`/`V2-0023`/`V2-0025`.
+
+Changes:
+
+- Added `docs/plans/V2-0041-placeholder-route-guard-pass.md`.
+- `src/modules/core/module-landing-page.tsx`: added a
+  `requirePermission({ permission: app.requiredPermission as
+  AppPermission })` check (when `app.requiredPermission` is set), returning
+  the existing `AccessDenied` component on denial — same shape as
+  `src/app/picking/page.tsx`'s guard. The cast to `AppPermission` is safe
+  because `scripts/check-migrations.mjs` already asserts the seeded
+  `public.permissions.key` values match the `AppPermission` union exactly,
+  and `public.apps.required_permission` is seeded from that same catalog.
+- `src/app/{purchasing,receiving,warehouse,returns,kpi}/page.tsx`: added
+  `export const dynamic = "force-dynamic"` with the same comment Picking
+  uses ("Auth-gated, per-user data: never statically cache this page."),
+  since the page is now genuinely per-user.
+- Updated `docs/plans/index.md`, `docs/handoff/current-state.md`, and
+  `docs/project-management/decision-board.md` (Near-Term Queue item 5
+  marked done, removed the now-stale Watch List entry).
+
+Verification:
+
+- `npm run lint`, `npm run typecheck`, `npm run build` all pass.
+- Started a local dev server and `curl`'d all 5 routes signed-out: each
+  returned the "Sign In Required" `AccessDenied` body instead of the
+  placeholder "Current Status" content (a static first-load check, not an
+  interactive flow, so no Playwright install was needed for this).
+- Did not separately verify the authenticated-forbidden/
+  authenticated-allowed branches with a real test account — the underlying
+  `requirePermission()`/`AccessDenied` code path is unchanged and already
+  proven correct in Picking (`V2-0019`) and Main (`V2-0017`); only new call
+  sites were added to 5 placeholder pages, no new logic.
+- `git diff --check` passes (pre-existing CRLF warnings only). No Supabase
+  schema, staging data, V1 production files, GAS deployments, Sheets,
+  URLs, LINE tokens, or secrets changed.
+
+## 2026-06-23 - PR/PO/GR Next Slice Plan (V2-0040)
+
+Context:
+
+- User accepted moving forward with planning after the `V2-0039` grouped
+  release-shape recommendation.
+- Treated grouped PR/PO/GR operational cutover as the accepted default and
+  planned the next executable slice.
+
+Changes:
+
+- Updated ADR `0021` from Proposed to Accepted.
+- Added `docs/plans/V2-0040-pr-po-gr-pr-csv-reconciliation.md`.
+- Updated `docs/plans/index.md`, `docs/handoff/current-state.md`, and
+  `docs/project-management/decision-board.md`.
+- `V2-0040` scopes the next `Go:` work to read-only fresh PR CSV intake and
+  PR -> PO -> GR reconciliation dry-run. No import, UI, RPC, staging write, or
+  V1 production change is included.
+
+Verification:
+
+- Documentation-only plan.
+- `git diff --check` passed.
+- No runtime code, Supabase schema, staging data, V1 production files, GAS
+  deployments, Sheets, URLs, LINE tokens, or secrets changed.
+
+## 2026-06-23 - PR/PO/GR Release Shape Plan (V2-0039)
+
+Context:
+
+- User requested `Achitect: ข้อ 2`, referring to the next-work item "decide
+  PR/PO/GR release shape."
+- Treated this as a planning-only `Architect:` command. No runtime code,
+  Supabase schema, staging data, V1 production files, GAS deployments, Sheets,
+  URLs, LINE tokens, or secrets were changed.
+
+Changes:
+
+- Added `docs/plans/V2-0039-pr-po-gr-release-shape-decision.md`.
+- Added proposed ADR `docs/decisions/0021-pr-po-gr-grouped-release-shape.md`.
+- Recommendation: implement PR/PO/GR in small slices, but keep a grouped
+  operational cutover gate after PR -> PO -> GR staging UAT passes. A staged
+  PR/PO-first release should require a separate bridge/writeback ADR first.
+- Updated `docs/plans/index.md`, `docs/handoff/current-state.md`,
+  `docs/project-management/decision-board.md`, and `V2-0036` references.
+
+Verification:
+
+- Documentation-only plan.
+- `git diff --check` passed.
+- No runtime code, Supabase schema, staging data, V1 production files, GAS
+  deployments, Sheets, URLs, LINE tokens, or secrets changed.
+
 ## 2026-06-23 - PR/PO/GR Foundation Closeout Sync (V2-0036)
 
 Context:

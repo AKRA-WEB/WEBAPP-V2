@@ -51,8 +51,19 @@ Last updated: 2026-06-23
   `npm run db:verify-staging-schema` both pass (36 public tables, 34 RLS
   policies), and a live anon Data API call against two new tables returned
   `HTTP 401` (matching `V2-0008`'s precedent). Remaining PR/PO/GR work
-  (data import, runtime UI) is gated on a fresh PR CSV export and a
-  release-shape decision. `V2-0037` separately added a PR frontend mock-up
+  (data import, runtime UI) is gated on a fresh PR CSV export and the grouped
+  release discipline. `V2-0039` accepted ADR `0021`: PR/PO/GR should cut over
+  as one grouped operational release after end-to-end staging UAT, while still
+  allowing implementation in small slices. `V2-0040` is now drafted as the
+  next executable PR/PO/GR planning slice: fresh PR CSV export plus read-only
+  PR -> PO -> GR reconciliation dry-run before import/UI. `V2-0041`
+  (2026-06-23) closed a real pre-existing gap on the 5 non-Picking
+  placeholder module routes (`/purchasing`, `/receiving`, `/warehouse`,
+  `/returns`, `/kpi`): they had no server-side permission guard at all and
+  were reachable by anyone regardless of role. `ModuleLandingPage` now
+  enforces each app's `required_permission` via the same
+  `requirePermission()`/`AccessDenied` pattern Picking already uses.
+  `V2-0037` separately added a PR frontend mock-up
   (`docs/mockups/pr-ui-ux-mockup.html`).
 - Production impact: None
 - V1 reference path: `C:\dev\WEBAPP`
@@ -115,6 +126,9 @@ Plan IDs:
 - `V2-0036` (`docs/plans/V2-0036-pr-po-gr-foundation.md`)
 - `V2-0037` (`docs/plans/V2-0037-pr-frontend-mockup.md`)
 - `V2-0038` (`docs/plans/V2-0038-kpi-frontend-mockup.md`)
+- `V2-0039` (`docs/plans/V2-0039-pr-po-gr-release-shape-decision.md`)
+- `V2-0040` (`docs/plans/V2-0040-pr-po-gr-pr-csv-reconciliation.md`)
+- `V2-0041` (`docs/plans/V2-0041-placeholder-route-guard-pass.md`)
 
 Goal: Continue Phase 3 from the verified Picking read-only/create baseline
 toward a full V1 replacement roadmap. `V2-0022` now frames the remaining work
@@ -733,6 +747,32 @@ Status:
     the migration files dynamically.
   - `V2-0036` task breakdown items 4-7 are now all done. No data import, no
     runtime UI, no RPCs, no V1 production files, no secrets changed.
+- Executed `V2-0041` on 2026-06-23 (bare `Go`, plan drafted inline per the
+  `V2-0017`/`V2-0023`/`V2-0025` precedent): placeholder route guard pass.
+  - Picked up the decision board's unblocked Near-Term Queue item 5 / Watch
+    List entry: `/purchasing`, `/receiving`, `/warehouse`, `/returns`, and
+    `/kpi` rendered placeholder content to anyone, signed in or out,
+    regardless of permission, because `ModuleLandingPage` never called
+    `requirePermission()`.
+  - Added a `requirePermission({ permission: app.requiredPermission as
+    AppPermission })` + `AccessDenied` guard to
+    `src/modules/core/module-landing-page.tsx` (shared by all 5 routes),
+    using each app's existing `public.apps.required_permission` value —
+    mirrors `src/app/picking/page.tsx`'s guard shape exactly, no new
+    permissions or schema changes. Added `export const dynamic =
+    "force-dynamic"` to the 5 route files with the same comment Picking
+    uses, since the page is now genuinely per-user.
+  - Verified signed-out via a local dev server + `curl` (no Playwright —
+    a static first-load check, not an interactive flow): all 5 routes now
+    return the "Sign In Required" `AccessDenied` body instead of the
+    placeholder "Current Status" content. Did not separately verify the
+    authenticated-forbidden/authenticated-allowed branches with a real
+    test account — the `requirePermission()`/`AccessDenied` code path
+    itself is unchanged, already proven correct in Picking (`V2-0019`) and
+    Main (`V2-0017`); only new call sites were added, no new logic.
+  - `lint`/`typecheck`/`build` pass. `git diff --check` passes (pre-existing
+    CRLF warnings only). No Supabase schema, staging data, V1 production
+    files, GAS deployments, Sheets, URLs, LINE tokens, or secrets changed.
 
 ## Next Actions
 
@@ -764,11 +804,16 @@ Status:
    release-shape decision — no specific command queued yet.
 10. ~~Execute `V2-0037`: design and implement the Purchase Requisitions (PR) frontend mockup (`docs/mockups/pr-ui-ux-mockup.html`).~~ Done 2026-06-22.
 11. ~~Execute `V2-0038`: design and implement the KPI Tracker frontend mockup (`docs/mockups/kpi-ui-ux-mockup.html`).~~ Done 2026-06-22.
-12. Keep `docs/plans/index.md` updated whenever a plan status or next action
+12. ~~Placeholder route guard pass: add server-side `requirePermission()`
+    guards to `/purchasing`, `/receiving`, `/warehouse`, `/returns`,
+    `/kpi`.~~ Done 2026-06-23 (`V2-0041`, bare `Go`).
+13. Provide/export a fresh live V1 `PR` CSV for `V2-0040`, then run
+    `Go: execute V2-0040 PR CSV reconciliation dry-run`.
+14. Keep `docs/plans/index.md` updated whenever a plan status or next action
     changes.
-13. Keep `docs/handoff/work-log.md` as the active recent log; archive older
+15. Keep `docs/handoff/work-log.md` as the active recent log; archive older
     entries under `docs/handoff/archive/` when it becomes long again.
-14. Use `docs/project-management/executive-summary-th.md` when the user needs
+16. Use `docs/project-management/executive-summary-th.md` when the user needs
     a supervisor-friendly project summary.
 
 

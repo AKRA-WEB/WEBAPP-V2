@@ -62,7 +62,12 @@ sheet with no CSV export yet, `scripts/pr-po-gr-import-dry-run.mjs` profiled
 shape, and `supabase/migrations/0013_pr_po_gr_foundation.sql` has been
 applied and verified in staging (36 public tables, 34 RLS policies). No
 PR/PO/GR data import, runtime UI, or RPCs exist yet; the next PR/PO/GR work is
-gated on a fresh PR CSV export and a release-shape decision. `V2-0037`
+gated on a fresh PR CSV export and grouped-release execution discipline.
+`V2-0039` accepts that PR/PO/GR should cut over as one grouped operational
+release after end-to-end staging UAT, while still allowing small
+implementation slices. `V2-0040` is now the next draft plan: ingest a fresh PR
+CSV export and produce a read-only PR -> PO -> GR reconciliation dry-run before
+any data import or runtime UI. `V2-0037`
 designed and implemented the Purchase Requisition (PR) module frontend mockup
 under `docs/mockups/pr-ui-ux-mockup.html`. `V2-0038` designed and implemented
 the KPI Tracker module frontend mockup under
@@ -416,6 +421,40 @@ the KPI Tracker module frontend mockup under
    - Status: Complete on 2026-06-22 (Mockup phase).
    - Outcome: designed and implemented the KPI Tracker module frontend mockup under `docs/mockups/kpi-ui-ux-mockup.html`, demonstrating active daily records input, branch switching (AKRA vs TRD), role simulation (Staff, Supervisor, Admin), dynamic SVG charts for error trends and monthly rankings, HP gamification rings leaderboard (starting at 100 HP), weekly task list status checks, CSV export utility, and administrative employee roster controls.
    - File: `docs/plans/V2-0038-kpi-frontend-mockup.md`
+31. `V2-0039` - PR/PO/GR release-shape decision
+   - Status: Complete on 2026-06-23 (planning decision accepted).
+   - Outcome: created a release-shape plan and ADR `0021` (Accepted).
+     Decision: implement PR/PO/GR in small slices, but keep one grouped
+     operational cutover gate after PR -> PO -> GR staging UAT. A staged
+     PR/PO-first release requires a separate bridge/writeback ADR first.
+   - Next action: proceed to `V2-0040` once a fresh PR CSV export is available.
+   - File: `docs/plans/V2-0039-pr-po-gr-release-shape-decision.md`
+32. `V2-0040` - PR/PO/GR fresh PR CSV reconciliation
+   - Status: Draft on 2026-06-23 (planning only).
+   - Outcome: defines the next executable PR/PO/GR slice after accepting
+     grouped release shape: user provides a fresh live V1 `PR` CSV export,
+     then the dry-run profiler is extended/rerun to reconcile PR -> PO -> GR
+     links and produce blockers/warnings before any import or runtime UI.
+   - Next action: provide/export the fresh PR CSV, then use
+     `Go: execute V2-0040 PR CSV reconciliation dry-run`.
+   - File: `docs/plans/V2-0040-pr-po-gr-pr-csv-reconciliation.md`
+33. `V2-0041` - Placeholder route guard pass
+   - Status: Complete on 2026-06-23.
+   - Outcome: drafted inline during a bare `Go` (same pattern as
+     `V2-0017`/`V2-0023`/`V2-0025`), picking up the decision board's
+     unblocked Near-Term Queue item 5 / Watch List entry. Added a
+     `requirePermission()` + `AccessDenied` guard to
+     `src/modules/core/module-landing-page.tsx` (shared by all 5
+     placeholder routes) using each app's own
+     `public.apps.required_permission`, plus `export const dynamic =
+     "force-dynamic"` on the 5 route files
+     (`/purchasing`, `/receiving`, `/warehouse`, `/returns`, `/kpi`).
+     Closes a real pre-existing gap: those 5 routes previously rendered
+     placeholder content to anyone, signed in or out, regardless of
+     permission. Verified signed-out via a local dev server: all 5 routes
+     now return "Sign In Required" instead of placeholder content.
+     `lint`/`typecheck`/`build`/`git diff --check` all pass.
+   - File: `docs/plans/V2-0041-placeholder-route-guard-pass.md`
 
 ## Completed Or Baseline Plans
 
@@ -447,6 +486,9 @@ the KPI Tracker module frontend mockup under
 - For `V2-0036`, when to obtain a fresh PR CSV export from the live V1 `PR`
   sheet. The authoritative source exists, but full PR-row import is blocked
   until a CSV snapshot is exported.
+- Resolved (`V2-0039`, ADR `0021`, 2026-06-23): PR/PO/GR use a grouped
+  operational release gate after end-to-end staging UAT; implementation can
+  still proceed in small slices.
 
 ## Update Rules
 

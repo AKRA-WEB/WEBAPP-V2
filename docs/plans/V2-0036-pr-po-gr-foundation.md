@@ -511,7 +511,8 @@ work.
   schema-only migration.
 - Should PR/PO/GR be cut over only as one grouped release after an end-to-end
   PR -> PO -> GR staging flow passes, or can PR/PO go live while GR remains on
-  V1? Current recommendation remains grouped release.
+  V1? `V2-0039` now drafts this decision and ADR `0021` proposes grouped
+  operational cutover as the default, pending user confirmation.
 - Which PO/GR notification paths need parity before cutover versus after
   operational replacement?
 - Should GR create warehouse stock movements in the first receiving release, or
@@ -600,13 +601,12 @@ work.
   needed; no data import; no UI; no RPCs.
 - Next action: task breakdown item 7 (docs close-out) is now done via this
   same update. The only remaining `V2-0036` work is future PR/PO/GR data
-  import and runtime UI slices — those need a fresh PR CSV export and a
-  release-shape decision first (see Open Questions). No specific next
-  command is queued; check `docs/project-management/decision-board.md` for
-  the broader project queue.
+  import and runtime UI slices — those need a fresh PR CSV export and user
+  confirmation of the `V2-0039` release-shape recommendation first. No
+  specific runtime/data command is queued.
 - Blockers: authoritative full PR history import and release-shape decision
   remain open; neither blocks schema drafting/apply, but both block final
   cutover.
 - Related plans: `V2-0009`, `V2-0018`, `V2-0022`, `V2-0032`, `V2-0033`,
-  `V2-0035`.
-- Related ADRs: `0015`, `0016`, `0018`, `0020`.
+  `V2-0035`, `V2-0039`.
+- Related ADRs: `0015`, `0016`, `0018`, `0020`, `0021`.
