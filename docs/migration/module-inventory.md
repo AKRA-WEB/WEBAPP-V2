@@ -96,16 +96,37 @@ For each module, capture:
   Vercel Preview/Development verification and one combined human UAT pass
   are open, user-gated items.
 
-- `purchasing` / `receiving` (PR/PO/GR): no schema/migration yet. `V2-0036`'s
-  first slice (2026-06-22) profiled V1 sources read-only: confirmed a live
-  V1 `PR` sheet exists (same spreadsheet as `PO`/`GR`) but has no CSV export
-  in `import-data/po-pr-gr/` yet; documented V1's own PO bill-grouping key
-  and the bare-`DIRECT`-vs-`DIRECT-<uuid>` distinction; found the exported
-  `PO.csv` is missing an `Expected_Date` column that the V1 code documents;
-  ran `scripts/pr-po-gr-import-dry-run.mjs` against staging (0 blockers, 7
+- `purchasing` / `receiving` (PR/PO/GR): schema migration applied to
+  staging (2026-06-22), no data, no UI yet. `V2-0036`'s first slice (2026-06-22) profiled V1
+  sources read-only: confirmed a live V1 `PR` sheet exists (same spreadsheet
+  as `PO`/`GR`) but has no CSV export in `import-data/po-pr-gr/` yet;
+  documented V1's own PO bill-grouping key and the
+  bare-`DIRECT`-vs-`DIRECT-<uuid>` distinction; found the exported `PO.csv`
+  is missing an `Expected_Date` column that the V1 code documents; ran
+  `scripts/pr-po-gr-import-dry-run.mjs` against staging (0 blockers, 7
   warnings — see `docs/migration/pr-po-gr-v1-mapping.md` and
-  `import-reports/pr-po-gr-dry-run-report.md`). No `public.purchasing_*` /
-  `public.receiving_*` tables exist yet.
+  `import-reports/pr-po-gr-dry-run-report.md`). The schema/RLS lock is
+  recorded in ADR `0020`. `supabase/migrations/0013_pr_po_gr_foundation.sql`
+  (drafted and applied to staging during `V2-0036`) implements that lock:
+  `public.purchasing_purchase_requests`,
+  `public.purchasing_purchase_request_lines`,
+  `public.purchasing_purchase_orders`,
+  `public.purchasing_purchase_order_lines`, `public.purchasing_events`,
+  `public.receiving_goods_receipts`,
+  `public.receiving_goods_receipt_lines`, `public.receiving_line_splits`,
+  and `public.receiving_events`, all with RLS, explicit grants, and
+  `purchasing.read/write`/`receiving.read/write` select policies only —
+  no data import, no RPC, no UI in this migration.
+  `npm run check:migrations` and `npm run db:verify-staging-schema` both
+  pass (36 public tables, 34 RLS policies, applied to staging 2026-06-22). A
+  live anon Data API call against two new tables returned `HTTP 401`,
+  matching `V2-0008`'s precedent. One schema judgment call beyond the
+  plan's literal field list: `receiving_goods_receipts.purchase_order_id`
+  is nullable (not just the line-level `purchase_order_line_id`), because
+  V1 GR rows resolve to a PO bill only by first resolving to a PO line via
+  `Ref_PO_UID` — the 10 known orphan rows can't resolve either, so the
+  header keeps `purchase_order_id` null rather than fabricating a bill
+  link.
 
 ## Notes From V1 Context
 

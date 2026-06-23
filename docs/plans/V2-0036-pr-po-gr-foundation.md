@@ -1,12 +1,15 @@
 # Plan V2-0036: PR/PO/GR Foundation
 
-Status: In progress — source profiling + dry-run report slice complete
-(2026-06-22); schema drafting (task breakdown items 3-7) not started.
+Status: In progress — source profiling + dry-run report, schema/RLS lock,
+migration `0013` draft, and staging apply + verification are all complete
+(2026-06-22). Remaining: task breakdown item 7 (docs close-out, in
+progress) and all future PR/PO/GR data import / runtime UI slices.
 
 Architect command:
 
 ```text
 Architect: ทำ PR/PO/GR foundation
+Architect: ล็อก schema/RLS ของ V2-0036 จาก dry-run report ก่อน migration
 ```
 
 ## 1. Goal
@@ -14,9 +17,9 @@ Architect: ทำ PR/PO/GR foundation
 - Primary objective: plan the shared data, import, permission, and verification
   foundation for PR, PO, and GR before any PR/PO/GR runtime UI or workflow
   writes are implemented.
-- Success definition: the next `Go:` slice can profile V1 data, produce a
-  repeatable PR/PO/GR dry-run report, and draft/apply a staging-only schema
-  foundation without changing V1 production systems.
+- Success definition: the next `Go:` slice can draft migration `0013` from a
+  locked schema/RLS decision, add verification tooling, and apply the
+  foundation to staging without changing V1 production systems.
 - User/business reason: PR, PO, and GR are tightly coupled in V1 through shared
   purchasing behavior, Direct PO identity, vendor expected dates, receiving,
   matching, reset/recall, split storage, and APV closeout. Designing them
@@ -109,67 +112,166 @@ Architect: ทำ PR/PO/GR foundation
 
 ### Data Model / Schema
 
-Proposed table families for the implementation plan:
+Schema/RLS lock from the 2026-06-22 dry-run report and current Supabase docs:
+
+- Migration `0013` should create the PR/PO/GR foundation as schema-only
+  operational tables, indexes, RLS, grants, and policies. It should not import
+  PR/PO/GR data, add UI routes, send notifications, or implement transaction
+  RPCs in the first pass.
+- Keep the project pattern of `public.<module>_*` tables until custom exposed
+  schemas are configured. Every table below lives in `public`, has RLS
+  enabled, and has explicit grants in the same migration.
+- Primary keys remain UUIDs for consistency with existing V2 tables. Legacy
+  row IDs stay as nullable/unique source columns and must not become V2
+  primary keys.
+
+Locked table set for migration `0013`:
 
 - `public.purchasing_purchase_requests`
-  - PR header, requester, request date, status, approval metadata, legacy PR
-    number/UID, raw payload metadata.
+  - PR header grouped by `PR_Number` when a real PR CSV exists.
+  - Key fields: `id`, `request_number`, `request_date`, `requester_name`,
+    nullable `requester_profile_id`, normalized `status`, `raw_status`,
+    approval metadata, `legacy_source`, `source_file`, `source_row`, and
+    `metadata`.
+  - PR CSV is still missing, so all import fields must be nullable enough to
+    allow the table to exist before PR history import.
 - `public.purchasing_purchase_request_lines`
-  - PR line items, product/catalog references, free-text source names,
-    requested quantity/unit, preferred vendor/warehouse, approval result.
+  - PR row/line records keyed by nullable unique `legacy_pr_uid`.
+  - Key fields: `purchase_request_id`, `line_no`, product/catalog references
+    (`catalog_product_id`, `catalog_alias_id`), raw `sku`, raw `product_name`,
+    `requested_qty`, `unit`, requester `warehouse_id`/`raw_warehouse`,
+    `remark`, approval result, and match status.
 - `public.purchasing_purchase_orders`
-  - PO header, `po_number`, `po_date`, vendor, warehouse, `expected_date`,
-    `status`, `ref_pr_uid`, `is_direct`, `direct_group_key`,
-    `legacy_group_key`, close/APV metadata, raw status.
+  - Logical PO bill header, not one row per V1 line.
+  - Key fields: `po_number`, `po_date`, vendor reference plus `raw_vendor_name`,
+    warehouse reference plus `raw_warehouse`, nullable `expected_date`,
+    `raw_expected_date`, `expected_date_source`, normalized `status`,
+    `raw_status`, close/APV metadata, and legacy identity fields.
+  - Identity fields: `bill_identity_kind` in
+    `('pr_uid', 'direct_stable', 'legacy_direct', 'v2_direct')`,
+    `bill_identity_value`, `legacy_ref_pr_uid`, `legacy_group_key`,
+    `is_direct`, and `is_legacy_ambiguous`.
+  - Add a unique index on `(legacy_source, bill_identity_kind,
+    bill_identity_value)` where `bill_identity_value is not null`.
 - `public.purchasing_purchase_order_lines`
-  - PO line rows keyed by legacy `PO_UID`, product/catalog references, SKU,
-    ordered quantity/unit, remarks, PR linkage, current receiving status.
-- `public.purchasing_po_events`
-  - approve/reject PR, create/update/delete PO, vendor expected-date update,
-    close, APV, and correction events.
+  - V1 PO line rows keyed by nullable unique `legacy_po_uid`.
+  - Key fields: `purchase_order_id`, optional `purchase_request_line_id`,
+    `line_no`, product/catalog references, raw `sku`, raw `product_name`,
+    `ordered_qty`, `unit`, `remark`, `pr_number_label`, normalized `status`,
+    raw status/date fields, and match status.
+- `public.purchasing_events`
+  - Purchasing audit/lifecycle events for PR and PO actions.
+  - Key fields: nullable `purchase_request_id`, `purchase_request_line_id`,
+    `purchase_order_id`, `purchase_order_line_id`, `event_type`, actor profile
+    and name, `metadata`, and `created_at`.
 - `public.receiving_goods_receipts`
-  - GR header, receipt date, ATA, receiver, status, source PO group, remark,
-    lift-fee summary, reset/recall metadata.
+  - GR header grouped conservatively from V1 rows by PO bill plus receipt
+    date/ATA/receiver/status/remark until a stronger receipt identity exists.
+  - Key fields: `purchase_order_id`, `receipt_date`, `raw_receipt_date`,
+    `ata_date`, `raw_ata`, receiver profile/name, normalized `status`,
+    `raw_status`, raw/clean remark, lift-fee summary, reset/recall metadata,
+    `legacy_group_key`, `legacy_source`, `source_file`, `source_row`, and
+    `metadata`.
 - `public.receiving_goods_receipt_lines`
-  - GR line rows keyed by legacy `GR_UID`, linked PO line where possible,
-    received quantity/unit, old quantity, exp date, location summary, status.
+  - V1 GR rows keyed by nullable unique `legacy_gr_uid`.
+  - Key fields: `goods_receipt_id`, nullable `purchase_order_line_id`,
+    raw `legacy_ref_po_uid`, product/catalog references, raw `sku`,
+    raw `product_name`, `received_qty`, `unit`, `old_qty`, nullable
+    `expiry_date`, `raw_expiry_date`, `date_parse_status`,
+    `location_summary`, raw `Loc_IN`, raw remark, extra/free-item flag, and
+    match status.
 - `public.receiving_line_splits`
-  - structured split receiving rows: warehouse, location, raw location, qty,
-    unit, and sort/order metadata.
+  - Structured split receiving locations parsed from `Loc_IN`.
+  - Key fields: `goods_receipt_line_id`, `split_no`, nullable `warehouse_id`,
+    `warehouse_key`, `raw_location`, parsed floor/zone when known, nullable
+    `qty`, `unit`, and `metadata`.
 - `public.receiving_events`
-  - draft save, submit for review, confirm receive, edit, reset, recall,
-    split-location update, and correction events.
+  - Receiving lifecycle events: draft save, submit for review, confirm,
+    reset, recall, split-location update, and correction events.
 
-Important constraints:
+Locked import/legacy handling:
 
-- New Direct POs must always receive a stable identity (`DIRECT-<uuid>` or V2
-  UUID equivalent) and must never be merged only by vendor, warehouse, and date.
-- Legacy `Ref_PR_UID = DIRECT` rows can use a fallback grouping key, but the
-  fallback must be labelled legacy-only and not reused for new writes.
-- Preserve raw legacy status values while also mapping normalized V2 statuses
-  for UI logic.
-- Do not aggregate quantities across unlike units until conversion rules exist.
-- Keep product/vendor/warehouse references nullable where legacy data is
-  ambiguous, and report unmatched rows instead of fabricating canonical data.
-- Store split receiving as structured rows while preserving original raw
-  location/remark text for audit.
+- Missing PR CSV does not block migration `0013`. PR tables are created now;
+  PR row import waits for a fresh `PR` export.
+- `PO.csv` has no `Expected_Date` column, so `expected_date` stays nullable
+  and paired with `raw_expected_date` plus `expected_date_source`.
+- Legacy bare `Ref_PR_UID = "DIRECT"` imports as
+  `bill_identity_kind = 'legacy_direct'` with `is_legacy_ambiguous = true`.
+  It may use V1's fallback key for display/import grouping only. New V2 Direct
+  PO writes must use `v2_direct` or `DIRECT-<uuid>` style stable identity and
+  must never fall back to vendor/date/warehouse grouping.
+- `DIRECT-<uuid>` imports as `direct_stable`; real PR UID references import as
+  `pr_uid`. Nullable PR FKs can be backfilled after PR CSV import.
+- The 10 orphan GR `Ref_PO_UID` rows stay importable with
+  `purchase_order_line_id = null`, raw `legacy_ref_po_uid`, and
+  `match_status = 'orphan_ref_po_uid'`. Do not fabricate a PO line.
+- Pre-1980 spreadsheet epoch artifacts and `-` date placeholders import as
+  null parsed dates with a `date_parse_status` marker; genuinely malformed
+  dates keep their raw text for manual review.
+- Product, vendor, and warehouse references are nullable. Preserve raw names
+  and use match-status fields instead of creating canonical catalog data during
+  this migration.
+- Do not aggregate quantities across unlike units until conversion rules
+  exist. Quantity columns use `numeric(12, 3)` unless a later dry-run proves a
+  wider precision is needed.
 
-RLS/security notes:
+Locked normalized statuses:
 
-- Every new `public.*` table must enable RLS and include explicit grants for
-  the intended roles. Supabase's 2026 Data API guidance makes grants part of
-  the table-creation flow, not an afterthought.
-- Operational reads can be exposed to `authenticated` only through
-  `purchasing.read`, `purchasing.write`, `receiving.read`, or
-  `receiving.write` policies.
-- Operational writes should stay server-side. Multi-table operations such as PO
-  creation, PR approval, receive/confirm, reset/recall, and APV closeout should
-  use transaction-safe database functions or direct Postgres scripts.
-- Data API-callable transaction functions should follow ADR `0015`: live in
-  `public`, use default `SECURITY INVOKER`, revoke `EXECUTE` from
-  `public`/`anon`/`authenticated`, and grant only to `service_role`.
-- If any view is introduced later, use `security_invoker = true` where
-  supported or keep the view out of exposed schemas.
+- PR: `pr_pending`, `pr_approved`, `pr_rejected`.
+- PO/receiving progress: `po_pending_receipt`, `gr_draft`,
+  `gr_pending_review`, `gr_completed`, `po_closed_apv_ready`.
+- V1's `Overdue` remains a computed read-model state, not stored.
+- Raw V1 status strings are stored alongside normalized status values.
+
+Locked indexes for the migration draft:
+
+- Add FK indexes for every nullable/non-null foreign key, including PR line to
+  PR, PO line to PO, GR line to receipt, GR line to PO line, split to GR line,
+  and all catalog/vendor/warehouse FKs.
+- Add worklist indexes:
+  - `purchasing_purchase_requests (status, request_date desc)`
+  - `purchasing_purchase_orders (status, po_date desc)`
+  - `purchasing_purchase_orders (warehouse_id, status, po_date desc)`
+  - `purchasing_purchase_orders (vendor_id, po_date desc)`
+  - `receiving_goods_receipts (status, receipt_date desc)`
+  - `receiving_goods_receipts (purchase_order_id)`
+- Add legacy lookup indexes:
+  - unique partial index on PR `legacy_pr_uid`
+  - unique partial index on PO line `legacy_po_uid`
+  - unique partial index on GR line `legacy_gr_uid`
+  - index PO line `source_ref_pr_uid`/`pr_number_label` fields if used by the
+    import script.
+
+RLS/security lock:
+
+- Revoke all table privileges from `public`, `anon`, and `authenticated`
+  before granting intended access.
+- Grant `select` to `authenticated` only on operational tables that browser
+  reads need. Grant `select, insert, update, delete` to `service_role` for
+  server actions/import tooling.
+- No `anon` grants or policies in this foundation.
+- No authenticated insert/update/delete policies in migration `0013`; writes
+  stay behind server-side `requirePermission()` plus service-role code.
+- PR tables and purchasing events read policy:
+  `purchasing.read OR purchasing.write`.
+- PO header/line read policy:
+  `purchasing.read OR purchasing.write OR receiving.read OR receiving.write`,
+  because receiving needs PO worklists/details.
+- Receiving header/line/split/event read policy:
+  `receiving.read OR receiving.write OR purchasing.read OR purchasing.write`,
+  because purchasing needs receiving state for close/APV workflows.
+- Use the existing RLS performance pattern:
+  `(select private.has_permission((select auth.uid()), '<permission>'))`.
+- If transaction functions are added in later UI slices, follow ADR `0015`:
+  public schema, default `SECURITY INVOKER`, `EXECUTE` revoked from
+  `public`/`anon`/`authenticated`, and granted only to `service_role`.
+- No views in migration `0013`. If a later read model introduces views, use
+  `security_invoker = true` where supported or keep the view out of exposed
+  schemas.
+- No new granular permissions in `0013`. Keep the existing
+  `purchasing.read/write` and `receiving.read/write` keys; add
+  `purchasing.approve`, `purchasing.close`, or `receiving.approve` only when
+  a UI/action slice proves the split is needed.
 
 ### Integration Points
 
@@ -242,13 +344,13 @@ foundation execution:
 
 ## 5. Task Breakdown
 
-1. Confirm V1 source inventory
+1. Confirm V1 source inventory — done 2026-06-22
    - Read V1 PR/PO/GR frontend references and available backend notes.
    - Confirm whether PR rows have a separate export or are only visible through
      the shared purchasing backend / PO fields in current snapshots.
    - Record source assumptions in `docs/migration/pr-po-gr-v1-mapping.md`.
 
-2. Build PR/PO/GR dry-run profiler
+2. Build PR/PO/GR dry-run profiler — done 2026-06-22
    - Add `scripts/pr-po-gr-import-dry-run.mjs`.
    - Parse the current CSV snapshots using robust header aliases.
    - Validate row counts, required columns, duplicate legacy IDs, date formats,
@@ -256,33 +358,56 @@ foundation execution:
      matches, warehouse matches, split-location evidence, and lift-fee tags.
    - Generate a git-ignored report under `import-reports/`.
 
-3. Decide schema details from the report
+3. Decide schema details from the report — done 2026-06-22
    - Finalize table names, keys, normalized statuses, nullable legacy bridges,
      and PR source handling.
    - Add or update an ADR if the schema changes module boundaries or release
      shape beyond ADR `0016`.
 
-4. Draft the staging schema migration
+4. Draft the staging schema migration — done 2026-06-22
    - Use the next migration slot after `0012`.
    - Include explicit grants, RLS, indexes for active worklists, foreign keys to
      shared catalog/vendor/warehouse tables, and server-only write posture.
-   - Consider extending permission catalog granularity only if needed for the
-     foundation (`purchasing.approve`, `purchasing.close`,
-     `receiving.approve`); otherwise keep the first schema using the current
-     `purchasing.read/write` and `receiving.read/write` keys.
+   - Keep the first migration on current permissions only:
+     `purchasing.read/write` and `receiving.read/write`.
+   - Do not add PR/PO/GR data import or transaction RPCs in the schema-only
+     migration unless a verification blocker proves they are required.
+   - Done: `supabase/migrations/0013_pr_po_gr_foundation.sql` — see section 10
+     handoff notes for the full table list and one schema judgment call
+     (nullable `receiving_goods_receipts.purchase_order_id`). Not yet applied
+     to any environment.
 
-5. Add verification tooling
-   - Add an npm script if the dry-run or staging verifier becomes repeatable.
-   - Extend migration preflight rules if the new table family introduces new
-     RLS/grant/function assumptions.
+5. Add verification tooling — done 2026-06-22, no new tooling needed
+   - `npm run check:migrations` and `npm run db:verify-staging-schema`
+     already derive their expected-table/policy lists from the migration
+     files dynamically (regex over `create table public.*`), so the 9 new
+     tables were picked up with no script changes. No new RLS/grant/function
+     assumptions outside what those scripts already check (no new
+     `SECURITY DEFINER` functions, no new server-only tables added to this
+     migration).
 
-6. Apply and verify in staging only
-   - Run migration preflight.
-   - Apply the migration to staging.
-   - Run staging schema verification and targeted SQL checks.
-   - Confirm `anon` is denied, assigned purchasing/receiving roles can read
-     intended rows after data import, and service-role-only functions are not
-     executable by browser roles.
+6. Apply and verify in staging only — done 2026-06-22
+   - Ran `npm run check:migrations` (preflight, static) — passed.
+   - Applied via `npm run db:apply-migrations -- 0013_pr_po_gr_foundation.sql`
+     — `Sanity: public_tables=36, permissions=13, apps=8,
+     private_functions=4`.
+   - Ran `npm run db:verify-staging-schema` — `Schema verification passed
+     (36 public tables, 34 policies)`.
+   - Confirmed `anon` is denied via a live Data API call (not just a static
+     grant check): `curl` against
+     `purchasing_purchase_requests`/`receiving_goods_receipts` with only the
+     publishable `apikey` header (no auth) returned `HTTP 401` /
+     `permission denied for table`, matching `V2-0008`'s
+     `public.apps` anon-denial precedent exactly.
+   - Did not confirm "assigned purchasing/receiving roles can read intended
+     rows" with real rows — there are zero rows in any of the 9 tables (no
+     data import yet), so that check is deferred to whenever the first
+     write path/UI lands and inserts real data, matching how the Picking
+     pilot's RLS-with-real-rows checks happened alongside `V2-0019`/
+     `V2-0020`'s UI, not at `V2-0006`'s schema-creation time. No new
+     `SECURITY DEFINER` functions exist in this migration, so the
+     "service-role-only functions not executable by browser roles" check
+     does not apply yet either.
 
 7. Close out docs
    - Update `docs/migration/database-strategy.md`,
@@ -294,10 +419,13 @@ foundation execution:
 
 This `Architect:` step changes only planning/handoff docs:
 
+- `docs/decisions/0020-pr-po-gr-schema-and-rls-lock.md`
 - `docs/plans/V2-0036-pr-po-gr-foundation.md`
 - `docs/plans/index.md`
 - `docs/handoff/current-state.md`
 - `docs/handoff/work-log.md`
+- `docs/migration/database-strategy.md`
+- `docs/migration/module-inventory.md`
 - `docs/project-management/decision-board.md`
 
 Future `Go:` implementation is expected to change:
@@ -311,8 +439,11 @@ Future `Go:` implementation is expected to change:
 - `scripts/verify-pr-po-gr-foundation.mjs` if staging verification needs a
   repeatable checker
 - `package.json` if new repeatable npm scripts are added
-- Possibly `src/modules/auth/permissions.ts` and `supabase/migrations/*` if
-  granular purchasing/receiving permissions are added during the foundation
+- `docs/plans/V2-0036-pr-po-gr-foundation.md`, `docs/plans/index.md`,
+  `docs/handoff/current-state.md`, `docs/handoff/work-log.md`,
+  `docs/migration/database-strategy.md`,
+  `docs/migration/module-inventory.md`, and
+  `docs/project-management/decision-board.md` for closeout notes
 
 ## 7. Verification Steps
 
@@ -332,6 +463,15 @@ For future implementation:
 - Targeted SQL checks for row counts, duplicate legacy IDs, Direct PO grouping,
   unmatched product/vendor/warehouse references, status mappings, RLS, and
   grants
+- Role/Data API checks:
+  - `anon` cannot read any PR/PO/GR table.
+  - a user with `purchasing.read` can read PR/PO tables and receiving state
+    needed for close/APV review.
+  - a user with `receiving.read` can read PO worklists/details and receiving
+    tables.
+  - authenticated users without those permissions get zero rows.
+  - no service-role-only function is executable by `anon` or `authenticated`
+    if a later slice adds one.
 - Browser checks only when a later UI slice changes PR/PO/GR routes
 
 ## 8. Rollback / No-Production-Impact Note
@@ -353,14 +493,25 @@ work.
   no CSV export of it exists in `import-data/po-pr-gr/`. Full PR-row import
   still needs a fresh export — see
   `docs/migration/pr-po-gr-v1-mapping.md`.
+- ~~Should granular V2 permissions be added now (`purchasing.approve`,
+  `purchasing.close`, `receiving.approve`) or mapped later when UI actions are
+  implemented?~~ Resolved for migration `0013`: do not add granular
+  permissions in the schema-only foundation. Keep existing
+  `purchasing.read/write` and `receiving.read/write` until a UI/action slice
+  proves the split is needed.
+- ~~Does the missing `Expected_Date` column block the schema migration?~~
+  Resolved for migration `0013`: no. Keep nullable `expected_date`,
+  `raw_expected_date`, and `expected_date_source`; require a fresh export
+  before vendor expected-delivery import/cutover.
+- ~~Do orphan GR `Ref_PO_UID` rows block schema migration?~~ Resolved for
+  migration `0013`: no. Keep nullable PO-line FK plus raw
+  `legacy_ref_po_uid` and match status.
 - Should the first import target active/open PR/PO/GR rows only, or all
-  historical rows currently present in the snapshots?
+  historical rows currently present in the snapshots? This does not block the
+  schema-only migration.
 - Should PR/PO/GR be cut over only as one grouped release after an end-to-end
   PR -> PO -> GR staging flow passes, or can PR/PO go live while GR remains on
-  V1?
-- Should granular V2 permissions be added now (`purchasing.approve`,
-  `purchasing.close`, `receiving.approve`) or mapped later when UI actions are
-  implemented?
+  V1? Current recommendation remains grouped release.
 - Which PO/GR notification paths need parity before cutover versus after
   operational replacement?
 - Should GR create warehouse stock movements in the first receiving release, or
@@ -387,13 +538,75 @@ work.
   `npm run pr-po-gr:import-dry-run`). `lint`/`typecheck`/`build`/
   `git diff --check` all pass. No schema/migration, staging data, V1
   production files, or secrets changed.
-- Next action: task breakdown items 3-7 (finalize schema details from the
-  report, draft the `0013` migration, verification tooling, staging apply,
-  docs close-out) remain undone — recommend `Architect:` to lock schema
-  details before the next `Go:`, given the `Expected_Date` mismatch and
-  bare-`DIRECT` grouping volume found above.
+- Done 2026-06-22 (`Architect:`): locked schema/RLS decisions from the dry-run
+  report before migration. Added ADR `0020`, fixed the migration target table
+  names, nullable legacy bridges, status mapping, expected-date handling,
+  orphan-GR handling, index targets, and RLS/grant policy. No runtime code,
+  SQL migration, staging data, V1 production files, or secrets changed.
+- Done 2026-06-22 (`Go: draft V2-0036 migration 0013 schema/RLS foundation
+  only`): drafted `supabase/migrations/0013_pr_po_gr_foundation.sql`,
+  task breakdown item 4 only — schema/RLS, no data import, no UI, no
+  transaction RPCs.
+  - 9 tables: `purchasing_purchase_requests`,
+    `purchasing_purchase_request_lines`, `purchasing_purchase_orders`,
+    `purchasing_purchase_order_lines`, `purchasing_events`,
+    `receiving_goods_receipts`, `receiving_goods_receipt_lines`,
+    `receiving_line_splits`, `receiving_events` — exactly the ADR `0020`
+    table family. All 9 have RLS enabled, revoke-then-grant posture
+    (`authenticated` gets `select` only, `service_role` gets full table
+    privileges, no `anon` grant), and a select policy combining
+    `purchasing.read/write`/`receiving.read/write` per the locked groupings
+    (PR tables + `purchasing_events` use the narrower 2-permission check; PO
+    tables and all receiving tables use the 4-permission check). No new
+    permissions, no views, no `SECURITY DEFINER` functions.
+  - Implemented every locked legacy-bridge field: nullable
+    `expected_date`/`raw_expected_date`/`expected_date_source` on PO header;
+    `bill_identity_kind`/`bill_identity_value`/`legacy_ref_pr_uid`/
+    `legacy_group_key`/`is_direct`/`is_legacy_ambiguous` on PO header plus the
+    locked partial unique index on
+    `(legacy_source, bill_identity_kind, bill_identity_value)`; nullable
+    `purchase_order_line_id` plus raw `legacy_ref_po_uid` on GR lines for the
+    10 orphan rows; a `date_parse_status` check
+    (`parsed`/`placeholder`/`epoch_artifact`/`malformed`) on GR lines
+    mirroring the dry-run script's `classifyDateField` categories; nullable
+    catalog/vendor/warehouse FK columns throughout (never fabricated).
+  - One schema judgment call beyond the plan's literal field list, made
+    while drafting rather than re-running `Architect:`: re-reading
+    `docs/migration/pr-po-gr-v1-mapping.md`'s GR section showed V1 GR rows
+    resolve to a PO bill only by first resolving `Ref_PO_UID` to a specific
+    PO **line** (`Ref_PO_UID` is a PO line's `PO_UID`, not a bill-level
+    field) — so the 10 orphan rows that can't resolve a PO line also can't
+    resolve a PO bill. Made `receiving_goods_receipts.purchase_order_id`
+    nullable (the plan's field list didn't mark it nullable, only the
+    line-level FK) so these orphan receipts stay importable without
+    fabricating a bill link; documented inline in the migration with a
+    comment citing the mapping doc. Indexes, RLS, and grants are otherwise
+    exactly as locked, including the "index every FK" rule (added FK indexes
+    on every nullable/non-null foreign key, including actor/profile columns,
+    not just the explicitly named examples).
+  - Verification for this slice: `npm run check:migrations` passes (36
+    public tables, 13 permissions — up from 27/13 before this migration).
+    `npm run lint` and `npm run typecheck` pass (no `src/` changes).
+    `git diff --check` passes (pre-existing CRLF warnings only). Did not run
+    `npm run db:apply-migrations` or `npm run db:verify-staging-schema` —
+    out of scope for "draft ... schema/RLS foundation only"; task breakdown
+    item 6 (apply and verify in staging) is still open.
+  - No data import, no `src/app/purchasing`/`src/app/receiving` routes, no
+    transaction RPCs, no V1 production files, no secrets changed.
+- Done 2026-06-22 (`ok go next`, continuing the same `Go:` slice): applied
+  migration `0013` to staging and verified it. See task breakdown items 5-6
+  above for the full verification record (preflight, apply, schema
+  verification, live anon Data API denial check). No new tooling was
+  needed; no data import; no UI; no RPCs.
+- Next action: task breakdown item 7 (docs close-out) is now done via this
+  same update. The only remaining `V2-0036` work is future PR/PO/GR data
+  import and runtime UI slices — those need a fresh PR CSV export and a
+  release-shape decision first (see Open Questions). No specific next
+  command is queued; check `docs/project-management/decision-board.md` for
+  the broader project queue.
 - Blockers: authoritative full PR history import and release-shape decision
-  remain open; neither blocks schema drafting, but both block final cutover.
+  remain open; neither blocks schema drafting/apply, but both block final
+  cutover.
 - Related plans: `V2-0009`, `V2-0018`, `V2-0022`, `V2-0032`, `V2-0033`,
   `V2-0035`.
-- Related ADRs: `0015`, `0016`, `0018`.
+- Related ADRs: `0015`, `0016`, `0018`, `0020`.

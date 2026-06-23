@@ -1,6 +1,6 @@
 # V2 Plan Index
 
-Last updated: 2026-06-22
+Last updated: 2026-06-23
 
 This is the central plan board for AKRA WEBAPP V2. It is the first file to read
 after `CONDUCTOR.md` when another agent needs to continue work.
@@ -55,14 +55,18 @@ requisitions only, no leftover test rows), a UAT checklist, a filled
 module cutover checklist, and a rollback plan. It deliberately does not
 declare Picking cut over — deployed Vercel Preview/Development verification
 and one combined human UAT pass remain open, user-gated items. `V2-0036`
-drafts the PR/PO/GR foundation plan and has executed its first slice: V1
-source profiling confirmed a live `PR` sheet with no CSV export yet, and
-`scripts/pr-po-gr-import-dry-run.mjs` profiled `PO`/`GR`/`ProductName`/
-`Vendor` against staging (0 blockers, 7 warnings — see
-`docs/migration/pr-po-gr-v1-mapping.md`); schema/RLS design and staging
-migration are not started. `V2-0037` designed and implemented
-the Purchase Requisition (PR) module frontend mockup under
-`docs/mockups/pr-ui-ux-mockup.html`. `V2-0038` designed and implemented the KPI Tracker module frontend mockup under `docs/mockups/kpi-ui-ux-mockup.html`.
+foundation work is now complete: V1 source profiling confirmed a live `PR`
+sheet with no CSV export yet, `scripts/pr-po-gr-import-dry-run.mjs` profiled
+`PO`/`GR`/`ProductName`/`Vendor` against staging (0 blockers, 7 warnings — see
+`docs/migration/pr-po-gr-v1-mapping.md`), ADR `0020` locked the schema/RLS
+shape, and `supabase/migrations/0013_pr_po_gr_foundation.sql` has been
+applied and verified in staging (36 public tables, 34 RLS policies). No
+PR/PO/GR data import, runtime UI, or RPCs exist yet; the next PR/PO/GR work is
+gated on a fresh PR CSV export and a release-shape decision. `V2-0037`
+designed and implemented the Purchase Requisition (PR) module frontend mockup
+under `docs/mockups/pr-ui-ux-mockup.html`. `V2-0038` designed and implemented
+the KPI Tracker module frontend mockup under
+`docs/mockups/kpi-ui-ux-mockup.html`.
 
 ## Active Queue
 
@@ -348,8 +352,11 @@ the Purchase Requisition (PR) module frontend mockup under
    - Outcome: designed and implemented the Goods Receiving (GR) mobile-first frontend mockup under `docs/mockups/gr-ui-ux-mockup.html`, achieving strict V1 layout parity. Based on feedback, upgraded the mockup to be fully dynamic, generating the 14-day calendar grid (displaying date, day badge, and vendor confirmed/estimated pills), warehouse filter chips with counts, PO cards, and status-gated action buttons (Draft, Review, Confirm, Recall, Reset) dynamically in Javascript, including automated field lockout.
    - File: `docs/plans/V2-0035-gr-frontend-mockup.md`
 28. `V2-0036` - PR/PO/GR foundation
-   - Status: In progress on 2026-06-22 — source profiling + dry-run report
-     slice complete; schema drafting not started.
+   - Status: In progress on 2026-06-22 — source profiling + dry-run report,
+     schema/RLS lock, migration `0013` draft, and staging apply +
+     verification are all complete. Remaining work is future PR/PO/GR data
+     import and runtime UI, gated on a fresh PR CSV export and a
+     release-shape decision.
    - Outcome: plans the grouped purchasing/receiving foundation before
      implementation: V1 source profiling, PR source confirmation, dry-run
      import report, Direct PO identity preservation, proposed
@@ -373,10 +380,33 @@ the Purchase Requisition (PR) module frontend mockup under
      products needing manual catalog review). No schema/migration, staging
      data, V1 production files, or secrets changed; `lint`/`typecheck`/
      `build`/`git diff --check` all pass.
-   - Next action: task breakdown items 3-7 (finalize schema details, draft
-     migration `0013`, verification tooling, staging apply, docs close-out)
-     remain undone; recommend `Architect:` to lock schema details given the
-     `Expected_Date` mismatch and bare-`DIRECT` grouping volume found.
+   - Schema/RLS lock (`Architect: ล็อก schema/RLS...`, 2026-06-22): ADR
+     `0020` fixes migration `0013` as a schema-only foundation using
+     `public.purchasing_*` / `public.receiving_*` tables, nullable legacy
+     bridges for missing PR CSV / `Expected_Date` / orphan GR rows, explicit
+     grants, RLS, and current coarse permissions only
+     (`purchasing.read/write`, `receiving.read/write`).
+   - Migration drafted and applied (`Go: draft V2-0036 migration 0013
+     schema/RLS foundation only`, then `ok go next`, 2026-06-22): added
+     `supabase/migrations/0013_pr_po_gr_foundation.sql` — the 9 ADR-`0020`
+     tables (`purchasing_purchase_requests/_lines`,
+     `purchasing_purchase_orders/_lines`, `purchasing_events`,
+     `receiving_goods_receipts/_lines`, `receiving_line_splits`,
+     `receiving_events`), all RLS-enabled with explicit grants and
+     permission-based select policies, no data import, no UI, no RPCs. One
+     schema judgment call beyond the plan's literal field list:
+     `receiving_goods_receipts.purchase_order_id` is nullable (re-reading
+     the mapping doc showed GR rows resolve a PO bill only via a PO-line
+     match, so orphan `Ref_PO_UID` rows can't resolve either) — documented
+     inline and in the plan's handoff notes. Applied to staging:
+     `npm run check:migrations` and `npm run db:verify-staging-schema` both
+     pass (36 public tables, 34 RLS policies); a live anon Data API call
+     against two new tables returned `HTTP 401`, matching `V2-0008`'s
+     precedent.
+   - Next action: task breakdown items 4-7 are all done. Remaining
+     `V2-0036` work is future PR/PO/GR data import and runtime UI, gated on
+     a fresh PR CSV export and a release-shape decision (see the plan's
+     Open Questions).
    - File: `docs/plans/V2-0036-pr-po-gr-foundation.md`
 29. `V2-0037` - PR Frontend UI/UX Mock-up
    - Status: Complete on 2026-06-22 (Mockup phase).
@@ -414,9 +444,9 @@ the Purchase Requisition (PR) module frontend mockup under
   V1 Sheets remain read-only archives after operational replacement.
 - For non-Picking modules, which notification paths require parity before
   cutover versus after operational replacement.
-- For `V2-0036`, where the authoritative PR row export lives, since current
-  `import-data/po-pr-gr` contains PO/GR/ProductName/Vendor snapshots but no
-  dedicated PR CSV.
+- For `V2-0036`, when to obtain a fresh PR CSV export from the live V1 `PR`
+  sheet. The authoritative source exists, but full PR-row import is blocked
+  until a CSV snapshot is exported.
 
 ## Update Rules
 

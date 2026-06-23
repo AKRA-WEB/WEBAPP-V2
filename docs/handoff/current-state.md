@@ -1,6 +1,6 @@
 # Current State
 
-Last updated: 2026-06-22
+Last updated: 2026-06-23
 
 ## Project
 
@@ -35,15 +35,25 @@ Last updated: 2026-06-22
   `V2-0035` (GR Mobile-first Mockup at `docs/mockups/gr-ui-ux-mockup.html`),
   `V2-0037` (PR Frontend Mockup at `docs/mockups/pr-ui-ux-mockup.html`), and
   `V2-0038` (KPI Frontend Mockup at `docs/mockups/kpi-ui-ux-mockup.html`) are complete.
-  `V2-0036` drafts the PR/PO/GR foundation plan and has executed its first
-  slice (source profiling + dry-run report, 2026-06-22): confirmed a live V1
-  `PR` sheet with no CSV export yet, and
-  `scripts/pr-po-gr-import-dry-run.mjs` profiled `PO`/`GR`/`ProductName`/
-  `Vendor` against staging shared catalog/vendor/warehouse tables (0
-  blockers, 7 warnings — see `docs/migration/pr-po-gr-v1-mapping.md` and
-  `import-reports/pr-po-gr-dry-run-report.md`). Schema/RLS design and
-  staging migration are not started. `V2-0037` separately added a PR
-  frontend mock-up (`docs/mockups/pr-ui-ux-mockup.html`).
+  `V2-0036` drafts the PR/PO/GR foundation plan and all four implementation
+  task-breakdown items are now done (2026-06-22): source profiling +
+  dry-run report (confirmed a live V1 `PR` sheet with no CSV export yet,
+  and `scripts/pr-po-gr-import-dry-run.mjs` profiled `PO`/`GR`/
+  `ProductName`/`Vendor` against staging shared catalog/vendor/warehouse
+  tables — 0 blockers, 7 warnings; see
+  `docs/migration/pr-po-gr-v1-mapping.md` and
+  `import-reports/pr-po-gr-dry-run-report.md`); the schema/RLS lock (ADR
+  `0020`); the migration draft and staging apply:
+  `supabase/migrations/0013_pr_po_gr_foundation.sql` adds the 9
+  `public.purchasing_*`/`public.receiving_*` tables with RLS, explicit
+  grants, and permission-based select policies, no data import, no runtime
+  UI, no RPCs — applied to staging, `npm run check:migrations` and
+  `npm run db:verify-staging-schema` both pass (36 public tables, 34 RLS
+  policies), and a live anon Data API call against two new tables returned
+  `HTTP 401` (matching `V2-0008`'s precedent). Remaining PR/PO/GR work
+  (data import, runtime UI) is gated on a fresh PR CSV export and a
+  release-shape decision. `V2-0037` separately added a PR frontend mock-up
+  (`docs/mockups/pr-ui-ux-mockup.html`).
 - Production impact: None
 - V1 reference path: `C:\dev\WEBAPP`
 
@@ -671,6 +681,58 @@ Status:
   - Documentation-only; no `src/` files, Supabase schema, staging data, V1
     production files, GAS deployments, Sheets, URLs, LINE tokens, or secrets
     changed. `git diff --check` passes. No commits pushed.
+- Executed `V2-0036` task breakdown item 4 on 2026-06-22 (`Go: draft
+  V2-0036 migration 0013 schema/RLS foundation only`): drafted
+  `supabase/migrations/0013_pr_po_gr_foundation.sql` per ADR `0020`.
+  - 9 tables (`purchasing_purchase_requests`/`_lines`,
+    `purchasing_purchase_orders`/`_lines`, `purchasing_events`,
+    `receiving_goods_receipts`/`_lines`, `receiving_line_splits`,
+    `receiving_events`), every nullable legacy bridge field from the locked
+    plan (PO bill identity kind/value/legacy refs, nullable
+    `expected_date`/`raw_expected_date`/`expected_date_source`, nullable
+    orphan-safe GR line FK, a `date_parse_status` check mirroring the
+    dry-run script's date classification), RLS enabled, revoke-then-grant
+    posture (`authenticated` select-only, `service_role` full, no `anon`),
+    and select policies using the two locked permission groupings. No data
+    import, no UI routes, no transaction RPCs, no new permissions.
+  - One schema judgment call beyond the plan's literal wording:
+    `receiving_goods_receipts.purchase_order_id` is nullable, not just the
+    line-level FK, because re-reading `docs/migration/pr-po-gr-v1-mapping.md`
+    showed V1 GR rows resolve a PO bill only via a PO-line match on
+    `Ref_PO_UID`; the 10 known orphan rows can't resolve either, so the
+    header stays importable without fabricating a bill link. Documented
+    inline in the migration and in the plan's handoff notes.
+  - Verified: `npm run check:migrations` passes (36 public tables, 13
+    permissions). `npm run lint`, `npm run typecheck` pass (no `src/`
+    changes). `git diff --check` passes (pre-existing CRLF warnings only).
+  - No data import, no V1 production files, no secrets changed.
+- Continued the same `Go:` slice on 2026-06-22 (`ok go next`): applied
+  migration `0013` to staging and verified it (task breakdown items 5-6).
+  - `npm run db:apply-migrations -- 0013_pr_po_gr_foundation.sql`:
+    `Sanity: public_tables=36, permissions=13, apps=8, private_functions=4`.
+  - `npm run db:verify-staging-schema`: `Schema verification passed (36
+    public tables, 34 policies)`.
+  - A live anon Data API call (`curl` with only the publishable `apikey`
+    header, no auth) against `purchasing_purchase_requests` and
+    `receiving_goods_receipts` both returned `HTTP 401` /
+    `permission denied for table`, matching `V2-0008`'s `public.apps`
+    anon-denial precedent exactly — a real Data API check, not just a
+    static grant inspection.
+  - Checked which roles currently hold `purchasing.*`/`receiving.*`
+    permissions: only `purchasing.write`/`receiving.write` (on
+    `ADMIN`/`SUPERVISOR`/`AKRA`/`WAREHOUSE`, from the real V1 import) — no
+    role has the `.read` variant specifically, but the select policies
+    treat read-or-write as equivalent so this still grants access.
+    Confirming a permission-holding role can read **real rows** is deferred
+    until a write path/UI lands and inserts data — there are zero rows in
+    any of the 9 tables right now, matching how Picking's RLS-with-real-rows
+    proof happened alongside `V2-0019`/`V2-0020`'s UI, not at `V2-0006`'s
+    schema-creation time.
+  - No new tooling needed for item 5: `check:migrations` and
+    `db:verify-staging-schema` already derive expected tables/policies from
+    the migration files dynamically.
+  - `V2-0036` task breakdown items 4-7 are now all done. No data import, no
+    runtime UI, no RPCs, no V1 production files, no secrets changed.
 
 ## Next Actions
 
@@ -695,9 +757,11 @@ Status:
    sufficient; run one combined human UAT pass versus relying on per-slice
    automated checks only; run a fresh V1 reference export/recheck; and execute
    the cutover runbook steps.
-9. Execute `V2-0036` in the smallest implementation slice: source profiling
-   and the dry-run report only. The plan is drafted; no PR/PO/GR runtime UI or
-   staging schema has been implemented yet.
+9. ~~Draft migration `0013` for the locked PR/PO/GR schema/RLS foundation
+   only, then apply it to staging and verify.~~ Done 2026-06-22 (`V2-0036`
+   task breakdown items 4-7 all complete). Next PR/PO/GR work is data
+   import and runtime UI, gated on a fresh PR CSV export and a
+   release-shape decision — no specific command queued yet.
 10. ~~Execute `V2-0037`: design and implement the Purchase Requisitions (PR) frontend mockup (`docs/mockups/pr-ui-ux-mockup.html`).~~ Done 2026-06-22.
 11. ~~Execute `V2-0038`: design and implement the KPI Tracker frontend mockup (`docs/mockups/kpi-ui-ux-mockup.html`).~~ Done 2026-06-22.
 12. Keep `docs/plans/index.md` updated whenever a plan status or next action

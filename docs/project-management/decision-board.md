@@ -1,6 +1,6 @@
 # Decision Board
 
-Last updated: 2026-06-22
+Last updated: 2026-06-23
 
 This board is for project-level decisions and recommended next actions. The
 source-of-truth implementation status remains `docs/plans/index.md`.
@@ -13,13 +13,12 @@ source-of-truth implementation status remains `docs/plans/index.md`.
 inherently user/business actions. It is **not** an approval — four items are
 open and need a user decision before Picking can be called cutover-ready:
 
-1. **Deployed Vercel Preview/Development verification.** Local `main` is 2
-   commits ahead of `origin/main` (`V2-0027` LINE notification, `V2-0028`
-   docs); the deployed build doesn't have the LINE retry feature yet. The
-   agent also cannot exercise a deployed build itself — the local `vercel`
-   CLI account (`akra-web`) can't reach the real project's team scope
-   (`akrapanich-3912s-projects`). Closing this needs the user to authorize a
-   push and then personally click through the deployed UAT script.
+1. **Deployed Vercel Preview/Development verification.** Today's V2 work has
+   been pushed to `origin/main`, but the agent still cannot exercise the real
+   deployed project itself — the local `vercel` CLI account (`akra-web`) can't
+   reach the real project's team scope (`akrapanich-3912s-projects`). Closing
+   this needs the user to personally click through the deployed UAT script or
+   explicitly accept staging/local verification as sufficient.
 2. **Combined human UAT pass.** All verification so far is per-slice,
    agent-run Playwright against synthetic accounts. No one has run the full
    create -> pick -> send -> problem -> LINE-retry flow in one sitting as a
@@ -33,21 +32,22 @@ open and need a user decision before Picking can be called cutover-ready:
    authority, enable V2 production route, notify real users); none are done
    yet, and real staff Supabase Auth accounts don't exist yet either.
 
-`V2-0036`'s first slice (source profiling + dry-run report) is now done
-(2026-06-22, 0 blockers / 7 warnings — see
+`V2-0036`'s foundation work is now fully complete (2026-06-22): source
+profiling + dry-run report (0 blockers / 7 warnings — see
 `docs/migration/pr-po-gr-v1-mapping.md` and
-`import-reports/pr-po-gr-dry-run-report.md`). Picking cutover still has the
-two gates above, unaffected by this PR/PO/GR work. Before the next `Go:`,
-schema details should be locked given two real findings: the exported
-`PO.csv` has no `Expected_Date` column (mismatch vs. the V1 code's
-documented schema), and 233 bill groups (698 line rows) rely on the
-ambiguous legacy bare-`DIRECT` grouping key.
+`import-reports/pr-po-gr-dry-run-report.md`), the schema/RLS lock (ADR
+`0020`), and the migration itself:
+`supabase/migrations/0013_pr_po_gr_foundation.sql` — 9
+`public.purchasing_*`/`public.receiving_*` tables, RLS, explicit grants,
+permission-based select policies, no data import, no UI, no RPCs. Applied
+to staging: `npm run check:migrations` and `npm run db:verify-staging-schema`
+both pass (36 public tables, 34 policies), and a live anon Data API call
+returned `HTTP 401` on the new tables. Picking cutover remains unaffected
+by this PR/PO/GR work.
 
-Suggested command for the next implementation slice:
-
-```text
-Architect: ล็อก schema/RLS ของ V2-0036 จาก dry-run report ก่อน migration
-```
+No specific next PR/PO/GR command is queued: further work (data import,
+runtime UI) needs a fresh PR CSV export and a release-shape decision first
+(see Open Decisions below).
 
 ## Near-Term Queue
 
@@ -56,7 +56,7 @@ Architect: ล็อก schema/RLS ของ V2-0036 จาก dry-run report �
 | 1 | Picking problem reporting | Completes shortage/exception workflow before LINE | Done (`V2-0025`, 2026-06-20): pending/picked bills stay in their current status when a problem is reported |
 | 2 | Picking LINE notification/failure recovery | Needed before realistic pilot/cutover | Done (`V2-0027`, 2026-06-22): disabled/dry-run by default, event-only failure (status untouched), retry action; real sends still unproven |
 | 3 | Picking cutover package | Lets user decide whether V2 Picking can replace V1 Picking | Prepared (`V2-0034`, 2026-06-22); review (2026-06-22) found 5 gaps, 3 closed (reproducible reconciliation script, runbook section 5a, freshness section 3a); 4 open user decisions remain: deployed-build verification, combined human UAT pass, fresh V1 reference-data export, runbook execution |
-| 4 | PR/PO/GR foundation | Next dependency group after Picking | Source profiling + dry-run report done (`V2-0036` slice 1, 2026-06-22, 0 blockers/7 warnings); next step is locking schema/RLS details, then migration `0013` |
+| 4 | PR/PO/GR foundation | Next dependency group after Picking | Done (`V2-0036`, ADR `0020`, 2026-06-22): source profiling, dry-run report, schema/RLS lock, migration `0013` drafted and applied to staging, verified. Next step (data import/UI) needs a fresh PR CSV export + release-shape decision |
 | 5 | Placeholder route guard pass | Prevents future route content from inheriting open placeholders | Can be bundled before non-Picking real content |
 
 ## Resolved Decisions
@@ -114,7 +114,8 @@ foundation, while keeping implementation sliced. The authoritative PR source
 question is resolved as a finding (2026-06-22): a live V1 `PR` sheet exists
 in the same spreadsheet as `PO`/`GR`, but no CSV of it has ever been
 exported into `import-data/po-pr-gr`. Full PR-row import is blocked on that
-export, not on missing source data.
+export, not on missing source data. ADR `0020` locks the schema/RLS foundation
+so migration `0013` can proceed without importing PR rows yet.
 
 ## Watch List
 
@@ -122,9 +123,8 @@ export, not on missing source data.
   should receive server-side guards before real content is added.
 - Vercel deployed-create was noted as not separately exercised through a
   deployed Preview/Development build after `V2-0020`; the same caveat now
-  also applies to the LINE real-send branch added in `V2-0027`. `V2-0034`
-  confirmed local `main` is still 2 commits ahead of `origin/main`, so this
-  gap is unresolved and is now an explicit open item in the cutover package.
+  also applies to the LINE real-send branch added in `V2-0027`. Today's work
+  has been pushed, but deployed UAT is still a user-side gate.
 - LINE real-send path (`fetch` to the Messaging API) is implemented but
   unproven — needs real `LINE_CHANNEL_TOKEN`/`LINE_GROUP_ID` plus explicit
   approval before any real send test.
@@ -134,10 +134,8 @@ export, not on missing source data.
   `V2-0034`'s reconciliation query, low priority, not fixed yet.
 - Active work-log length should stay below the context budget; archive before
   it becomes the default history dump again.
-- `V2-0036` dry-run findings to resolve before drafting the staging migration:
-  no PR CSV export exists yet (full PR-row import blocked on a fresh V1
-  export); the exported `PO.csv` has no `Expected_Date` column despite the
-  V1 code documenting one (affects vendor expected-delivery modeling); 233
-  bill groups (698 PO line rows) rely on the ambiguous legacy bare-`DIRECT`
-  grouping key (largest group 21 lines) — fine to read/display, must not be
-  reused for new V2 writes.
+- `V2-0036` dry-run findings are handled for schema design by ADR `0020`, but
+  still matter before import/cutover: no PR CSV export exists yet; the
+  exported `PO.csv` has no `Expected_Date` column; 233 bill groups (698 PO
+  line rows) rely on the ambiguous legacy bare-`DIRECT` grouping key; and 10
+  GR rows have orphan `Ref_PO_UID` references.

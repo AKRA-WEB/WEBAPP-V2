@@ -128,6 +128,60 @@ These workflows should be backed by database transactions or RPC functions:
   - **Catalog Edit Authority:** Restricted to `core.admin` roles initially; custom roles will be planned later.
   - **Picking Integration:** The Picking pilot will transition directly to using the new `catalog_products` and locations instead of keeping an isolated table.
 
+## PR/PO/GR Foundation Assumptions
+
+Locked on 2026-06-22 in `V2-0036` and ADR `0020`.
+`supabase/migrations/0013_pr_po_gr_foundation.sql` (the schema-only
+migration) is applied to staging (2026-06-22): 9 new
+`public.purchasing_*`/`public.receiving_*` tables, all RLS-enabled with
+explicit grants and select policies, no data, no RPC. `npm run
+check:migrations` and `npm run db:verify-staging-schema` both pass (36
+public tables, 34 RLS policies). A live anon Data API call against two of
+the new tables returned `HTTP 401` / `permission denied for table` with no
+auth header, matching the existing `public.apps` anon-denial precedent from
+`V2-0008`. No existing role/test account has `purchasing.read` or
+`receiving.read` specifically (only `purchasing.write`/`receiving.write` on
+`SUPERVISOR`/`AKRA`/`WAREHOUSE` from the real V1 import — the select
+policies treat read-or-write as equivalent, so this still grants access);
+confirming a permission-holding role can read real rows is deferred until a
+write path/UI exists and inserts real data, per the plan's own scope.
+
+- The first PR/PO/GR migration is schema/RLS only. It should create
+  `public.purchasing_*` and `public.receiving_*` tables, indexes, constraints,
+  explicit grants, and RLS policies, but it should not import data or add
+  runtime UI.
+- Table family:
+  - `public.purchasing_purchase_requests`
+  - `public.purchasing_purchase_request_lines`
+  - `public.purchasing_purchase_orders`
+  - `public.purchasing_purchase_order_lines`
+  - `public.purchasing_events`
+  - `public.receiving_goods_receipts`
+  - `public.receiving_goods_receipt_lines`
+  - `public.receiving_line_splits`
+  - `public.receiving_events`
+- Missing PR CSV does not block the schema. PR import waits for a fresh export
+  from the live V1 `PR` sheet.
+- `Expected_Date` is nullable because the current `PO.csv` export does not
+  contain that column. Preserve `raw_expected_date` and
+  `expected_date_source` until a fresh export resolves the mismatch.
+- Bare legacy `Ref_PR_UID = "DIRECT"` is an import/display fallback only and
+  must be marked `is_legacy_ambiguous`. New V2 Direct PO writes must use a
+  stable identity (`DIRECT-<uuid>` style or V2 UUID), never the legacy
+  vendor/date/warehouse fallback.
+- Orphan GR `Ref_PO_UID` rows remain auditable with nullable
+  `purchase_order_line_id`, raw `legacy_ref_po_uid`, and match status.
+- Raw V1 status/date/location/product/vendor values remain stored beside
+  normalized fields. Do not fabricate catalog/vendor/warehouse references when
+  matching is ambiguous.
+- PR tables are readable by `purchasing.read` or `purchasing.write`; PO tables
+  are readable by purchasing or receiving permissions; receiving tables are
+  readable by receiving or purchasing permissions.
+- Keep the current coarse permissions (`purchasing.read/write`,
+  `receiving.read/write`) for the schema-only migration. Add granular
+  approve/close permissions only when an implementation slice proves the
+  action split is needed.
+
 ## Staging Apply Status
 
 - Migrations `0001`-`0009` have been applied to the staging Supabase project.

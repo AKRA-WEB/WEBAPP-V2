@@ -162,10 +162,15 @@ Exit criteria:
 
 Current notes:
 
-- `V2-0036` source profiling + dry-run report slice is complete
-  (2026-06-22): see `docs/migration/pr-po-gr-v1-mapping.md` and
-  `import-reports/pr-po-gr-dry-run-report.md`. No schema or migration exists
-  yet for `purchasing`/`receiving`.
+- `V2-0036` foundation work is complete through staging schema verification:
+  source profiling + dry-run report, schema/RLS lock (ADR `0020`), and
+  migration `0013` applied to staging. See
+  `docs/migration/pr-po-gr-v1-mapping.md`,
+  `import-reports/pr-po-gr-dry-run-report.md`, and
+  `supabase/migrations/0013_pr_po_gr_foundation.sql`. The 9
+  `public.purchasing_*` / `public.receiving_*` tables now exist in staging
+  with RLS, explicit grants, and permission-based select policies, but no
+  PR/PO/GR data import, runtime UI, or transaction RPCs exist yet.
 
 ## Phase 5 - Warehouse And Returns
 

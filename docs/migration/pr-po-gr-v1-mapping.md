@@ -212,3 +212,20 @@ V2 statuses"); this table is the mapping, not a replacement.
   (e.g. PR/PO before GR).
 - Whether GR receiving should write warehouse stock movements in the first
   release or wait for the warehouse foundation.
+
+## Schema/RLS Lock Follow-Up (2026-06-22)
+
+ADR `0020` locks the migration `0013` direction based on this mapping and the
+dry-run report. The warnings above do not block schema creation:
+
+- no PR CSV means PR import waits for a fresh export, but PR header/line tables
+  are still created now;
+- missing `Expected_Date` means V2 keeps nullable `expected_date`,
+  `raw_expected_date`, and `expected_date_source`;
+- bare legacy `DIRECT` stays legacy-only and ambiguous; new V2 Direct POs must
+  use stable identity;
+- orphan GR `Ref_PO_UID` rows keep raw references and nullable PO-line FKs
+  instead of fabricated links.
+
+Those issues still block final import/cutover decisions until fresh exports,
+manual review, and UAT evidence exist.
