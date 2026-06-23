@@ -61,13 +61,13 @@ sheet with no CSV export yet, `scripts/pr-po-gr-import-dry-run.mjs` profiled
 `docs/migration/pr-po-gr-v1-mapping.md`), ADR `0020` locked the schema/RLS
 shape, and `supabase/migrations/0013_pr_po_gr_foundation.sql` has been
 applied and verified in staging (36 public tables, 34 RLS policies). No
-PR/PO/GR data import, runtime UI, or RPCs exist yet; the next PR/PO/GR work is
-gated on a fresh PR CSV export and grouped-release execution discipline.
+PR/PO/GR data import, runtime UI, or RPCs exist yet; after `V2-0040`, the next
+PR/PO/GR gate is deciding how to handle 3 PR-derived PO rows with no source PR
+row before staging import planning.
 `V2-0039` accepts that PR/PO/GR should cut over as one grouped operational
 release after end-to-end staging UAT, while still allowing small
-implementation slices. `V2-0040` is now the next draft plan: ingest a fresh PR
-CSV export and produce a read-only PR -> PO -> GR reconciliation dry-run before
-any data import or runtime UI. `V2-0037`
+implementation slices. `V2-0040` executed the read-only PR -> PO -> GR
+reconciliation dry-run against the current empty PR source. `V2-0037`
 designed and implemented the Purchase Requisition (PR) module frontend mockup
 under `docs/mockups/pr-ui-ux-mockup.html`. `V2-0038` designed and implemented
 the KPI Tracker module frontend mockup under
@@ -360,8 +360,8 @@ the KPI Tracker module frontend mockup under
    - Status: In progress on 2026-06-22 — source profiling + dry-run report,
      schema/RLS lock, migration `0013` draft, and staging apply +
      verification are all complete. Remaining work is future PR/PO/GR data
-     import and runtime UI, gated on a fresh PR CSV export and a
-     release-shape decision.
+     import and runtime UI, now gated on the `V2-0040` manual-review/import
+     decision for 3 PR-derived PO rows with no source PR row.
    - Outcome: plans the grouped purchasing/receiving foundation before
      implementation: V1 source profiling, PR source confirmation, dry-run
      import report, Direct PO identity preservation, proposed
@@ -409,9 +409,9 @@ the KPI Tracker module frontend mockup under
      against two new tables returned `HTTP 401`, matching `V2-0008`'s
      precedent.
    - Next action: task breakdown items 4-7 are all done. Remaining
-     `V2-0036` work is future PR/PO/GR data import and runtime UI, gated on
-     a fresh PR CSV export and a release-shape decision (see the plan's
-     Open Questions).
+     `V2-0036` work is future PR/PO/GR data import and runtime UI; after
+     `V2-0039`/`V2-0040`, the next gate is deciding how to handle 3
+     PR-derived PO rows with no source PR row before staging import planning.
    - File: `docs/plans/V2-0036-pr-po-gr-foundation.md`
 29. `V2-0037` - PR Frontend UI/UX Mock-up
    - Status: Complete on 2026-06-22 (Mockup phase).
@@ -427,16 +427,27 @@ the KPI Tracker module frontend mockup under
      Decision: implement PR/PO/GR in small slices, but keep one grouped
      operational cutover gate after PR -> PO -> GR staging UAT. A staged
      PR/PO-first release requires a separate bridge/writeback ADR first.
-   - Next action: proceed to `V2-0040` once a fresh PR CSV export is available.
+   - Next action: `V2-0040` has run against the current empty PR source;
+     decide how to handle 3 PR-derived PO rows without source PR rows before
+     import planning.
    - File: `docs/plans/V2-0039-pr-po-gr-release-shape-decision.md`
 32. `V2-0040` - PR/PO/GR fresh PR CSV reconciliation
-   - Status: Draft on 2026-06-23 (planning only).
-   - Outcome: defines the next executable PR/PO/GR slice after accepting
-     grouped release shape: user provides a fresh live V1 `PR` CSV export,
-     then the dry-run profiler is extended/rerun to reconcile PR -> PO -> GR
-     links and produce blockers/warnings before any import or runtime UI.
-   - Next action: provide/export the fresh PR CSV, then use
-     `Go: execute V2-0040 PR CSV reconciliation dry-run`.
+   - Status: Review on 2026-06-23 — reconciliation logic built and proven
+     against the current empty PR source; import planning needs a decision
+     for 3 PR-derived PO rows without source PR rows.
+   - Outcome: extended `scripts/pr-po-gr-import-dry-run.mjs` with PR
+     Profiling, PR -> PO Reconciliation (matched/genuinely-unmatched/
+     unverifiable), and PO -> GR line coverage sections. `Trackingpo -
+     webapp - PR.csv` exists with the current PR header and 0 rows; user
+     confirmed the PR source is genuinely empty. Real findings: 1 bill
+     group / 3 PO line rows carry a real `Ref_PR_UID` and are
+     unverifiable/manual-review because no source PR rows exist; PO -> GR
+     line coverage is 94.1% (706/750). Result: 0 blockers, 9 warnings —
+     see `docs/migration/pr-po-gr-v1-mapping.md`'s "V2-0040
+     Reconciliation Dry-Run" section.
+   - Next action: decide the import posture for those 3 PR-derived PO rows
+     (nullable/manual-review linkage vs. recovering historical PR rows from
+     another source), then plan the PR/PO/GR staging import slice.
    - File: `docs/plans/V2-0040-pr-po-gr-pr-csv-reconciliation.md`
 33. `V2-0041` - Placeholder route guard pass
    - Status: Complete on 2026-06-23.
@@ -483,9 +494,9 @@ the KPI Tracker module frontend mockup under
   V1 Sheets remain read-only archives after operational replacement.
 - For non-Picking modules, which notification paths require parity before
   cutover versus after operational replacement.
-- For `V2-0036`, when to obtain a fresh PR CSV export from the live V1 `PR`
-  sheet. The authoritative source exists, but full PR-row import is blocked
-  until a CSV snapshot is exported.
+- For PR/PO/GR import planning after `V2-0040`, how to handle the 3
+  PR-derived PO rows whose `Ref_PR_UID` has no source PR row because the
+  current PR CSV source is genuinely empty.
 - Resolved (`V2-0039`, ADR `0021`, 2026-06-23): PR/PO/GR use a grouped
   operational release gate after end-to-end staging UAT; implementation can
   still proceed in small slices.

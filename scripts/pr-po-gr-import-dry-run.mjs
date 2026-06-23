@@ -18,9 +18,9 @@ const files = {
   vendor: join(importDataDir, "Trackingpo - webapp - Vendor.csv"),
 };
 
-// Live V1 `PR` sheet has no CSV export in this snapshot (see
-// docs/migration/pr-po-gr-v1-mapping.md). Reported as a blocker for any
-// future PR-row import, not for this PO/GR/Product/Vendor profiling run.
+// PR CSV is optional for this dry-run. A missing or empty PR source does not
+// block PO/GR profiling; it means PR-derived PO rows can only be reported as
+// unverifiable/manual-review until source PR rows exist.
 const prCsvPath = join(importDataDir, "Trackingpo - webapp - PR.csv");
 
 const KNOWN_WAREHOUSE_KEYS = new Set(["w1", "w2", "w3", "w4", "w5", "c1", "c2"]);
@@ -178,6 +178,12 @@ async function run() {
     console.log(`- ${name}: ${data[name].rows.length} rows`);
   }
 
+  // PR is optional. When absent or genuinely empty, PR-side counts stay zero
+  // and PR -> PO coverage is reported as unverifiable rather than as a false
+  // orphan/mismatch.
+  const prData = prCsvExists ? parseCSV(readFileSync(prCsvPath, "utf8")) : { headers: [], rows: [] };
+  console.log(`- pr: ${prData.rows.length} rows${prCsvExists ? "" : " (no CSV export found)"}`);
+
   const poRows = data.po.rows;
   const grRows = data.gr.rows;
   const productRows = data.product.rows;
@@ -246,6 +252,56 @@ async function run() {
   );
 
   // ==========================================
+  // PR profiling
+  // ==========================================
+  const prRows = prData.rows;
+  const prUidSeen = new Set();
+  let prDuplicateUid = 0;
+  let prBlankUid = 0;
+  const prStatusCounts = new Map();
+
+  for (const row of prRows) {
+    const uid = (row["PR_UID"] || "").trim();
+    if (!uid) prBlankUid++;
+    else if (prUidSeen.has(uid)) prDuplicateUid++;
+    else prUidSeen.add(uid);
+
+    const status = (row["Status"] || "(blank)").trim() || "(blank)";
+    prStatusCounts.set(status, (prStatusCounts.get(status) || 0) + 1);
+  }
+
+  // ==========================================
+  // PR -> PO reconciliation
+  // ==========================================
+  // Only PO rows classified pr_derived (a real, non-DIRECT Ref_PR_UID) are
+  // expected to match a PR row. Direct POs (DIRECT / DIRECT-<uuid>) never
+  // require a PR match by design. An empty PR CSV is treated the same as a
+  // missing file for matching purposes: there is no PR row data to check
+  // against, so every pr_derived ref is "unverifiable", not a false
+  // "genuinely unmatched" blocker.
+  const prSourceHasRows = prRows.length > 0;
+  let prPoMatched = 0;
+  let prPoUnmatchedVerifiable = 0; // PR source has real rows, ref genuinely not found
+  let prPoUnverifiable = 0; // no usable PR source (missing or empty) to check against
+  const prPoUnmatchedSamples = [];
+
+  for (const [, group] of prDerivedGroups) {
+    for (const row of group.rows) {
+      const ref = (row["Ref_PR_UID"] || "").trim();
+      if (!prSourceHasRows) {
+        prPoUnverifiable++;
+      } else if (prUidSeen.has(ref)) {
+        prPoMatched++;
+      } else {
+        prPoUnmatchedVerifiable++;
+        if (prPoUnmatchedSamples.length < 10) {
+          prPoUnmatchedSamples.push({ poUid: row["PO_UID"] || "(blank)", ref });
+        }
+      }
+    }
+  }
+
+  // ==========================================
   // GR profiling
   // ==========================================
   const grUidSeen = new Set();
@@ -302,6 +358,20 @@ async function run() {
     }
     if (remark.includes(EXTRA_ITEM_TAG)) extraItemTagCount++;
   }
+
+  // ==========================================
+  // PO -> GR line coverage
+  // ==========================================
+  // Does not depend on PR data: every PO line either has at least one GR
+  // row referencing it via Ref_PO_UID, or it doesn't yet.
+  const poUidsWithGr = new Set();
+  for (const row of grRows) {
+    const refPoUid = (row["Ref_PO_UID"] || "").trim();
+    if (refPoUid) poUidsWithGr.add(refPoUid);
+  }
+  const poLinesCoveredByGr = [...poByUid.keys()].filter((uid) => poUidsWithGr.has(uid)).length;
+  const poLinesCoveragePercent =
+    poByUid.size > 0 ? ((poLinesCoveredByGr / poByUid.size) * 100).toFixed(1) : "0.0";
 
   // ==========================================
   // ProductName / Vendor master profiling
@@ -415,11 +485,30 @@ async function run() {
   if (poDuplicateUid > 0) blockers.push(`${poDuplicateUid} PO row(s) reuse an existing PO_UID.`);
   if (grBlankUid > 0) blockers.push(`${grBlankUid} GR row(s) have a blank GR_UID.`);
   if (grDuplicateUid > 0) blockers.push(`${grDuplicateUid} GR row(s) reuse an existing GR_UID.`);
+  if (prSourceHasRows && prBlankUid > 0) blockers.push(`${prBlankUid} PR row(s) have a blank PR_UID.`);
+  if (prSourceHasRows && prDuplicateUid > 0) blockers.push(`${prDuplicateUid} PR row(s) reuse an existing PR_UID.`);
+  if (prSourceHasRows && prPoUnmatchedVerifiable > 0) {
+    blockers.push(
+      `${prPoUnmatchedVerifiable} PO row(s) reference a Ref_PR_UID not found in the PR source (real orphan PR linkage, not a missing-export issue).`,
+    );
+  }
 
   const warnings = [];
-  if (!prCsvExists) {
+  if (!prSourceHasRows) {
     warnings.push(
-      "No PR CSV export found (`Trackingpo - webapp - PR.csv`). The live V1 `PR` sheet exists (see docs/migration/pr-po-gr-v1-mapping.md) but was never exported into this snapshot; PR-row import needs a fresh export first.",
+      prCsvExists
+        ? "PR CSV exists with 0 data rows. Treating the PR source as currently empty; PR-row import would import zero PR rows, and PR -> PO coverage cannot be verified from PR rows."
+        : "No PR CSV export found (`Trackingpo - webapp - PR.csv`). The live V1 `PR` sheet exists (see docs/migration/pr-po-gr-v1-mapping.md) but was never exported into this snapshot; PR-row import needs a fresh export first.",
+    );
+  }
+  if (prPoUnverifiable > 0) {
+    warnings.push(
+      `${prPoUnverifiable} PO row(s) reference a real PR_UID via Ref_PR_UID across ${prDerivedGroups.length} bill group(s), but PR -> PO coverage cannot be verified because the PR source has zero usable rows. Treat these as manual-review rows before import/cutover decisions.`,
+    );
+  }
+  if (poByUid.size > 0 && poLinesCoveredByGr < poByUid.size) {
+    warnings.push(
+      `${poByUid.size - poLinesCoveredByGr} of ${poByUid.size} PO line(s) (${(100 - Number(poLinesCoveragePercent)).toFixed(1)}%) have no GR row referencing them yet via Ref_PO_UID — expected for open/pending POs, not necessarily a data issue.`,
     );
   }
   if (poDateFailures > 0) warnings.push(`${poDateFailures} PO row(s) failed PO_Date parsing.`);
@@ -465,12 +554,19 @@ async function run() {
 
 Date: ${new Date().toISOString()}
 Source files: \`import-data/po-pr-gr/Trackingpo - webapp - {PO,GR,ProductName,Vendor}.csv\`
-PR source: ${prCsvExists ? "CSV export found" : "**no CSV export found** — live V1 \`PR\` sheet only, see docs/migration/pr-po-gr-v1-mapping.md"}
+PR source: ${
+    prSourceHasRows
+      ? `CSV export found, ${prRows.length} row(s)`
+      : prCsvExists
+        ? "**empty** — CSV exists with 0 data rows"
+        : "**no CSV export found** — live V1 `PR` sheet only, see docs/migration/pr-po-gr-v1-mapping.md"
+  }
 
 ## 1. File Row Counts
 
 | File | Rows |
 | --- | ---: |
+| PR.csv | ${prRows.length}${prSourceHasRows ? "" : prCsvExists ? " (empty source)" : " (no export found)"} |
 | PO.csv | ${poRows.length} |
 | GR.csv | ${grRows.length} |
 | ProductName.csv | ${productRows.length} |
@@ -518,7 +614,49 @@ ${
     : "No bare-`DIRECT` groups found."
 }
 
-## 3. GR Profiling
+## 3. PR Profiling
+
+PR source: ${
+    prSourceHasRows
+      ? `CSV export found, ${prRows.length} row(s)`
+      : prCsvExists
+        ? "**empty** — CSV exists with 0 data rows, all counts below are necessarily zero"
+        : "**no CSV export found**, all counts below are necessarily zero"
+  }
+
+| Metric | Count |
+| --- | ---: |
+| Total rows | ${prRows.length} |
+| Blank PR_UID | ${prBlankUid} |
+| Duplicate PR_UID | ${prDuplicateUid} |
+
+### Status distribution
+
+${
+  prStatusCounts.size > 0
+    ? `| Status | Count |\n| --- | ---: |\n${[...prStatusCounts.entries()].map(([s, c]) => `| ${s} | ${c} |`).join("\n")}`
+    : "- No PR rows to classify."
+}
+
+## 4. PR -> PO Reconciliation
+
+Only PO rows classified \`pr_derived\` (a real, non-\`DIRECT\` \`Ref_PR_UID\`) are
+expected to match a PR row; Direct POs never require one.
+
+| Metric | Count |
+| --- | ---: |
+| PO row(s) with a PR-derived Ref_PR_UID | ${refClassCounts.get("pr_derived") || 0} |
+| ... matched to a PR_UID in the PR source | ${prPoMatched} |
+| ... genuinely unmatched (PR source present, ref not found) | ${prPoUnmatchedVerifiable} |
+| ... unverifiable (no PR source to check against) | ${prPoUnverifiable} |
+
+${
+  prPoUnmatchedSamples.length > 0
+    ? `### Unmatched PR-derived PO rows (first 10, manual review)\n\n| PO_UID | Ref_PR_UID |\n| --- | --- |\n${prPoUnmatchedSamples.map((s) => `| ${s.poUid} | ${s.ref} |`).join("\n")}`
+    : ""
+}
+
+## 5. GR Profiling
 
 | Metric | Count |
 | --- | ---: |
@@ -526,6 +664,7 @@ ${
 | Blank GR_UID | ${grBlankUid} |
 | Duplicate GR_UID | ${grDuplicateUid} |
 | Orphan Ref_PO_UID (no matching PO_UID) | ${grOrphanRefPo} |
+| PO line(s) covered by at least one GR row | ${poLinesCoveredByGr} / ${poByUid.size} (${poLinesCoveragePercent}%) |
 | Date fields genuinely malformed (GR_Date/ATA/Exp_Date) | ${grDateFailures} |
 | Date fields using \`-\` "no date" placeholder | ${grDatePlaceholderDash} |
 | Date fields with pre-1980 epoch-zero export artifact | ${grDateEpochArtifact} |
@@ -552,7 +691,7 @@ ${
     : "None found."
 }
 
-## 4. ProductName / Vendor Master Profiling
+## 6. ProductName / Vendor Master Profiling
 
 | Metric | Count |
 | --- | ---: |
@@ -565,14 +704,14 @@ ${
 | Duplicate Vendor Code | ${vendorDuplicateCodes} |
 | ProductName Vendor Code(s) missing from Vendor.csv | ${productVendorCodesMissingFromVendorFile.length} |
 
-## 5. Cross-File Matching
+## 7. Cross-File Matching
 
 - PO vendor names with no exact match in Vendor.csv: **${unmatchedPoVendorNames.length}** / ${poVendorNames.size}
 ${unmatchedPoVendorNames.length > 0 ? unmatchedPoVendorNames.slice(0, 30).map((v) => `  - \`${v}\``).join("\n") : ""}
 - PO non-blank SKUs with no match in ProductName.csv \`Product code\`: **${unmatchedPoSkus.length}** / ${poSkuValues.size}
 ${unmatchedPoSkus.length > 0 ? unmatchedPoSkus.slice(0, 30).map((s) => `  - \`${s}\``).join("\n") : ""}
 
-## 6. Staging Catalog/Warehouse Cross-Reference (DB, read-only)
+## 8. Staging Catalog/Warehouse Cross-Reference (DB, read-only)
 
 | Metric | Count |
 | --- | ---: |
@@ -590,33 +729,33 @@ ${
     : "None — every PO product row matched the staging catalog by code or exact name."
 }
 
-## 7. Known Schema Mismatch
+## 9. Known Schema Mismatch
 
 The exported \`PO.csv\` header has **no \`Expected_Date\` column**, even though
 \`PO/Code.gs.txt\`'s \`setupDatabase()\` documents one. See
 \`docs/migration/pr-po-gr-v1-mapping.md\` for detail. Vendor expected-delivery
 modeling should not be finalized until this is resolved.
 
-## 8. Blockers (${blockers.length})
+## 10. Blockers (${blockers.length})
 
 ${blockers.length > 0 ? blockers.map((b) => `- ${b}`).join("\n") : "- None"}
 
-## 9. Warnings (${warnings.length})
+## 11. Warnings (${warnings.length})
 
 ${warnings.length > 0 ? warnings.map((w) => `- ${w}`).join("\n") : "- None"}
 
-## 10. Recommendation
+## 12. Recommendation
 
 ${
   blockers.length === 0
-    ? "No blockers. Review the warnings above (PR CSV export, bare-`DIRECT` grouping, unmatched vendors/products, lift-fee/non-W2 rows, Expected_Date mismatch) before finalizing the PR/PO/GR staging schema migration."
+    ? "No blockers. Review the warnings above (empty PR source / PR-derived PO manual-review rows, bare-`DIRECT` grouping, unmatched vendors/products, lift-fee/non-W2 rows, Expected_Date mismatch) before planning PR/PO/GR import."
     : "Resolve blockers before proceeding to schema drafting."
 }
 `;
 
   writeFileSync(reportPath, reportText, "utf8");
   console.log(
-    `\nDry run complete: ${poRows.length} PO rows, ${grRows.length} GR rows, ${blockers.length} blockers, ${warnings.length} warnings.`,
+    `\nDry run complete: ${prRows.length} PR rows, ${poRows.length} PO rows, ${grRows.length} GR rows, ${blockers.length} blockers, ${warnings.length} warnings.`,
   );
   console.log(`Report written to: ${reportPath}`);
 }

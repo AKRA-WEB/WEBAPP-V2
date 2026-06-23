@@ -47,8 +47,14 @@ by this PR/PO/GR work.
 
 `V2-0039` accepts the release-shape decision (ADR `0021`): grouped PR/PO/GR
 operational cutover after end-to-end staging UAT, while still implementing in
-small slices. `V2-0040` is now the next PR/PO/GR plan: get a fresh live V1
-`PR` CSV export and run a read-only PR -> PO -> GR reconciliation dry-run.
+small slices. `V2-0040`'s reconciliation logic is now built and proven
+(2026-06-23) against the current empty PR source (0 data rows): the dry-run
+script gained PR Profiling, PR -> PO Reconciliation, and PO -> GR line
+coverage sections. Real findings: 1 bill group / 3 PO rows are
+unverifiable/manual-review because no source PR rows exist; PO -> GR coverage
+is 94.1% (706/750). 0 blockers, 9 warnings. **Still open: decide how to
+import the 3 PR-derived PO rows** — nullable/manual-review linkage or recover
+historical PR rows from another source.
 
 ## Near-Term Queue
 
@@ -57,7 +63,7 @@ small slices. `V2-0040` is now the next PR/PO/GR plan: get a fresh live V1
 | 1 | Picking problem reporting | Completes shortage/exception workflow before LINE | Done (`V2-0025`, 2026-06-20): pending/picked bills stay in their current status when a problem is reported |
 | 2 | Picking LINE notification/failure recovery | Needed before realistic pilot/cutover | Done (`V2-0027`, 2026-06-22): disabled/dry-run by default, event-only failure (status untouched), retry action; real sends still unproven |
 | 3 | Picking cutover package | Lets user decide whether V2 Picking can replace V1 Picking | Prepared (`V2-0034`, 2026-06-22); review (2026-06-22) found 5 gaps, 3 closed (reproducible reconciliation script, runbook section 5a, freshness section 3a); 4 open user decisions remain: deployed-build verification, combined human UAT pass, fresh V1 reference-data export, runbook execution |
-| 4 | Fresh PR CSV reconciliation | Required before PR/PO/GR data import/runtime UI | Drafted (`V2-0040`, 2026-06-23): user exports fresh live V1 `PR` CSV, then run read-only PR -> PO -> GR reconciliation dry-run |
+| 4 | Fresh PR CSV reconciliation | Required before PR/PO/GR data import/runtime UI | Logic built+proven (`V2-0040`, 2026-06-23) against the current empty PR source (0 blockers, 9 warnings); needs a decision for 3 PR-derived PO rows with no source PR row |
 | 5 | Placeholder route guard pass | Prevents future route content from inheriting open placeholders | Done (`V2-0041`, 2026-06-23): `ModuleLandingPage` now guards all 5 non-Picking routes with `requirePermission()` |
 
 ## Resolved Decisions
@@ -113,14 +119,15 @@ staging LINE credentials exist yet.
 
 ### PR/PO/GR Import Scope
 
-Recommended next: run `V2-0040` first, then decide whether the first staging
-import should include all historical rows in the snapshots or active/open rows
-first.
+Recommended next: decide whether the first staging import should include all
+historical rows in the snapshots or active/open rows first, and decide how to
+handle the 3 PR-derived PO rows with no source PR row.
 
-The authoritative PR source question is resolved as a finding (2026-06-22): a
-live V1 `PR` sheet exists in the same spreadsheet as `PO`/`GR`, but no CSV of
-it has ever been exported into `import-data/po-pr-gr`. Full PR-row import is
-blocked on that export, not on missing source data.
+The authoritative PR source question is now resolved for the current snapshot:
+a live V1 `PR` sheet exists in the same spreadsheet as `PO`/`GR`, and the
+current `Trackingpo - webapp - PR.csv` export has 0 rows. Full PR-row import
+therefore imports zero PR rows unless historical PR rows are recovered from
+another source.
 
 ## Watch List
 

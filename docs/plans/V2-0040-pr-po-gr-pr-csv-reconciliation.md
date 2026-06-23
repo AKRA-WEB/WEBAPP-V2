@@ -1,6 +1,8 @@
 # Plan V2-0040: PR/PO/GR Fresh PR CSV Reconciliation
 
-Status: Draft
+Status: Review — dry-run task breakdown complete (2026-06-23) against the
+current empty PR source (0 data rows). Remaining decision: handle 3
+PR-derived PO rows without source PR rows before import planning.
 
 Architect command:
 
@@ -10,9 +12,9 @@ Architect command:
 
 ## 1. Goal
 
-- Primary objective: define the next executable PR/PO/GR slice after accepting
-  grouped release shape: obtain a fresh PR CSV export and produce a repeatable
-  PR -> PO -> GR reconciliation dry-run report.
+- Primary objective: define and execute the next PR/PO/GR data-proof slice
+  after accepting grouped release shape: read the current PR source state and
+  produce a repeatable PR -> PO -> GR reconciliation dry-run report.
 - Success definition: after the future `Go:` slice, the repo can prove whether
   current V1 PR rows link cleanly to PO rows and whether PO rows link cleanly to
   GR rows, without writing to staging or V1.
@@ -27,8 +29,11 @@ Architect command:
 - `V2-0036` created and verified the PR/PO/GR schema foundation in staging.
 - `V2-0039`/ADR `0021` accepts grouped PR/PO/GR operational release as the
   default.
-- The blocking gap is now data proof: the live V1 `PR` sheet exists, but no
-  PR CSV snapshot exists in `import-data/po-pr-gr/`.
+- The original blocking gap was data proof: the live V1 `PR` sheet exists, but
+  no PR CSV snapshot existed in `import-data/po-pr-gr/`.
+- During execution, `Trackingpo - webapp - PR.csv` was found with the current
+  PR header and 0 rows. The user confirmed this reflects the current empty PR
+  source, not merely a missing export.
 
 ### Users
 
@@ -39,7 +44,8 @@ Architect command:
 
 ### MVP Features
 
-- Accept a fresh PR CSV export in `import-data/po-pr-gr/`.
+- Accept the current PR CSV export in `import-data/po-pr-gr/`, including the
+  valid empty-source case.
 - Extend or rerun PR/PO/GR dry-run profiling to include PR rows.
 - Reconcile PR -> PO through `PO.Ref_PR_UID`.
 - Reconcile PO -> GR through `GR.Ref_PO_UID`.
@@ -127,7 +133,7 @@ Reconciliation rules:
 
 ### User Flow
 
-1. User exports the live V1 `PR` sheet as CSV and places it under
+1. User provides or confirms the live V1 `PR` sheet CSV under
    `import-data/po-pr-gr/`.
 2. Agent runs the dry-run reconciliation.
 3. Agent reports blockers/warnings and updates migration docs.
@@ -165,9 +171,10 @@ write Markdown report under import-reports/
 ## 5. Task Breakdown
 
 1. Collect inputs.
-   - User exports fresh PR CSV from the live V1 `PR` sheet.
-   - Prefer refreshing PO/GR/ProductName/Vendor at the same time, but PR is the
-     hard blocker.
+   - Done 2026-06-23: `Trackingpo - webapp - PR.csv` exists with 0 rows, and
+     the user confirmed the source is genuinely empty.
+   - Prefer refreshing PO/GR/ProductName/Vendor at the same time before final
+     cutover, but not needed for this empty-source dry-run.
 
 2. Confirm snapshot inventory.
    - List exact filenames and modified timestamps.
@@ -175,7 +182,8 @@ write Markdown report under import-reports/
 
 3. Extend the dry-run profiler.
    - Parse PR CSV when present.
-   - Keep current no-PR behavior as an explicit blocker/warning when absent.
+   - Keep current no-PR/empty-PR behavior as an explicit warning when absent
+     or empty.
    - Add robust header alias handling only if the fresh export differs.
 
 4. Add reconciliation sections.
@@ -232,7 +240,11 @@ the local CSV snapshot/report and reverting script/doc changes.
 
 ## 9. Open Questions
 
-- Can the user provide a fresh PR CSV export?
+- Resolved 2026-06-23: the current PR CSV exists and has 0 rows; the user
+  confirmed the PR source is genuinely empty, not merely missing.
+- How should import planning handle the 3 PR-derived PO rows whose
+  `Ref_PR_UID` has no source PR row: nullable/manual-review linkage, or a
+  separate historical PR recovery source?
 - Should PO/GR/ProductName/Vendor be refreshed in the same export batch?
 - Should the first import later target all historical rows or active/open rows
   first?
@@ -240,8 +252,35 @@ the local CSV snapshot/report and reverting script/doc changes.
 
 ## 10. Handoff Notes
 
-- Next action after this plan: provide/export the fresh PR CSV, then run
-  `Go: execute V2-0040 PR CSV reconciliation dry-run`.
-- Blockers: fresh PR CSV is required.
+- Done 2026-06-23 (`execute V2-0040 PR CSV reconciliation dry-run with empty
+  PR source`): `Trackingpo - webapp - PR.csv` exists with the current PR
+  header and 0 data rows. User confirmed the PR source is genuinely empty,
+  so this slice ran the reconciliation against an explicitly empty PR source.
+  - Extended `scripts/pr-po-gr-import-dry-run.mjs` (task items 3-4): PR
+    parsing is now optional (no hard-block like PO/GR/Product/Vendor); added
+    PR Profiling, PR -> PO Reconciliation (matched / genuinely-unmatched /
+    unverifiable, where "unverifiable" specifically means the PR source has
+    no usable rows — file missing or empty — distinct from a real blocker),
+    and PO -> GR line coverage (doesn't need PR data at all)
+    sections to the report. Renumbered report sections 1-12.
+  - Real finding: 1 bill group / 3 PO line rows carry a real (non-`DIRECT`)
+    `Ref_PR_UID` and are currently unverifiable/manual-review because no
+    source PR rows exist.
+  - Real finding: PO -> GR line coverage is 94.1% (706/750); 44 PO lines
+    have no GR row yet.
+  - Result: 0 blockers, 9 warnings (see
+    `docs/migration/pr-po-gr-v1-mapping.md`'s new "V2-0040 Reconciliation
+    Dry-Run" section and `import-reports/pr-po-gr-dry-run-report.md`,
+    git-ignored, regenerate with `npm run pr-po-gr:import-dry-run`).
+  - Verified: `npm run lint`, `npm run typecheck` pass. `git diff --check`
+    passes (pre-existing CRLF warnings only). No staging writes, runtime
+    code/UI, RPCs, V1 production files, or secrets changed — the script
+    only reads `import-data/` CSVs and read-only staging catalog tables.
+- Next action: review/decide the import posture for the 3 PR-derived PO rows
+  with no source PR row (nullable/manual-review linkage vs. recovering old PR
+  rows from another source), then proceed to the next PR/PO/GR import-planning
+  slice.
+- Blockers: no script blocker. Import planning still needs a user/business
+  decision for those 3 unverifiable PR-derived PO rows.
 - Related plans: `V2-0036`, `V2-0039`.
 - Related ADRs: `0020`, `0021`.

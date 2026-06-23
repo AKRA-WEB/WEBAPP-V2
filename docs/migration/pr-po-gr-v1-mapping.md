@@ -204,8 +204,9 @@ V2 statuses"); this table is the mapping, not a replacement.
 
 ## Open Decisions (Carried From `V2-0036`)
 
-- Whether to export and import full PR history now, or treat `PR` rows as a
-  later slice once a real CSV export exists.
+- How to handle the 3 PR-derived PO rows when the current PR source has 0
+  rows: accept nullable PR linkage/manual review for import, or recover
+  historical PR rows from another backup/source before import.
 - Whether the `Expected_Date` mismatch means the live sheet truly lacks that
   column today, or the export needs to be redone.
 - Whether PR/PO/GR ship as one combined cutover or can go live in stages
@@ -218,8 +219,9 @@ V2 statuses"); this table is the mapping, not a replacement.
 ADR `0020` locks the migration `0013` direction based on this mapping and the
 dry-run report. The warnings above do not block schema creation:
 
-- no PR CSV means PR import waits for a fresh export, but PR header/line tables
-  are still created now;
+- empty/missing PR source does not block schema creation; PR header/line
+  tables are still created now, and PR-derived PO rows without source PR rows
+  stay nullable/manual-review on import;
 - missing `Expected_Date` means V2 keeps nullable `expected_date`,
   `raw_expected_date`, and `expected_date_source`;
 - bare legacy `DIRECT` stays legacy-only and ambiguous; new V2 Direct POs must
@@ -227,5 +229,43 @@ dry-run report. The warnings above do not block schema creation:
 - orphan GR `Ref_PO_UID` rows keep raw references and nullable PO-line FKs
   instead of fabricated links.
 
-Those issues still block final import/cutover decisions until fresh exports,
-manual review, and UAT evidence exist.
+Those issues still block final import/cutover decisions until manual review
+and UAT evidence exist.
+
+## V2-0040 Reconciliation Dry-Run (2026-06-23, Empty PR Source)
+
+`import-data/po-pr-gr/Trackingpo - webapp - PR.csv` now exists locally with
+the real V1 `PR` header (`PR_UID,PR_Date,PR_Number,Requester,Warehouse,SKU,
+Product,Qty,Unit,Remark,Status`) and **0 data rows**. The user confirmed this
+is the real current PR source state, not a missing export. For PR -> PO
+matching purposes, an empty source still has no usable PR rows to verify
+against, but it is reported distinctly from a missing file.
+
+Extended `scripts/pr-po-gr-import-dry-run.mjs` per `V2-0040` task breakdown
+items 3-4:
+
+- Parses the PR CSV when present (optional — does not hard-block like
+  PO/GR/ProductName/Vendor).
+- New **PR Profiling** section: row count, blank/duplicate `PR_UID`, status
+  distribution (all necessarily zero against the current empty source).
+- New **PR -> PO Reconciliation** section: classifies every `pr_derived` PO
+  row (real, non-`DIRECT` `Ref_PR_UID`) as matched / genuinely unmatched
+  (PR source has rows but ref not found — a real blocker) / unverifiable (PR
+  source has no rows — a warning, not a blocker). Against the current
+  empty source: **1 bill group, 3 PO line rows** carry a real `Ref_PR_UID`
+  and are unverifiable/manual-review because no source PR rows exist.
+- New **PO -> GR line coverage** metric (doesn't depend on PR data at all):
+  **706 / 750 PO lines (94.1%) have at least one GR row** referencing them
+  via `Ref_PO_UID`; the remaining 44 (5.9%) are reported as a warning
+  ("expected for open/pending POs, not necessarily a data issue").
+
+Result with the empty PR source: **0 blockers, 9 warnings** (up from 7 in the
+`V2-0036` slice-1 run — the two new warnings are the empty-PR-source notice
+and the 3-row unverifiable-coverage count; all other PO/GR/Product/Vendor
+numbers are unchanged from the prior run on the same snapshot).
+
+This resolves the file-presence question for the current snapshot: the PR
+source is empty. The remaining decision is how to handle the exact PR-derived
+legacy count (**3 PO rows / 1 bill group**) when planning import: accept
+nullable/manual-review PR linkage, or recover historical PR rows from another
+source if the business needs that relationship reconstructed.

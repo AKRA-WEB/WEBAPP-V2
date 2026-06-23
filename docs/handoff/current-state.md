@@ -51,12 +51,21 @@ Last updated: 2026-06-23
   `npm run db:verify-staging-schema` both pass (36 public tables, 34 RLS
   policies), and a live anon Data API call against two new tables returned
   `HTTP 401` (matching `V2-0008`'s precedent). Remaining PR/PO/GR work
-  (data import, runtime UI) is gated on a fresh PR CSV export and the grouped
-  release discipline. `V2-0039` accepted ADR `0021`: PR/PO/GR should cut over
+  (data import, runtime UI) is now gated on the `V2-0040` decision for 3
+  PR-derived PO rows with no source PR row and the grouped release discipline.
+  `V2-0039` accepted ADR `0021`: PR/PO/GR should cut over
   as one grouped operational release after end-to-end staging UAT, while still
-  allowing implementation in small slices. `V2-0040` is now drafted as the
-  next executable PR/PO/GR planning slice: fresh PR CSV export plus read-only
-  PR -> PO -> GR reconciliation dry-run before import/UI. `V2-0041`
+  allowing implementation in small slices. `V2-0040`'s reconciliation logic
+  is now built and proven against the current empty PR source (2026-06-23):
+  the dry-run script gained PR Profiling, PR -> PO Reconciliation, and PO ->
+  GR line coverage sections. The current PR CSV has the PR header and 0 rows
+  (confirmed by the user as genuinely empty), surfacing 1 bill group/3 PO
+  rows as unverifiable/manual-review because no source PR rows exist; PO ->
+  GR coverage is 94.1% (706/750) — 0 blockers, 9 warnings. The next
+  PR/PO/GR decision is how to import those 3 PR-derived PO rows
+  (nullable/manual-review linkage versus recovering historical PR rows from
+  another source).
+  `V2-0041`
   (2026-06-23) closed a real pre-existing gap on the 5 non-Picking
   placeholder module routes (`/purchasing`, `/receiving`, `/warehouse`,
   `/returns`, `/kpi`): they had no server-side permission guard at all and
@@ -773,6 +782,38 @@ Status:
   - `lint`/`typecheck`/`build` pass. `git diff --check` passes (pre-existing
     CRLF warnings only). No Supabase schema, staging data, V1 production
     files, GAS deployments, Sheets, URLs, LINE tokens, or secrets changed.
+- Executed `V2-0040` task breakdown items 3-6 on 2026-06-23 (`execute
+  V2-0040 PR CSV reconciliation dry-run with empty PR source`): a
+  `Trackingpo - webapp - PR.csv` with the current PR header and 0 data rows
+  had appeared locally. The user confirmed the PR source is genuinely empty,
+  so ran the reconciliation against this explicitly-empty source.
+  - Extended `scripts/pr-po-gr-import-dry-run.mjs`: PR parsing is now
+    optional (no hard-block like PO/GR/Product/Vendor). Added three new
+    report sections: PR Profiling (row count, blank/duplicate `PR_UID`,
+    status distribution); PR -> PO Reconciliation, classifying every
+    `pr_derived` PO row's `Ref_PR_UID` as matched / genuinely-unmatched (PR
+    source has rows, ref truly not found — a real blocker) /
+    **unverifiable** (PR source has no usable rows — file missing or
+    empty — a warning, not a false blocker); and PO -> GR line
+    coverage (independent of PR data).
+  - Real findings against the empty source: 1 bill group / 3 PO line rows
+    carry a real (non-`DIRECT`) `Ref_PR_UID` and are currently
+    unverifiable/manual-review because no source PR rows exist. PO -> GR
+    line coverage is 94.1%
+    (706/750); 44 lines have no GR yet (expected for open POs).
+  - Result: 0 blockers, 9 warnings (up from 7 in the `V2-0036` slice-1 run
+    on the same PO/GR/Product/Vendor data — the 2 new warnings are the
+    empty-PR-source notice and the 3-row unverifiable-coverage count).
+    Updated `docs/migration/pr-po-gr-v1-mapping.md` (new "V2-0040
+    Reconciliation Dry-Run" section).
+  - `npm run lint`, `npm run typecheck` pass. `git diff --check` passes
+    (pre-existing CRLF warnings only). No staging writes, runtime
+    code/UI, RPCs, V1 production files, or secrets changed — the script
+    is read-only against local CSVs and staging catalog tables.
+  - Still open: user/business decision for the 3 PR-derived PO rows with no
+    source PR row (nullable/manual-review linkage vs. recovering historical
+    PR rows from another source). No further script changes are expected for
+    the empty-source case.
 
 ## Next Actions
 
@@ -800,15 +841,16 @@ Status:
 9. ~~Draft migration `0013` for the locked PR/PO/GR schema/RLS foundation
    only, then apply it to staging and verify.~~ Done 2026-06-22 (`V2-0036`
    task breakdown items 4-7 all complete). Next PR/PO/GR work is data
-   import and runtime UI, gated on a fresh PR CSV export and a
-   release-shape decision — no specific command queued yet.
+   import and runtime UI, gated on deciding how to handle `V2-0040`'s 3
+   PR-derived PO rows with no source PR row.
 10. ~~Execute `V2-0037`: design and implement the Purchase Requisitions (PR) frontend mockup (`docs/mockups/pr-ui-ux-mockup.html`).~~ Done 2026-06-22.
 11. ~~Execute `V2-0038`: design and implement the KPI Tracker frontend mockup (`docs/mockups/kpi-ui-ux-mockup.html`).~~ Done 2026-06-22.
 12. ~~Placeholder route guard pass: add server-side `requirePermission()`
     guards to `/purchasing`, `/receiving`, `/warehouse`, `/returns`,
     `/kpi`.~~ Done 2026-06-23 (`V2-0041`, bare `Go`).
-13. Provide/export a fresh live V1 `PR` CSV for `V2-0040`, then run
-    `Go: execute V2-0040 PR CSV reconciliation dry-run`.
+13. Decide how to handle `V2-0040`'s 3 PR-derived PO rows with no source PR
+    row (nullable/manual-review linkage vs. recovering historical PR rows),
+    then plan the PR/PO/GR staging import slice.
 14. Keep `docs/plans/index.md` updated whenever a plan status or next action
     changes.
 15. Keep `docs/handoff/work-log.md` as the active recent log; archive older
