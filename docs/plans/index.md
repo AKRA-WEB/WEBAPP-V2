@@ -71,7 +71,10 @@ reconciliation dry-run against the current empty PR source. `V2-0037`
 designed and implemented the Purchase Requisition (PR) module frontend mockup
 under `docs/mockups/pr-ui-ux-mockup.html`. `V2-0038` designed and implemented
 the KPI Tracker module frontend mockup under
-`docs/mockups/kpi-ui-ux-mockup.html`.
+`docs/mockups/kpi-ui-ux-mockup.html`. `V2-0042` adds Obsidian-friendly docs
+entrypoints (`docs/00-dashboard.md`, active-plan, decision, and migration
+maps) and ignores local `.obsidian/` folders so project docs can be browsed as
+a vault without committing editor workspace state.
 
 ## Active Queue
 
@@ -466,6 +469,28 @@ the KPI Tracker module frontend mockup under
      now return "Sign In Required" instead of placeholder content.
      `lint`/`typecheck`/`build`/`git diff --check` all pass.
    - File: `docs/plans/V2-0041-placeholder-route-guard-pass.md`
+34. `V2-0042` - Obsidian docs index
+   - Status: Complete on 2026-06-23.
+   - Outcome: added Obsidian-friendly navigation pages under `docs/`:
+     `00-dashboard.md`, `01-active-plans.md`, `02-decisions.md`, and
+     `03-migration-map.md`; added `.obsidian/` and `docs/.obsidian/` to
+     `.gitignore`; no runtime code, schema, staging data, or V1 production
+     files changed.
+   - File: `docs/plans/V2-0042-obsidian-docs-index.md`
+
+35. `V2-0043` - App flow diagrams (Mermaid)
+   - Status: Complete on 2026-06-23.
+   - Outcome: added `docs/architecture/app-flow-diagrams.md`, basic Mermaid
+     flowcharts for all 8 V2 modules (Main/Auth, Picking, Purchasing PR,
+     Purchasing PO, Receiving GR, Warehouse TRDAKRA+W5, Returns, KPI), ready
+     to paste into Mermaid Live. Each diagram is labeled with real
+     implementation status (Picking/Main implemented+verified; PR/PO/GR
+     schema-only; Warehouse/Returns/KPI placeholder-route-only) so it isn't
+     mistaken for proven behavior where it is actually a planned spec, or,
+     for Returns, a generic placeholder pending a real mockup/plan.
+     Documentation-only; no runtime code, schema, staging data, V1
+     production files, or secrets changed.
+   - File: `docs/plans/V2-0043-app-flow-diagrams.md`
 
 ## Completed Or Baseline Plans
 

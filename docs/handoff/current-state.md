@@ -72,6 +72,14 @@ Last updated: 2026-06-23
   were reachable by anyone regardless of role. `ModuleLandingPage` now
   enforces each app's `required_permission` via the same
   `requirePermission()`/`AccessDenied` pattern Picking already uses.
+  `V2-0042` adds Obsidian-friendly docs navigation: `docs/00-dashboard.md`
+  as the entrypoint, plus active-plan, decision, and migration maps, with
+  `.obsidian/` and `docs/.obsidian/` ignored so local vault settings are not
+  committed.
+  `V2-0043` adds `docs/architecture/app-flow-diagrams.md`: basic
+  Mermaid flowcharts for all 8 modules (ready to paste into Mermaid Live),
+  each labeled with real implementation status so planned/placeholder
+  modules aren't mistaken for proven flow.
   `V2-0037` separately added a PR frontend mock-up
   (`docs/mockups/pr-ui-ux-mockup.html`).
 - Production impact: None
@@ -138,6 +146,8 @@ Plan IDs:
 - `V2-0039` (`docs/plans/V2-0039-pr-po-gr-release-shape-decision.md`)
 - `V2-0040` (`docs/plans/V2-0040-pr-po-gr-pr-csv-reconciliation.md`)
 - `V2-0041` (`docs/plans/V2-0041-placeholder-route-guard-pass.md`)
+- `V2-0042` (`docs/plans/V2-0042-obsidian-docs-index.md`)
+- `V2-0043` (`docs/plans/V2-0043-app-flow-diagrams.md`)
 
 Goal: Continue Phase 3 from the verified Picking read-only/create baseline
 toward a full V1 replacement roadmap. `V2-0022` now frames the remaining work
@@ -851,11 +861,16 @@ Status:
 13. Decide how to handle `V2-0040`'s 3 PR-derived PO rows with no source PR
     row (nullable/manual-review linkage vs. recovering historical PR rows),
     then plan the PR/PO/GR staging import slice.
-14. Keep `docs/plans/index.md` updated whenever a plan status or next action
+14. ~~Set up Obsidian-friendly docs index.~~ Done 2026-06-23 (`V2-0042`);
+    open `docs/00-dashboard.md` after creating an Obsidian vault at
+    `C:\dev\AKRA-WEBAPP-V2\docs`.
+15. ~~Produce basic Mermaid flow diagrams for all 8 modules.~~ Done
+    2026-06-23 (`V2-0043`); see `docs/architecture/app-flow-diagrams.md`.
+16. Keep `docs/plans/index.md` updated whenever a plan status or next action
     changes.
-15. Keep `docs/handoff/work-log.md` as the active recent log; archive older
+17. Keep `docs/handoff/work-log.md` as the active recent log; archive older
     entries under `docs/handoff/archive/` when it becomes long again.
-16. Use `docs/project-management/executive-summary-th.md` when the user needs
+18. Use `docs/project-management/executive-summary-th.md` when the user needs
     a supervisor-friendly project summary.
 
 

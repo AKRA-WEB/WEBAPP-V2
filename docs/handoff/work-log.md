@@ -29,6 +29,73 @@ Context budget:
 
 ## Active Recent Entries
 
+## 2026-06-23 - App Flow Diagrams (V2-0043)
+
+Context:
+
+- User asked (Thai): "ช่วยทำ Flow ของทุกแอปเบื้องต้นมาให้หน่อยได้มั้ย
+  สำหรับใช้ใน Mermaid live" (basic flow for every app, for use in Mermaid
+  Live). Documentation-only slice.
+
+Changes:
+
+- Added `docs/architecture/app-flow-diagrams.md`: one Mermaid flowchart per
+  module (Main/Auth, Picking, Purchasing PR, Purchasing PO, Receiving GR,
+  Warehouse TRDAKRA+W5, Returns, KPI), sourced from
+  `docs/architecture/target-architecture.md`,
+  `docs/migration/module-inventory.md`, `docs/migration/migration-plan.md`,
+  and `docs/plans/V2-0032-frontend-ui-ux-module-roadmap.md`. Each diagram
+  carries a status line (implemented+verified / schema-only-planned-spec /
+  placeholder-route-only / generic-placeholder for Returns specifically,
+  since it has no mockup/plan yet) so a reader can't mistake planned flow
+  for proven behavior.
+- Added `docs/plans/V2-0043-app-flow-diagrams.md`.
+- Updated `docs/plans/index.md` and `docs/handoff/current-state.md`.
+
+Verification:
+
+- `git diff --check` passes.
+- Manual Mermaid syntax check: every node label quoted to avoid
+  parenthesis/slash parsing conflicts with flowchart shape syntax.
+- No runtime code, Supabase schema, staging data, V1 production files, GAS
+  deployments, Sheets, URLs, LINE tokens, or secrets changed.
+
+Concurrency note:
+
+- `docs/plans/index.md`, `docs/handoff/current-state.md`, and this file had
+  already been modified by another session (`V2-0042`, Obsidian docs index)
+  between this session's `Let's work` read and this edit. Did not revert
+  that work; renumbered this slice to `V2-0043` and layered on top. An
+  untracked `WEBAPP V2/` directory (Obsidian vault scratch files) exists at
+  the repo root, already noted and left untouched by the `V2-0042` session;
+  left untouched here too.
+
+## 2026-06-23 - Obsidian Docs Index (V2-0042)
+
+Context:
+
+- User requested `Go: set up Obsidian-friendly docs index for this repo`.
+- Documentation-only slice. No runtime code, Supabase schema, staging data,
+  V1 production files, GAS deployments, Sheets, URLs, LINE tokens, or secrets
+  changed.
+
+Changes:
+
+- Added `docs/00-dashboard.md` as the recommended Obsidian entrypoint.
+- Added `docs/01-active-plans.md`, `docs/02-decisions.md`, and
+  `docs/03-migration-map.md` as Obsidian-friendly map pages using relative
+  Markdown links.
+- Added `docs/plans/V2-0042-obsidian-docs-index.md`.
+- Added `.obsidian/` and `docs/.obsidian/` to `.gitignore` so local Obsidian
+  vault settings/workspace files are not accidentally committed.
+- Updated `docs/plans/index.md` and `docs/handoff/current-state.md`.
+
+Verification:
+
+- Manual link/path inspection for the new docs index files.
+- `git diff --check` passed.
+- Existing unrelated untracked `WEBAPP V2/` directory was left untouched.
+
 ## 2026-06-23 - PR/PO/GR Reconciliation Dry-Run Against Empty PR Source (V2-0040)
 
 Context:

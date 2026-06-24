@@ -28,6 +28,8 @@ pnpm-debug.log*
 Thumbs.db
 .idea/
 .vscode/
+.obsidian/
+docs/.obsidian/
 
 # Local screenshots and artifacts
 screenshot/
