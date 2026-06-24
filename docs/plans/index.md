@@ -79,8 +79,11 @@ a vault without committing editor workspace state. `V2-0043` adds
 modules labeled by real implementation status. `V2-0040`'s last open
 question is now resolved (ADR `0022`, 2026-06-24): the 3 PR-derived PO rows
 with no source PR row import as manual-review/nullable PR linkage, with no
-historical PR-row recovery and no schema change — PR/PO/GR data-import
-planning can now proceed.
+historical PR-row recovery and no schema change. `V2-0044` (2026-06-24,
+Draft) plans the next slice — a gated, idempotent staging-only PO/GR
+(and PR) import into the locked `0013` schema — with proposed ADR `0023`
+recommending a full-snapshot import, pending user confirmation before
+`Go:`.
 
 ## Active Queue
 
@@ -502,6 +505,23 @@ planning can now proceed.
      production files, or secrets changed.
    - File: `docs/plans/V2-0043-app-flow-diagrams.md`
 
+36. `V2-0044` - PR/PO/GR staging import slice
+   - Status: Draft on 2026-06-24 — planning step only, no implementation.
+   - Outcome: plans the next PR/PO/GR slice now that schema (`V2-0036`) and
+     reconciliation (`V2-0040`, ADR `0022`) are both done: a gated,
+     idempotent staging-only import of the V1 PO (750 lines/254 bill
+     groups)/GR (1868 rows)/PR (0 rows today) snapshot into the locked
+     `0013` schema, reusing the dry-run script's already-proven bill-identity/
+     date/Remark-tag parsing logic via a new shared module instead of
+     re-deriving it, applying ADR `0022` to the 3 PR-derived manual-review
+     lines, and adding a repeatable post-import verification script. Added
+     proposed ADR `0023` recommending a full-snapshot import (not
+     active/open rows only) — **pending user confirmation before `Go:`**.
+   - Next action: user confirms (or redirects) the import-scope
+     recommendation in ADR `0023`, then `Go:` task breakdown items 1-3
+     (shared parsing module + PO import) as the smallest safe slice.
+   - File: `docs/plans/V2-0044-pr-po-gr-staging-import-slice.md`
+
 ## Completed Or Baseline Plans
 
 | Plan | Status | Notes |
@@ -529,6 +549,10 @@ planning can now proceed.
   V1 Sheets remain read-only archives after operational replacement.
 - For non-Picking modules, which notification paths require parity before
   cutover versus after operational replacement.
+- Open (`V2-0044`, ADR `0023` Proposed, 2026-06-24): import the full
+  current PO/GR snapshot (all 750/1868 rows) in one pass, or active/open
+  rows first? Recommended: full snapshot. **Needs user confirmation before
+  `Go:`.**
 - Resolved (`V2-0040`, ADR `0022`, 2026-06-24): the 3 PR-derived PO rows
   whose `Ref_PR_UID` has no source PR row (current PR CSV source is
   genuinely empty) import as manual-review/nullable PR linkage; no

@@ -1,6 +1,6 @@
 # Decision Board
 
-Last updated: 2026-06-23
+Last updated: 2026-06-24
 
 This board is for project-level decisions and recommended next actions. The
 source-of-truth implementation status remains `docs/plans/index.md`.
@@ -60,6 +60,13 @@ pursue historical PR-row recovery — the PR is already closed
 locked schema's existing nullable columns cover this with no migration
 change. PR/PO/GR data-import planning can now proceed.
 
+`V2-0044` (Draft, 2026-06-24) plans the next slice: a gated, idempotent
+staging-only import of the V1 PO (750 lines/254 bill groups)/GR (1868
+rows)/PR (0 rows) snapshot into the locked `0013` schema. Proposed ADR
+`0023` recommends importing the full snapshot in one pass rather than
+active/open rows only — **this needs your confirmation before the next
+`Go:`** (see Open Decisions below).
+
 ## Near-Term Queue
 
 | Order | Work | Why Now | Decision Needed |
@@ -69,6 +76,7 @@ change. PR/PO/GR data-import planning can now proceed.
 | 3 | Picking cutover package | Lets user decide whether V2 Picking can replace V1 Picking | Prepared (`V2-0034`, 2026-06-22); review (2026-06-22) found 5 gaps, 3 closed (reproducible reconciliation script, runbook section 5a, freshness section 3a); 4 open user decisions remain: deployed-build verification, combined human UAT pass, fresh V1 reference-data export, runbook execution |
 | 4 | Fresh PR CSV reconciliation | Required before PR/PO/GR data import/runtime UI | Done (`V2-0040`, 2026-06-23; ADR `0022`, 2026-06-24): logic built+proven (0 blockers, 9 warnings); 3 PR-derived PO rows resolved as manual-review/nullable PR linkage, no recovery needed |
 | 5 | Placeholder route guard pass | Prevents future route content from inheriting open placeholders | Done (`V2-0041`, 2026-06-23): `ModuleLandingPage` now guards all 5 non-Picking routes with `requirePermission()` |
+| 6 | PR/PO/GR staging import slice | Required before any PR/PO/GR read-only UI | Planned (`V2-0044`, 2026-06-24, Draft); proposed ADR `0023` recommends full-snapshot import — needs user confirmation before `Go:` |
 
 ## Resolved Decisions
 
@@ -136,8 +144,13 @@ staging LINE credentials exist yet.
 
 ### PR/PO/GR Import Scope
 
-Recommended next: decide whether the first staging import should include all
-historical rows in the snapshots or active/open rows first.
+Recommendation (ADR `0023`, Proposed, 2026-06-24): import the full current
+snapshot — all 750 PO line rows (254 bill groups) and 1868 GR rows — in one
+pass, rather than active/open rows only. Rationale: the dry-run already
+proves the full snapshot clean (0 blockers), and an active-only first pass
+would still need a second backfill pass later for historical/closed rows
+with no clear benefit. **Needs your confirmation before the `V2-0044` `Go:`
+slice starts.**
 
 The authoritative PR source question is now resolved for the current snapshot:
 a live V1 `PR` sheet exists in the same spreadsheet as `PO`/`GR`, and the

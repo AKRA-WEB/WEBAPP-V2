@@ -90,6 +90,16 @@ Last updated: 2026-06-24
   modules aren't mistaken for proven flow.
   `V2-0037` separately added a PR frontend mock-up
   (`docs/mockups/pr-ui-ux-mockup.html`).
+  `V2-0044` (Draft, 2026-06-24) plans the next PR/PO/GR slice: a gated,
+  idempotent staging-only import of the V1 PO (750 lines/254 bill
+  groups)/GR (1868 rows)/PR (0 rows) snapshot into the locked `0013`
+  schema, reusing the dry-run script's bill-identity/date/Remark-tag
+  parsing via a new shared module, applying ADR `0022` to the 3
+  manual-review PR-derived lines, and adding a post-import verification
+  script. Proposed ADR `0023` recommends a full-snapshot import (not
+  active-only) — **pending user confirmation before `Go:`**. Planning-only;
+  no runtime code, schema, staging data, V1 production files, or secrets
+  changed.
 - Production impact: None
 - V1 reference path: `C:\dev\WEBAPP`
 
@@ -156,6 +166,7 @@ Plan IDs:
 - `V2-0041` (`docs/plans/V2-0041-placeholder-route-guard-pass.md`)
 - `V2-0042` (`docs/plans/V2-0042-obsidian-docs-index.md`)
 - `V2-0043` (`docs/plans/V2-0043-app-flow-diagrams.md`)
+- `V2-0044` (`docs/plans/V2-0044-pr-po-gr-staging-import-slice.md`)
 
 Goal: Continue Phase 3 from the verified Picking read-only/create baseline
 toward a full V1 replacement roadmap. `V2-0022` now frames the remaining work
@@ -873,11 +884,15 @@ Status:
     `C:\dev\AKRA-WEBAPP-V2\docs`.
 15. ~~Produce basic Mermaid flow diagrams for all 8 modules.~~ Done
     2026-06-23 (`V2-0043`); see `docs/architecture/app-flow-diagrams.md`.
-16. Keep `docs/plans/index.md` updated whenever a plan status or next action
+16. Plan PR/PO/GR staging import slice. Done 2026-06-24 (`V2-0044`, Draft).
+    Next: user confirms the import-scope recommendation in ADR `0023`
+    (full snapshot vs active-only), then `Go:` task breakdown items 1-3
+    (shared parsing module + PO import).
+17. Keep `docs/plans/index.md` updated whenever a plan status or next action
     changes.
-17. Keep `docs/handoff/work-log.md` as the active recent log; archive older
+18. Keep `docs/handoff/work-log.md` as the active recent log; archive older
     entries under `docs/handoff/archive/` when it becomes long again.
-18. Use `docs/project-management/executive-summary-th.md` when the user needs
+19. Use `docs/project-management/executive-summary-th.md` when the user needs
     a supervisor-friendly project summary.
 
 
