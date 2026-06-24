@@ -29,6 +29,65 @@ Context budget:
 
 ## Active Recent Entries
 
+## 2026-06-24 - PR-Derived PO 3-Row Decision (V2-0040, ADR 0022)
+
+Context:
+
+- User asked to "decide PR/PO/GR 3-row handling next" — the open decision
+  left by `V2-0040`'s reconciliation dry-run: 1 bill group / 3 PO line rows
+  carry a real `Ref_PR_UID` with no matching PR row, since the current PR
+  source is confirmed genuinely empty. The mapping doc framed this as accept
+  nullable/manual-review linkage vs. recover historical PR rows from
+  another source.
+
+Investigation:
+
+- Inspected the raw rows in `import-data/po-pr-gr/Trackingpo - webapp -
+  PO.csv` directly rather than reasoning from the report summary alone: all
+  3 lines share one `Ref_PR_UID` (`343d0d75-68db-4ce1-aa9a-e13e7e7f6837`),
+  one vendor (`บจก. เม่งฮง`), one warehouse (`W3`), one date (`5/5/2026`),
+  `Status = GR Completed` (already received/closed), and each line's
+  `PR_Number` column already carries the human-readable breadcrumb
+  `อ้างอิง PR: PR-20260504-7703`. The PR reference is not actually lost —
+  only a structured PR row (requester, requested qty) is missing, for a
+  single already-closed PR.
+- Verified (not assumed) that the locked schema already has columns for
+  this case by reading `supabase/migrations/0013_pr_po_gr_foundation.sql`:
+  `purchasing_purchase_orders.legacy_ref_pr_uid` (nullable text),
+  `purchasing_purchase_order_lines.pr_number_label` (nullable text), and
+  `purchasing_purchase_order_lines.purchase_request_line_id` (nullable FK)
+  all already exist. No migration change is needed to import these 3 rows.
+
+Decision (ADR `0022`, Accepted):
+
+- Import the 3 rows as manual-review/nullable PR linkage
+  (`legacy_ref_pr_uid` + `pr_number_label`, `purchase_request_line_id =
+  null`, `bill_identity_kind = 'pr_uid'`).
+- Do not pursue historical PR-row recovery from another source — the PR is
+  already closed and its reference survives as text; reconstructing a full
+  PR row for 1 of 254 bill groups has no business value at this scale. Full
+  recovery stays a deferrable later step if the business later needs
+  PR-level audit detail for closed POs, not a blocker.
+
+Changes:
+
+- Added `docs/decisions/0022-pr-po-gr-3-row-pr-linkage.md`.
+- Updated `docs/migration/pr-po-gr-v1-mapping.md` (resolution note under the
+  "V2-0040 Reconciliation Dry-Run" section), `docs/plans/index.md` (`V2-0040`
+  marked Complete, Open Decisions section), `docs/handoff/current-state.md`
+  (status paragraph, work-record note, Next Actions item 13), and
+  `docs/project-management/decision-board.md` (Recommended Next Move,
+  Near-Term Queue, Open Decisions -> Resolved Decisions).
+
+Verification:
+
+- Documentation/decision-only; no runtime code, Supabase schema, staging
+  data, V1 production files, GAS deployments, Sheets, URLs, LINE tokens, or
+  secrets changed. No migration file added — confirmed `0013`'s existing
+  nullable columns already cover the decision instead of asserting it.
+- Next action: plan the PR/PO/GR staging import slice (no further blockers
+  from this decision).
+
 ## 2026-06-23 - App Flow Diagrams (V2-0043)
 
 Context:

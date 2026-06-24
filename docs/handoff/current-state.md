@@ -1,6 +1,6 @@
 # Current State
 
-Last updated: 2026-06-23
+Last updated: 2026-06-24
 
 ## Project
 
@@ -61,10 +61,18 @@ Last updated: 2026-06-23
   GR line coverage sections. The current PR CSV has the PR header and 0 rows
   (confirmed by the user as genuinely empty), surfacing 1 bill group/3 PO
   rows as unverifiable/manual-review because no source PR rows exist; PO ->
-  GR coverage is 94.1% (706/750) — 0 blockers, 9 warnings. The next
-  PR/PO/GR decision is how to import those 3 PR-derived PO rows
-  (nullable/manual-review linkage versus recovering historical PR rows from
-  another source).
+  GR coverage is 94.1% (706/750) — 0 blockers, 9 warnings. **Resolved (ADR
+  `0022`, 2026-06-24):** import those 3 PR-derived PO rows as
+  manual-review/nullable PR linkage (`legacy_ref_pr_uid` on the PO header,
+  `pr_number_label` breadcrumb text on each line); do not pursue historical
+  PR-row recovery. Raw-row inspection showed all 3 lines share one
+  `Ref_PR_UID`, one vendor, one date, `Status = GR Completed` (already
+  closed), and the human-readable `PR_Number` breadcrumb survives on every
+  line — only the structured PR row is missing, for a single already-closed
+  PR. The locked schema's nullable columns
+  (`supabase/migrations/0013_pr_po_gr_foundation.sql`) already cover this;
+  no migration change was needed. PR/PO/GR data-import planning can now
+  proceed.
   `V2-0041`
   (2026-06-23) closed a real pre-existing gap on the 5 non-Picking
   placeholder module routes (`/purchasing`, `/receiving`, `/warehouse`,
@@ -820,10 +828,9 @@ Status:
     (pre-existing CRLF warnings only). No staging writes, runtime
     code/UI, RPCs, V1 production files, or secrets changed — the script
     is read-only against local CSVs and staging catalog tables.
-  - Still open: user/business decision for the 3 PR-derived PO rows with no
-    source PR row (nullable/manual-review linkage vs. recovering historical
-    PR rows from another source). No further script changes are expected for
-    the empty-source case.
+  - Resolved 2026-06-24 (ADR `0022`): the 3 PR-derived PO rows with no
+    source PR row import as manual-review/nullable PR linkage; no historical
+    PR-row recovery, no schema change. See the 2026-06-24 work-log entry.
 
 ## Next Actions
 
@@ -858,9 +865,9 @@ Status:
 12. ~~Placeholder route guard pass: add server-side `requirePermission()`
     guards to `/purchasing`, `/receiving`, `/warehouse`, `/returns`,
     `/kpi`.~~ Done 2026-06-23 (`V2-0041`, bare `Go`).
-13. Decide how to handle `V2-0040`'s 3 PR-derived PO rows with no source PR
-    row (nullable/manual-review linkage vs. recovering historical PR rows),
-    then plan the PR/PO/GR staging import slice.
+13. ~~Decide how to handle `V2-0040`'s 3 PR-derived PO rows with no source PR
+    row.~~ Done 2026-06-24 (ADR `0022`): manual-review/nullable PR linkage,
+    no recovery. Next: plan the PR/PO/GR staging import slice.
 14. ~~Set up Obsidian-friendly docs index.~~ Done 2026-06-23 (`V2-0042`);
     open `docs/00-dashboard.md` after creating an Obsidian vault at
     `C:\dev\AKRA-WEBAPP-V2\docs`.

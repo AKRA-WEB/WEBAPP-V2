@@ -1,6 +1,6 @@
 # V2 Plan Index
 
-Last updated: 2026-06-23
+Last updated: 2026-06-24
 
 This is the central plan board for AKRA WEBAPP V2. It is the first file to read
 after `CONDUCTOR.md` when another agent needs to continue work.
@@ -74,7 +74,13 @@ the KPI Tracker module frontend mockup under
 `docs/mockups/kpi-ui-ux-mockup.html`. `V2-0042` adds Obsidian-friendly docs
 entrypoints (`docs/00-dashboard.md`, active-plan, decision, and migration
 maps) and ignores local `.obsidian/` folders so project docs can be browsed as
-a vault without committing editor workspace state.
+a vault without committing editor workspace state. `V2-0043` adds
+`docs/architecture/app-flow-diagrams.md`, Mermaid flowcharts for all 8
+modules labeled by real implementation status. `V2-0040`'s last open
+question is now resolved (ADR `0022`, 2026-06-24): the 3 PR-derived PO rows
+with no source PR row import as manual-review/nullable PR linkage, with no
+historical PR-row recovery and no schema change — PR/PO/GR data-import
+planning can now proceed.
 
 ## Active Queue
 
@@ -435,9 +441,9 @@ a vault without committing editor workspace state.
      import planning.
    - File: `docs/plans/V2-0039-pr-po-gr-release-shape-decision.md`
 32. `V2-0040` - PR/PO/GR fresh PR CSV reconciliation
-   - Status: Review on 2026-06-23 — reconciliation logic built and proven
-     against the current empty PR source; import planning needs a decision
-     for 3 PR-derived PO rows without source PR rows.
+   - Status: Complete on 2026-06-24 — reconciliation logic built and proven
+     against the current empty PR source; the 3-row import-posture decision
+     is now resolved (ADR `0022`).
    - Outcome: extended `scripts/pr-po-gr-import-dry-run.mjs` with PR
      Profiling, PR -> PO Reconciliation (matched/genuinely-unmatched/
      unverifiable), and PO -> GR line coverage sections. `Trackingpo -
@@ -448,9 +454,13 @@ a vault without committing editor workspace state.
      line coverage is 94.1% (706/750). Result: 0 blockers, 9 warnings —
      see `docs/migration/pr-po-gr-v1-mapping.md`'s "V2-0040
      Reconciliation Dry-Run" section.
-   - Next action: decide the import posture for those 3 PR-derived PO rows
-     (nullable/manual-review linkage vs. recovering historical PR rows from
-     another source), then plan the PR/PO/GR staging import slice.
+   - Decision (ADR `0022`, 2026-06-24): import the 3 PR-derived PO rows as
+     manual-review/nullable PR linkage (`legacy_ref_pr_uid` +
+     `pr_number_label`); do not pursue historical PR-row recovery — raw-row
+     inspection showed the PR is already closed (`GR Completed`) and its
+     reference survives as text on every line, and the locked schema's
+     nullable columns already cover this with no migration change.
+   - Next action: plan the PR/PO/GR staging import slice.
    - File: `docs/plans/V2-0040-pr-po-gr-pr-csv-reconciliation.md`
 33. `V2-0041` - Placeholder route guard pass
    - Status: Complete on 2026-06-23.
@@ -519,9 +529,10 @@ a vault without committing editor workspace state.
   V1 Sheets remain read-only archives after operational replacement.
 - For non-Picking modules, which notification paths require parity before
   cutover versus after operational replacement.
-- For PR/PO/GR import planning after `V2-0040`, how to handle the 3
-  PR-derived PO rows whose `Ref_PR_UID` has no source PR row because the
-  current PR CSV source is genuinely empty.
+- Resolved (`V2-0040`, ADR `0022`, 2026-06-24): the 3 PR-derived PO rows
+  whose `Ref_PR_UID` has no source PR row (current PR CSV source is
+  genuinely empty) import as manual-review/nullable PR linkage; no
+  historical PR-row recovery.
 - Resolved (`V2-0039`, ADR `0021`, 2026-06-23): PR/PO/GR use a grouped
   operational release gate after end-to-end staging UAT; implementation can
   still proceed in small slices.

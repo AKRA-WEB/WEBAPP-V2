@@ -269,3 +269,18 @@ source is empty. The remaining decision is how to handle the exact PR-derived
 legacy count (**3 PO rows / 1 bill group**) when planning import: accept
 nullable/manual-review PR linkage, or recover historical PR rows from another
 source if the business needs that relationship reconstructed.
+
+**Resolved (ADR `0022`, 2026-06-24):** import as manual-review/nullable PR
+linkage; do not pursue historical PR-row recovery. Inspecting the raw rows
+shows the linkage is not actually lost — all 3 lines share one
+`Ref_PR_UID` (`343d0d75-68db-4ce1-aa9a-e13e7e7f6837`), one vendor (`บจก.
+เม่งฮง`), one warehouse (`W3`), one date (`5/5/2026`), `Status = GR
+Completed` (already closed), and each line's `PR_Number` column already
+carries the human-readable breadcrumb `อ้างอิง PR: PR-20260504-7703`. Only a
+structured PR row (requester/requested-qty) is missing, for a single
+already-closed PR. The locked schema
+(`supabase/migrations/0013_pr_po_gr_foundation.sql`) already has the needed
+nullable columns (`purchasing_purchase_orders.legacy_ref_pr_uid`,
+`purchasing_purchase_order_lines.pr_number_label`,
+`purchasing_purchase_order_lines.purchase_request_line_id`), so no schema
+change is needed to import these 3 rows.
