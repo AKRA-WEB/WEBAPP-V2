@@ -13,6 +13,8 @@
     "picking:reference-import-dry-run": "node scripts/picking-reference-import-dry-run.mjs",
     "picking:reference-import-apply": "node scripts/picking-reference-import-apply.mjs",
     "pr-po-gr:import-dry-run": "node scripts/pr-po-gr-import-dry-run.mjs",
+    "pr-po-gr:import-apply": "node scripts/pr-po-gr-import-apply.mjs",
+    "pr-po-gr:verify-import": "node scripts/verify-pr-po-gr-import.mjs",
     "picking:verify-cutover-reconciliation": "node scripts/verify-picking-cutover-reconciliation.mjs",
     "start": "next start",
     "lint": "eslint .",

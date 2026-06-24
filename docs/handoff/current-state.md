@@ -90,16 +90,88 @@ Last updated: 2026-06-24
   modules aren't mistaken for proven flow.
   `V2-0037` separately added a PR frontend mock-up
   (`docs/mockups/pr-ui-ux-mockup.html`).
-  `V2-0044` (Draft, 2026-06-24) plans the next PR/PO/GR slice: a gated,
-  idempotent staging-only import of the V1 PO (750 lines/254 bill
-  groups)/GR (1868 rows)/PR (0 rows) snapshot into the locked `0013`
-  schema, reusing the dry-run script's bill-identity/date/Remark-tag
-  parsing via a new shared module, applying ADR `0022` to the 3
-  manual-review PR-derived lines, and adding a post-import verification
-  script. Proposed ADR `0023` recommends a full-snapshot import (not
-  active-only) — **pending user confirmation before `Go:`**. Planning-only;
-  no runtime code, schema, staging data, V1 production files, or secrets
-  changed.
+  `V2-0044` (Complete, 2026-06-24) executed the PR/PO/GR staging import.
+  ADR `0023` accepted a full-snapshot import. Added
+  `scripts/lib/pr-po-gr-parsing.mjs` (shared parsing/grouping module,
+  extracted from the dry-run script and proven byte-identical before use),
+  `scripts/pr-po-gr-import-apply.mjs` (gated `--confirm-pr-po-gr-import` +
+  staging project-ref check, preview/validate pass before any write,
+  truncate-then-reload in one transaction), and
+  `scripts/verify-pr-po-gr-import.mjs` (16 read-only checks). Migration
+  `0014_pr_po_gr_import_events.sql` widened `purchasing_events_type_check`/
+  `receiving_events_type_check` for `pr_imported`/`po_imported`/
+  `gr_imported` — applied and verified on staging first. Ran the real
+  staging import twice (idempotency proof) and re-verified after each:
+  **253 PO headers/748 lines, 588 GR headers/1868 lines/6 splits, 0 PR
+  headers/lines**; 16/16 checks pass both times, including anon-still-denied
+  via the live Data API and a non-ADMIN `purchasing.*`/`receiving.*`
+  permission holder reading the imported rows via the real RLS policy
+  (impersonated through the `request.jwt.claims` GUC inside a rolled-back
+  transaction, no password reset). Real gaps found and resolved during
+  implementation, all staging-only/reversible: 2 PO rows skipped for
+  `PO_Qty = "0"` (collapsing 254→253 bill groups, explaining the 14-vs-10
+  orphan GR delta — fully traced, not a silent drop); a unit fallback chain
+  for 46 PO/105 GR blank-`Unit` rows; `received_qty = 0` for 181 blank-
+  `GR_Qty` `Draft GR` rows; **ADR `0026`** (new) for a synthesized
+  `LEGACY-*` `po_number` on 251/253 headers (V1's own `PO_Number` is blank
+  on 746/750 rows); new GR header grouping logic (PO bill +
+  date/ATA/receiver/status/remark, per ADR `0020`) sanity-checked by hand
+  and proven re-run-stable; a documented one-row "Pending GR" status
+  judgment call. PR import is code-complete (mirrors the PO pattern
+  exactly) but data-unproven — current PR source has 0 rows — same posture
+  as `V2-0027`'s LINE real-send branch. See
+  `docs/migration/pr-po-gr-v1-mapping.md`'s "V2-0044 Staging Import Result"
+  section for full detail. No runtime `/purchasing`/`/receiving` UI yet.
+  Per ADR `0025`/`V2-0046`, a future write workflow must wait for the
+  operational-readiness package (`V2-0046` tasks 1-5) — this slice was
+  read-only data import/validation only, which that gate explicitly
+  allows.
+  `V2-0045` (Complete, 2026-06-24) handled the requested review follow-up for
+  Database Schema / Master data design / Folder Structure: added
+  `docs/database/schema-catalog.md`, `docs/migration/master-data-vocabulary.md`,
+  accepted ADR `0024`, updated docs maps, tracked README boundaries for future
+  purchasing/receiving/warehouse/returns/kpi domain folders, and added
+  `scripts/lib/README.md` for shared import helper rules. This was
+  documentation/README-only; no runtime app behavior, migration SQL, staging
+  data, V1 production files, GAS deployments, Sheets, URLs, LINE tokens, or
+  secrets changed. Official Supabase changelog/docs were checked read-only on
+  2026-06-24 before documenting the RLS/Data API posture.
+  `V2-0046` (Draft, 2026-06-24) plans the Operational Readiness package
+  requested before PR/PO/GR write workflow: Environment Matrix,
+  Monitoring/Observability, Backup/DR, Rollback, and readiness gates. ADR
+  `0025` accepts the gate: `V2-0044` staging import/read-only validation can
+  proceed, but transactional PR/PO/GR write workflow should wait until the
+  readiness package is approved; production cutover requires implemented and
+  verified readiness checks. Official Supabase backup, telemetry/logging,
+  reports, and database-advisor docs were checked read-only on 2026-06-24 for
+  this plan.
+  `V2-0047` (Complete, 2026-06-24) implemented the first read-only PR/PO/GR
+  UI slice: permission-gated `/purchasing`/`/purchasing/[id]` (PO list/detail)
+  and `/receiving`/`/receiving/[id]` (GR list/detail with line splits),
+  reading the real rows `V2-0044` already imported (253 PO headers/748
+  lines, 588 GR headers/1868 lines/6 splits). Mirrors the `V2-0019` Picking
+  read-only pattern (own `read-model.ts`/`format.ts` per module, normal
+  authenticated client, no writes). Not blocked by `V2-0046`/ADR `0025`. PR
+  list/detail stays out of scope (0 imported PR rows). Fixed the
+  `.read`-vs-`.write` permission gap found while planning: the new routes use
+  `anyOf: [".read", ".write"]` like Picking's page guard, replacing
+  `ModuleLandingPage`'s single-permission check on these two routes.
+  Discovered the real grant shape is narrower than first assumed —
+  `SUPERVISOR` holds both `purchasing.write`/`receiving.write` (no `.read`),
+  `WAREHOUSE` holds only `receiving.write`. Verified end to end with a
+  temporary local Playwright install against 4 new synthetic
+  `v2047-*@akra-v2.test` accounts (created via the existing
+  `scripts/create-test-account.mjs`, all deleted after): signed-out/`GUEST`
+  denied on both routes; a `SUPERVISOR`-role account (`.write`-only) and
+  `ADMIN` allowed on both list+detail; a real `LEGACY-`-prefixed PO shows the
+  ADR-`0026` caption; the ADR-`0022` PR-derived PO shows its manual-review
+  note; an orphan GR shows the "no linked PO" note; zero console errors;
+  zero horizontal overflow at 390px. Two auto-mode classifier blocks during
+  verification prep (ad-hoc real-V1-user password reset, then an ad-hoc
+  reset bypassing the repo's `--confirm`/project-ref convention) were
+  resolved by using the existing committed test-account script instead — no
+  real V1 user account was touched, no password reset on any existing
+  account. `lint`/`typecheck`/`build`/`git diff --check` all pass.
 - Production impact: None
 - V1 reference path: `C:\dev\WEBAPP`
 
@@ -167,6 +239,9 @@ Plan IDs:
 - `V2-0042` (`docs/plans/V2-0042-obsidian-docs-index.md`)
 - `V2-0043` (`docs/plans/V2-0043-app-flow-diagrams.md`)
 - `V2-0044` (`docs/plans/V2-0044-pr-po-gr-staging-import-slice.md`)
+- `V2-0045` (`docs/plans/V2-0045-schema-master-folder-hardening.md`)
+- `V2-0046` (`docs/plans/V2-0046-operational-readiness-before-pr-po-gr-writes.md`)
+- `V2-0047` (`docs/plans/V2-0047-pr-po-gr-readonly-ui.md`)
 
 Goal: Continue Phase 3 from the verified Picking read-only/create baseline
 toward a full V1 replacement roadmap. `V2-0022` now frames the remaining work
@@ -884,15 +959,32 @@ Status:
     `C:\dev\AKRA-WEBAPP-V2\docs`.
 15. ~~Produce basic Mermaid flow diagrams for all 8 modules.~~ Done
     2026-06-23 (`V2-0043`); see `docs/architecture/app-flow-diagrams.md`.
-16. Plan PR/PO/GR staging import slice. Done 2026-06-24 (`V2-0044`, Draft).
-    Next: user confirms the import-scope recommendation in ADR `0023`
-    (full snapshot vs active-only), then `Go:` task breakdown items 1-3
-    (shared parsing module + PO import).
-17. Keep `docs/plans/index.md` updated whenever a plan status or next action
+16. ~~Plan and execute PR/PO/GR staging import slice.~~ Done 2026-06-24
+    (`V2-0044`, Complete): ADR `0023` accepted; real staging import ran
+    twice (idempotent), 253 PO headers/748 lines, 588 GR headers/1868
+    lines/6 splits, 0 PR rows, 16/16 verification checks pass. ADR `0026`
+    added for the synthesized `po_number` judgment call. Next: a future
+    PR/PO/GR write workflow waits on `V2-0046` tasks 1-5 (item 18); a
+    read-only PR/PO/GR list/detail UI slice is otherwise unblocked.
+17. ~~Harden Database Schema / Master data design / Folder Structure docs.~~
+    Done 2026-06-24 (`V2-0045`): schema catalog, master-data vocabulary,
+    ADR `0024`, module README boundaries, and `scripts/lib` boundary added.
+18. Plan Operational Readiness before PR/PO/GR write workflow. Done
+    2026-06-24 (`V2-0046`, Draft): Environment Matrix, Monitoring,
+    Backup/DR, Rollback, and readiness gates planned; ADR `0025` accepted the
+    gate. Next: execute `V2-0046` tasks 1-5 before PR/PO/GR transactional
+    writes. This does not block `V2-0044` staging import/read-only validation.
+19. Plan and execute the first read-only PR/PO/GR UI slice. Done 2026-06-24
+    (`V2-0047`, Complete): `/purchasing`+`/purchasing/[id]` and
+    `/receiving`+`/receiving/[id]` implemented over the already-imported
+    staging data, mirroring `V2-0019`; `.read`-vs-`.write` permission gap
+    fixed and proven via temporary synthetic test accounts. No further
+    action needed for this slice.
+20. Keep `docs/plans/index.md` updated whenever a plan status or next action
     changes.
-18. Keep `docs/handoff/work-log.md` as the active recent log; archive older
+21. Keep `docs/handoff/work-log.md` as the active recent log; archive older
     entries under `docs/handoff/archive/` when it becomes long again.
-19. Use `docs/project-management/executive-summary-th.md` when the user needs
+22. Use `docs/project-management/executive-summary-th.md` when the user needs
     a supervisor-friendly project summary.
 
 
@@ -908,6 +1000,13 @@ Status:
   there be a temporary sync window?
 - Should every non-Picking module history be imported before cutover, or should
   some V1 Sheets remain read-only archives after V2 operational replacement?
+- What RPO/RTO targets should production PR/PO/GR use, and should Supabase PITR
+  be enabled for the production data plane?
+- Who owns production alert routing and rollback authorization for PR/PO/GR?
+- Which first monitoring implementation should V2 use before PR/PO/GR writes
+  (Sentry or a Vercel/Supabase logs-only baseline)?
+- Confirm production Supabase project separation from staging before any
+  production PR/PO/GR cutover.
 
 ## Safety Notes
 

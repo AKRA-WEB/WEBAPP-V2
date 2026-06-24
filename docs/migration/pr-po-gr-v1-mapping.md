@@ -7,6 +7,12 @@ source (`Code.gs.txt`, read-only reference) and the current
 `import-data/po-pr-gr/` CSV snapshot, plus running
 `scripts/pr-po-gr-import-dry-run.mjs`.
 
+Use `docs/migration/master-data-vocabulary.md` for shared provenance and match
+status vocabulary. The PR/PO/GR CSV family should use `source_app = 'po-pr-gr'`
+when it is source evidence; module visibility (`purchasing`, `receiving`) is
+represented through `catalog_product_scopes` or module table ownership, not by
+overloading `source_app`.
+
 ## V1 Sources
 
 Read-only references:
@@ -160,8 +166,9 @@ Loc_IN, Exp_Date, Leadtime(_Days), Remark, Status, Old.Qty/Old_Stock
   Time`. Same file family already profiled for the shared catalog
   (`V2-0018`); PO/GR-sourced `SKU` values are expected to match `Product
   code` here, not the shared-catalog `canonical_code` directly — bridge
-  through `catalog_product_aliases` the same way Picking did
-  (`source_app = "purchasing"`/`"receiving"`), not a new product table.
+  through `catalog_product_aliases` with `source_app = "po-pr-gr"` and
+  module visibility scopes for `purchasing`/`receiving`, not a new product
+  table.
 - `Vendor.csv` header: `Code, Vendor Name, Phone Number, Email, Address, Tax
   ID, Price Level, Avg.Lead Time 2025, Avg.Lead Time 2026, SUM`. `PO.Vendor`
   stores a free-text vendor **name**, not `Code` — matching against
@@ -284,3 +291,91 @@ nullable columns (`purchasing_purchase_orders.legacy_ref_pr_uid`,
 `purchasing_purchase_order_lines.pr_number_label`,
 `purchasing_purchase_order_lines.purchase_request_line_id`), so no schema
 change is needed to import these 3 rows.
+
+## V2-0044 Staging Import Result (2026-06-24)
+
+ADR `0023` (Accepted) confirmed a full-snapshot import. `scripts/pr-po-gr-import-apply.mjs`
+(gated on `--confirm-pr-po-gr-import` + staging project-ref check, truncate-
+then-reload inside one transaction) ran against staging and was verified by
+`scripts/verify-pr-po-gr-import.mjs` (16/16 checks pass) and a second
+identical re-run (idempotency proof). Final staging counts: **253 PO
+headers / 748 PO lines, 588 GR headers / 1868 GR lines / 6 location splits,
+0 PR headers/lines**.
+
+Real gaps the dry-run report did not surface, found and resolved during
+implementation (none required a blocking stop — all staging-only, reversible
+via truncate):
+
+- **2 PO lines have `PO_Qty = "0"`** (`PO_UID` `39e58079-…`/`14613212-…`,
+  vendor "ผง BK บีเค", both marked `GR Completed` despite zero ordered qty —
+  a real V1 data-entry anomaly). `ordered_qty > 0` is a real schema check;
+  these 2 rows are skipped as `match_status`-equivalent `invalid_source_row`
+  and logged in `import-reports/pr-po-gr-import-apply-report.md`'s "Skipped
+  PO Rows" section, not inserted. This also collapsed bill-group count from
+  254 (dry-run, counts all raw rows) to **253** (the one bill group whose
+  only members were these 2 rows disappeared entirely), and pushed the
+  orphan GR count from the dry-run's 10 to **14** in the import (10
+  genuinely-absent `Ref_PO_UID` + 4 GR rows that reference these 2 real-but-
+  skipped `PO_UID`s — fully traced, not a silent drop; see the apply
+  report's "Orphan Ref_PO_UID GR lines" line).
+- **46 PO / 105 GR rows have a blank `Unit`.** Resolved via a fallback chain:
+  raw value if present, else the matched `catalog_products.default_unit`
+  (already populated from `ProductName.csv` by `V2-0018`), else the literal
+  `"ลัง"` (mirrors `product-catalog-import-apply.mjs`'s own existing
+  fallback for the same situation). Only 2 PO / 5 GR rows ever fell through
+  to the final literal (their product never matched the catalog at all).
+- **181 GR lines have a blank `GR_Qty`**, all and only on `Status = "Draft
+  GR"` rows (not yet received) — imported as `received_qty = 0`, which the
+  schema's `>= 0` check (not `> 0`) and the `gr_draft` status both already
+  anticipate.
+- **746/750 PO lines have a blank `PO_Number`**, and only 3/254 bill groups
+  have any real value at all. `po_number` is `not null`/not-blank in the
+  schema. Resolved per **ADR `0026`**: synthesize
+  `po_number = "LEGACY-" + <bill identity>` for the 251/253 imported headers
+  with no source value; use the real value verbatim for the other 2.
+- **GR header grouping is new logic** (the dry-run only ever counted GR
+  *rows*; it never grouped them into headers). Implemented per ADR `0020`:
+  group by (resolved PO bill identity, or the raw `Ref_PO_UID` for orphan
+  rows) + `GR_Date` + `ATA` + `Receiver` + `Status` + `Remark`. Sanity-checked
+  by hand (largest group: 49 lines, one vendor/date/warehouse/receiver,
+  `Draft GR`; a lift-fee-tagged group correctly aggregates into
+  `receiving_goods_receipts.lift_fee_summary`; an orphan group preserves the
+  raw `Ref_PO_UID` with `purchase_order_id = null`) and proven re-run-stable
+  (588 headers both times — there is no external source of truth to check
+  this count against besides that stability).
+- **GR `Status = "Pending GR"` (1 row of 1868)** doesn't match any of the
+  schema's 3 allowed values directly. Inspection showed that row already
+  carries a real received qty/location (not a draft), so it normalizes to
+  `gr_pending_review` rather than `gr_draft` — a documented one-row judgment
+  call, not a 4th category. `normalizeGrStatus()`/`normalizePrStatus()` throw
+  on any other unmapped status string so a future refreshed export with
+  genuinely new text fails loudly instead of silently miscategorizing.
+- **2 source `Loc_IN` split rows produced 6 `receiving_line_splits` rows**
+  (3 location pieces each, e.g. `"W5-1F-โซน-นม | W5-1F-โซน-นม | W5-1F"`) —
+  the dry-run's "2" counted split-containing *rows*, not split *pieces*.
+- **PR import is code-complete but data-unproven.** `buildPrGroups`/the PR
+  insert loop in `pr-po-gr-import-apply.mjs` mirror the PO pattern exactly
+  (group by `PR_Number`, same catalog/unit/warehouse resolution, same
+  validation-and-skip pattern) and ran cleanly over the current 0-row PR
+  source (0 headers, 0 lines, 0 `pr_imported` events — all asserted by
+  `verify-pr-po-gr-import.mjs`). This is the same "implemented against the
+  known schema, unproven against real data" posture already used for
+  `V2-0027`'s LINE real-send branch — re-validate once a real PR export
+  exists.
+- Migration `0014_pr_po_gr_import_events.sql` (new) widened
+  `purchasing_events_type_check`/`receiving_events_type_check` to add
+  `pr_imported`/`po_imported`/`gr_imported`: the locked `0013` lists only
+  covered future write-workflow actions, not an import audit trail. Applied
+  and verified on staging before the import ran.
+
+One non-ADMIN `purchasing.*`/`receiving.*`-permission-holding profile was
+proven able to read the imported rows via the real RLS policy (impersonated
+through the `request.jwt.claims` GUC inside a rolled-back transaction — no
+password reset). This proves a permission holder *can* read; it does not by
+itself re-prove that RLS denies the unpermissioned (already proven by
+Picking's identical `has_permission()` policy shape).
+
+No runtime `/purchasing` or `/receiving` UI, write/approve/close workflow, or
+V1 production change is part of this slice. Per `ADR 0025`/`V2-0046`, any
+future PR/PO/GR **write** workflow (not this read-only import) must wait for
+the operational-readiness package (`V2-0046` tasks 1-5).

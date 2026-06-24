@@ -97,7 +97,13 @@ For each module, capture:
   are open, user-gated items.
 
 - `purchasing` / `receiving` (PR/PO/GR): schema migration applied to
-  staging (2026-06-22), no data, no UI yet. `V2-0036`'s first slice (2026-06-22) profiled V1
+  staging (2026-06-22); **staging data now imported (2026-06-24, `V2-0044`)**:
+  253 PO headers / 748 lines, 588 GR headers / 1868 lines / 6 splits, 0 PR
+  rows (source genuinely empty). No runtime UI yet — see
+  `docs/migration/pr-po-gr-v1-mapping.md`'s "V2-0044 Staging Import Result"
+  section for the real gaps found/resolved (qty=0 skip, `LEGACY-` synthesized
+  `po_number` per ADR `0026`, new GR header grouping logic, migration `0014`
+  import-event types). `V2-0036`'s first slice (2026-06-22) profiled V1
   sources read-only: confirmed a live V1 `PR` sheet exists (same spreadsheet
   as `PO`/`GR`) but has no CSV export in `import-data/po-pr-gr/` yet;
   documented V1's own PO bill-grouping key and the

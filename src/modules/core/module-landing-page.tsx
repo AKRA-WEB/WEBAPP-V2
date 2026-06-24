@@ -12,14 +12,6 @@ const moduleNotes: Record<string, string[]> = {
     "Pilot schema is applied and verified in staging.",
     "Next slice: requisition list, create flow, status changes, and problem reports.",
   ],
-  purchasing: [
-    "Queued after the Picking pilot establishes the V2 workflow pattern.",
-    "PR, PO, and GR remain grouped because V1 uses shared purchasing behavior.",
-  ],
-  receiving: [
-    "Queued with the purchasing migration because receiving depends on stable PO identity.",
-    "Current V1 GR stays live until a module cutover is approved.",
-  ],
   warehouse: [
     "Queued after the pilot and purchasing/receiving foundation.",
     "TRDAKRA and AKRA W5 need shared stock/location modeling before cutover.",

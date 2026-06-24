@@ -1,6 +1,13 @@
 # Product Catalog and Warehouse V1-to-V2 Mapping
 
-This document defines how legacy data snapshot CSV files under `import-data/` map to the V2 database tables defined in migration `0008_shared_catalog_schema.sql`.
+This document defines how legacy data snapshot CSV files under `import-data/`
+map to the V2 database tables defined in migration
+`0008_shared_catalog_schema.sql`.
+
+Use `docs/migration/master-data-vocabulary.md` for the authoritative
+`source_app`, `legacy_source`, and `match_status` vocabulary. In this mapping,
+`source_app` names the legacy source family (for example `po-pr-gr`), while
+module visibility is stored separately as `catalog_product_scopes`.
 
 ## 1. Source Files & Data Quality Notes
 
@@ -38,7 +45,7 @@ Every row from PO/GR, Returnitem, TRDAKRA Product, and W5 Current Stock represen
 | V2 Field | Source | Value / Mapping Logic |
 | --- | --- | --- |
 | `product_id` | Match | Resolved `catalog_products.id` via product code or manual approval |
-| `source_app` | String | `po-pr-gr`, `returnitem`, `akra-trd`, or `akra-w5` |
+| `source_app` | String | Source-family value from `docs/migration/master-data-vocabulary.md`, e.g. `po-pr-gr`, `returnitem`, `akra-trd`, or `akra-w5` |
 | `source_file` | String | Filename of the source snapshot |
 | `legacy_code` | `Product code` | Source-specific code (can be empty, e.g. W5) |
 | `source_name` | `Product name` / `ชื่อสินค้า` | Exact string from the file |

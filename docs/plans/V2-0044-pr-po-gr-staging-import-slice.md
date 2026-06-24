@@ -1,6 +1,8 @@
 # Plan V2-0044: PR/PO/GR Staging Import Slice
 
-Status: Draft
+Status: Complete — see `docs/plans/index.md` entry 36 and
+`docs/migration/pr-po-gr-v1-mapping.md`'s "V2-0044 Staging Import Result"
+section for the executed outcome (2026-06-24).
 
 Architect command:
 

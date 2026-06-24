@@ -60,12 +60,39 @@ pursue historical PR-row recovery — the PR is already closed
 locked schema's existing nullable columns cover this with no migration
 change. PR/PO/GR data-import planning can now proceed.
 
-`V2-0044` (Draft, 2026-06-24) plans the next slice: a gated, idempotent
-staging-only import of the V1 PO (750 lines/254 bill groups)/GR (1868
-rows)/PR (0 rows) snapshot into the locked `0013` schema. Proposed ADR
-`0023` recommends importing the full snapshot in one pass rather than
-active/open rows only — **this needs your confirmation before the next
-`Go:`** (see Open Decisions below).
+`V2-0044` (Complete, 2026-06-24) executed the staging import. ADR `0023`
+accepted (full-snapshot). The real run loaded **253 PO headers/748 lines,
+588 GR headers/1868 lines/6 splits, 0 PR rows** into the locked `0013`
+schema, verified by 16 read-only checks and an idempotent second run. New
+ADR `0026` records a synthesized `LEGACY-*` `po_number` for 251/253 headers
+whose V1 source `PO_Number` was blank. No runtime PR/PO/GR UI yet — see
+`docs/migration/pr-po-gr-v1-mapping.md`'s "V2-0044 Staging Import Result"
+for full detail.
+
+`V2-0045` (Complete, 2026-06-24) handled the requested schema/master-data/
+folder-structure hardening without changing runtime behavior or schema:
+`docs/database/schema-catalog.md`, `docs/migration/master-data-vocabulary.md`,
+and ADR `0024` now standardize the schema reference, `source_app`/
+`legacy_source`/`match_status` vocabulary, and module/script folder
+boundaries before PR/PO/GR import code is written.
+
+`V2-0046` (Draft, 2026-06-24) now plans the operational-readiness package
+requested before PR/PO/GR write workflow: Environment Matrix,
+Monitoring/Observability, Backup/DR, Rollback, and readiness gates. ADR `0025`
+is Accepted: `V2-0044` staging import/read-only validation can proceed, but
+transactional PR/PO/GR writes should wait until the readiness package is
+approved; production cutover requires implemented and verified readiness
+checks, not just draft documents.
+
+`V2-0047` (Draft, 2026-06-24) plans the first read-only PR/PO/GR UI slice:
+permission-gated `/purchasing`/`/purchasing/[id]` (PO) and `/receiving`/
+`/receiving/[id]` (GR, with line splits), reading the real rows `V2-0044`
+already imported. **Not** blocked by `V2-0046`/ADR `0025` — that gate covers
+write workflow only. Found a real gap to fix during execution: the shared
+`ModuleLandingPage` placeholder checks only the single `purchasing.read`/
+`receiving.read` permission, but no role currently holds those `.read`
+values (only `.write`), so a `.write`-only role is incorrectly denied today;
+the new routes should use `anyOf` like Picking's page guard. Awaiting `Go:`.
 
 ## Near-Term Queue
 
@@ -76,9 +103,36 @@ active/open rows only — **this needs your confirmation before the next
 | 3 | Picking cutover package | Lets user decide whether V2 Picking can replace V1 Picking | Prepared (`V2-0034`, 2026-06-22); review (2026-06-22) found 5 gaps, 3 closed (reproducible reconciliation script, runbook section 5a, freshness section 3a); 4 open user decisions remain: deployed-build verification, combined human UAT pass, fresh V1 reference-data export, runbook execution |
 | 4 | Fresh PR CSV reconciliation | Required before PR/PO/GR data import/runtime UI | Done (`V2-0040`, 2026-06-23; ADR `0022`, 2026-06-24): logic built+proven (0 blockers, 9 warnings); 3 PR-derived PO rows resolved as manual-review/nullable PR linkage, no recovery needed |
 | 5 | Placeholder route guard pass | Prevents future route content from inheriting open placeholders | Done (`V2-0041`, 2026-06-23): `ModuleLandingPage` now guards all 5 non-Picking routes with `requirePermission()` |
-| 6 | PR/PO/GR staging import slice | Required before any PR/PO/GR read-only UI | Planned (`V2-0044`, 2026-06-24, Draft); proposed ADR `0023` recommends full-snapshot import — needs user confirmation before `Go:` |
+| 6 | PR/PO/GR staging import slice | Required before any PR/PO/GR read-only UI | Done (`V2-0044`, 2026-06-24): 253 PO/588 GR headers imported, 16/16 checks pass, idempotent re-run proven; ADR `0026` added for synthesized `po_number` |
+| 7 | Operational readiness before PR/PO/GR writes | Prevents core write workflow from starting without environment, monitoring, backup/DR, and rollback posture | Planned (`V2-0046`, 2026-06-24, Draft); ADR `0025` accepted the gate. Does not block `V2-0044` import/read-only validation; blocks PR/PO/GR write workflow until readiness package is approved |
+| 8 | PR/PO/GR read-only list/detail UI | First UI over the imported PO/GR data; not blocked by the write-readiness gate | Planned (`V2-0047`, 2026-06-24, Draft); awaiting `Go:` |
 
 ## Resolved Decisions
+
+### Operational Readiness Gate Before PR/PO/GR Writes
+
+Decision (ADR `0025`, 2026-06-24): before transactional PR/PO/GR write
+workflow begins, V2 must have a documented and reviewed operational-readiness
+package covering Environment Matrix, Monitoring/Observability, Backup/DR,
+Rollback, and PR/PO/GR readiness gates.
+
+Implication: `V2-0044` staging import and read-only validation can continue.
+PR/PO/GR write workflow waits for `V2-0046` readiness docs/approval.
+Production cutover waits for readiness implementation and verification
+evidence. Production Supabase should be a separate data plane from staging
+unless a later ADR accepts an exception.
+
+### Master Data Vocabulary And Folder Boundaries
+
+Decision (ADR `0024`, 2026-06-24): keep `source_app` as a legacy source-family
+field (`po-pr-gr`, `picking`, `returnitem`, `akra-trd`, `akra-w5`) and store
+module visibility separately in `catalog_product_scopes`. Standardize
+`match_status` values in `docs/migration/master-data-vocabulary.md`, put future
+domain logic under `src/modules/<module>/`, and put shared import helpers under
+`scripts/lib/`.
+
+Implication: `V2-0044` should use this vocabulary before writing PR/PO/GR
+import rows. No schema change was required.
 
 ### PR-Derived PO Rows With No Source PR Row
 
@@ -140,23 +194,49 @@ non-blocking). The reserved `line_push_failed` *status* value (migration
 button reads the *event* log instead. Real sends remain unproven — no
 staging LINE credentials exist yet.
 
-## Open Decisions
+### Synthesized `po_number` For Legacy PO Bills
+
+Decision (ADR `0026`, Accepted, 2026-06-24): when no line in an imported PO
+bill group carries a real V1 `PO_Number` (746/750 PO rows are blank; only
+3/254 bill groups have any real value), synthesize
+`po_number = "LEGACY-" + <bill identity>` instead of leaving it blank
+(the schema requires non-blank). Affected 251 of 253 imported headers.
+
+Implication: `po_number` is always a deterministic, clearly-marked
+(`LEGACY-` prefix) display value for legacy-imported bills; the real
+identity stays in `legacy_group_key`/`bill_identity_kind`/
+`bill_identity_value`. A future PR/PO/GR UI should not present `po_number`
+as a real V1 business number without explaining the prefix.
 
 ### PR/PO/GR Import Scope
 
-Recommendation (ADR `0023`, Proposed, 2026-06-24): import the full current
+Decision (ADR `0023`, Accepted, 2026-06-24): import the full current
 snapshot — all 750 PO line rows (254 bill groups) and 1868 GR rows — in one
 pass, rather than active/open rows only. Rationale: the dry-run already
 proves the full snapshot clean (0 blockers), and an active-only first pass
 would still need a second backfill pass later for historical/closed rows
-with no clear benefit. **Needs your confirmation before the `V2-0044` `Go:`
-slice starts.**
+with no clear benefit. User confirmed 2026-06-24; `V2-0044` import execution
+follows.
 
 The authoritative PR source question is now resolved for the current snapshot:
 a live V1 `PR` sheet exists in the same spreadsheet as `PO`/`GR`, and the
 current `Trackingpo - webapp - PR.csv` export has 0 rows. Full PR-row import
 therefore imports zero PR rows unless historical PR rows are recovered from
 another source (not pursued — see Resolved Decisions below).
+
+## Open Decisions
+
+### Operational Readiness Sub-Decisions
+
+ADR `0025` accepts the gate, but these implementation choices remain open
+before PR/PO/GR writes:
+
+- production RPO/RTO target;
+- daily-backup baseline vs PITR production profile;
+- monitoring tool choice and whether Sentry is the first implementation slice;
+- alert recipients and escalation owner;
+- rollback authorization owner during and outside business hours;
+- exact production/staging Supabase separation and project ownership.
 
 ## Watch List
 
@@ -178,3 +258,15 @@ another source (not pursued — see Resolved Decisions below).
   exported `PO.csv` has no `Expected_Date` column; 233 bill groups (698 PO
   line rows) rely on the ambiguous legacy bare-`DIRECT` grouping key; and 10
   GR rows have orphan `Ref_PO_UID` references.
+- Operations readiness is now a formal gate for PR/PO/GR writes, not a generic
+  later hardening item. Keep import/read-only validation separate from write
+  workflow readiness when planning the next `Go:`.
+- `V2-0044`'s PR import path is code-complete (mirrors the PO import pattern)
+  but unproven against real data — the current PR source has 0 rows. Re-run
+  `scripts/pr-po-gr-import-apply.mjs` and `scripts/verify-pr-po-gr-import.mjs`
+  once a real, non-empty `PR.csv` export exists, before trusting that branch.
+- 2 real V1 PO rows (`PO_UID` `39e58079-…`/`14613212-…`) carry `PO_Qty = "0"`
+  and were skipped on import (`invalid_source_row`) rather than imported with
+  a fabricated quantity. If a future fresh export shows these were corrected
+  upstream, re-running the import will pick up the corrected values
+  automatically (truncate-then-reload).

@@ -115,6 +115,11 @@ These workflows should be backed by database transactions or RPC functions:
 ## Shared Catalog And Warehouse Product Assumptions
 
 - Product master data should be modeled once in a shared catalog, but legacy app-specific product names must be preserved as aliases.
+- `docs/migration/master-data-vocabulary.md` is the source of truth for
+  `source_app`, `legacy_source`, and `match_status` vocabulary. `source_app`
+  records the legacy source family (`po-pr-gr`, `picking`, `akra-trd`,
+  `akra-w5`, `returnitem`), while module visibility belongs in
+  `catalog_product_scopes`.
 - Product membership in TRD, AKRA, AKRA-TRD, W5, and app modules should be represented as scope/evidence rows, not as destructive overwrites on a single product row.
 - PO/GR `ProductName` is the best initial coded seed because it covers all currently observed TRDAKRA and Returnitem product codes in `import-data/`.
 - TRDAKRA `Floor`, `Location`, and `Par Level` are warehouse placement/par metadata, not canonical product fields.
@@ -143,8 +148,19 @@ auth header, matching the existing `public.apps` anon-denial precedent from
 `receiving.read` specifically (only `purchasing.write`/`receiving.write` on
 `SUPERVISOR`/`AKRA`/`WAREHOUSE` from the real V1 import — the select
 policies treat read-or-write as equivalent, so this still grants access);
-confirming a permission-holding role can read real rows is deferred until a
-write path/UI exists and inserts real data, per the plan's own scope.
+**Resolved (2026-06-24, `V2-0044`):** `0013` now holds real staging data
+(253 PO headers/748 lines, 588 GR headers/1868 lines/6 splits, 0 PR rows);
+`scripts/verify-pr-po-gr-import.mjs` confirmed a non-ADMIN `purchasing.*`/
+`receiving.*`-permission-holding profile can read the imported rows through
+the real RLS policy (impersonated via the `request.jwt.claims` GUC, no
+password reset), and anon is still denied via the live Data API.
+`supabase/migrations/0014_pr_po_gr_import_events.sql` widened
+`purchasing_events_type_check`/`receiving_events_type_check` to add
+`pr_imported`/`po_imported`/`gr_imported` — the `0013` lists only covered
+future write-workflow actions, not an import audit trail. See
+`docs/migration/pr-po-gr-v1-mapping.md`'s "V2-0044 Staging Import Result"
+section and ADR `0026` (synthesized `po_number` for legacy bills with no
+source value) for the real gaps found during implementation.
 
 - The first PR/PO/GR migration is schema/RLS only. It should create
   `public.purchasing_*` and `public.receiving_*` tables, indexes, constraints,
@@ -184,6 +200,11 @@ write path/UI exists and inserts real data, per the plan's own scope.
 
 ## Staging Apply Status
 
+- Migrations `0001`-`0014` have been applied to the staging Supabase project.
+- `0013_pr_po_gr_foundation.sql` adds the PR/PO/GR schema/RLS foundation;
+  `0014_pr_po_gr_import_events.sql` widens its event-type checks for the
+  import audit trail. `V2-0044` (2026-06-24) loaded real staging data into
+  `0013`'s tables — see "PR/PO/GR Foundation Assumptions" above.
 - Migrations `0001`-`0009` have been applied to the staging Supabase project.
 - `0009_picking_catalog_bridge.sql` adds the Picking-to-catalog nullable bridge
   columns and `public.create_picking_requisition(...)`.

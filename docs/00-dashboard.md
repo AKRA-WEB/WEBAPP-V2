@@ -20,6 +20,10 @@ plan board, current-state handoff, and decision board.
 
 ## Current Work
 
+- [V2-0047 PR/PO/GR read-only list/detail UI](plans/V2-0047-pr-po-gr-readonly-ui.md)
+- [V2-0046 Operational readiness before PR/PO/GR writes](plans/V2-0046-operational-readiness-before-pr-po-gr-writes.md)
+- [V2-0044 PR/PO/GR staging import slice](plans/V2-0044-pr-po-gr-staging-import-slice.md)
+- [V2-0045 Schema/master/folder hardening](plans/V2-0045-schema-master-folder-hardening.md)
 - [V2-0040 PR/PO/GR PR CSV reconciliation](plans/V2-0040-pr-po-gr-pr-csv-reconciliation.md)
 - [V2-0036 PR/PO/GR foundation](plans/V2-0036-pr-po-gr-foundation.md)
 - [V2-0039 PR/PO/GR release shape](plans/V2-0039-pr-po-gr-release-shape-decision.md)
@@ -36,6 +40,8 @@ plan board, current-state handoff, and decision board.
 
 - [Thai executive summary](project-management/executive-summary-th.md)
 - [Frontend UI/UX operating model](frontend/ui-ux-operating-model.md)
+- [Schema catalog](database/schema-catalog.md)
+- [Master data vocabulary](migration/master-data-vocabulary.md)
 - [Database/data-flow HTML](database/data-flow.html)
 
 ## Working Notes
