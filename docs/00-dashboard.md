@@ -44,6 +44,14 @@ plan board, current-state handoff, and decision board.
 - [Master data vocabulary](migration/master-data-vocabulary.md)
 - [Database/data-flow HTML](database/data-flow.html)
 
+## Operational Readiness (V2-0046)
+
+- [PR/PO/GR readiness gates](operations/pr-po-gr-readiness-gates.md)
+- [Environment matrix](operations/environment-matrix.md)
+- [Monitoring/observability plan](operations/monitoring-observability-plan.md)
+- [Backup/DR plan](operations/backup-dr-plan.md)
+- [Module rollback runbook](operations/module-rollback-runbook.md)
+
 ## Working Notes
 
 - V2 work stays isolated from V1 production unless a cutover task is explicitly

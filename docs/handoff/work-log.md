@@ -31,6 +31,81 @@ Context budget:
 
 ## Active Recent Entries
 
+## 2026-06-24 - Operational Readiness Package Executed (V2-0046, tasks 1-6)
+
+Context:
+
+- User asked which work remains, then confirmed (via `AskUserQuestion`) that
+  only `V2-0046` should proceed now — not a second parallel worktree task, per
+  the earlier discussion of git-worktree parallelism risk (shared staging DB
+  writes/migration-number collisions are the reason to serialize anything that
+  touches the database; this slice is documentation-only so the question was
+  moot in practice, but the user's choice was recorded before starting).
+- `V2-0046`'s plan (Draft since its planning-only session) already specified
+  tasks 1-6 in detail; this session executed them rather than re-planning.
+
+Changes:
+
+- Added `docs/operations/environment-matrix.md` (task 1): Local/Preview/
+  Development/Staging/Production rows; today all four non-Production
+  environments share one Supabase project (`yqyoxtgrubuspzyfzija`); no
+  Production project exists yet; no rollback owner named for any row.
+- Added `docs/operations/monitoring-observability-plan.md` (task 2):
+  severity levels, taxonomy across app/server/Vercel/Supabase/business-event
+  surfaces, PII/secrets logging rules, and the already-real business-event
+  inventory (`purchasing_events`/`receiving_events`/
+  `picking_requisition_events` types, migration `0014`). No monitoring tool
+  is installed; this is explicitly stated, not implied.
+- Added `docs/operations/backup-dr-plan.md` (task 3): candidate DR profiles
+  (daily backup vs. PITR) with the explicit caveat that `RPO=15min`/
+  `RTO=1hr` are not committed targets until a real restore drill proves them;
+  a restore-drill checklist; zero drills run to date.
+- Added `docs/operations/module-rollback-runbook.md` (task 4): generic
+  3-state rollback (staging import issue / pre-cutover UAT issue /
+  post-cutover production issue) plus PR/PO/GR-specific notes tying back to
+  ADR `0021`'s grouped-cutover rule and noting the current staging import is
+  reversible (truncate-then-reload) in a way future write-workflow records
+  will not be.
+- Added `docs/operations/pr-po-gr-readiness-gates.md` (task 5): the single
+  page distinguishing what's already allowed (`V2-0044` import, `V2-0047`
+  read-only UI, a future real PR import) from what's gated (write-workflow
+  *implementation*, gated on this package being reviewed/accepted — not on
+  every Open Question being answered) from what has the stricter
+  production-cutover bar (implemented+verified readiness, not just
+  documented).
+- Task 6: linked all five docs from `docs/migration/cutover-checklist.md`
+  (a new note above the checklist plus an inline pointer on the "Rollback
+  path documented" line) — no PR/PO/GR-specific cutover package exists yet to
+  link from instead.
+- Updated `docs/plans/V2-0046-...md` (Status: Draft -> Complete, tasks 1-6;
+  task 7 deferred), `docs/plans/index.md`, `docs/handoff/current-state.md`,
+  `docs/project-management/decision-board.md` (also fixed a pre-existing
+  staleness: `V2-0047` was still listed as "Draft, awaiting `Go:`" there even
+  though it was already executed and pushed in a prior session), and the
+  Obsidian maps/dashboard (`00`-`03`).
+
+Verification:
+
+- `npm run lint`, `npm run typecheck`, `git diff --check` all pass.
+- Documentation-only: no runtime app code, Supabase schema/migration,
+  staging data, V1 production files, GAS deployments, Sheets, URLs, LINE
+  tokens, deployment settings, or secrets changed.
+- Each new doc states its own real current gaps as Open Questions (no
+  monitoring tool, no drill, no named owner, single shared Supabase project)
+  rather than inventing placeholder numbers — consistent with this repo's
+  pattern of not fabricating verification evidence.
+
+Next action: user reviews/accepts this readiness package; PR/PO/GR
+write-workflow implementation can then be planned as a new slice. Task 7
+(install real monitoring tooling, run an actual restore drill, run a
+tabletop rollback exercise) remains deferred and is only a hard requirement
+before production cutover, not before planning Staging write-workflow work.
+
+Also committed and pushed this session's prior uncommitted work (`V2-0044`,
+`V2-0045`, `V2-0047`, this `V2-0046` entry's predecessor docs) as `c4797f9` on
+`main`, after explicit user confirmation via `AskUserQuestion` (direct push to
+`main`, no PR — solo-dev repo, same pattern as prior direct-to-main pushes).
+
 ## 2026-06-24 - PR/PO/GR Read-Only UI Slice Planned And Executed (V2-0047)
 
 Context:
@@ -226,101 +301,10 @@ slices (`V2-0045`, this one) were still uncommitted locally at the start of
 this session alongside `V2-0046`/ADR `0025`/ADR `0026` from this one — not
 committed/pushed unless the user asks.
 
-## 2026-06-24 - Operational Readiness Plan Before PR/PO/GR Writes (V2-0046)
-
-Context:
-
-- User asked for an `Architect:` plan for Operational Readiness covering
-  Environment Matrix, Monitoring, Backup/DR, and Rollback before PR/PO/GR write
-  workflow.
-- Scope was kept plan-only: no runtime app code, Supabase migration/schema,
-  staging data, deployment settings, V1 production system, or secret changes.
-
-Changes:
-
-- Added
-  `docs/plans/V2-0046-operational-readiness-before-pr-po-gr-writes.md`.
-  The plan defines the readiness package that must exist before transactional
-  PR/PO/GR writes: environment matrix, monitoring/observability plan,
-  backup/DR plan, rollback runbook, and readiness gate checklist.
-- Added accepted ADR
-  `docs/decisions/0025-operational-readiness-gate-before-pr-po-gr-writes.md`.
-  The decision does not block `V2-0044` staging import/read-only validation,
-  but it blocks PR/PO/GR transactional write workflow until the readiness
-  package is approved. Production cutover requires implemented and verified
-  readiness checks.
-- Updated `docs/plans/index.md`, `docs/project-management/decision-board.md`,
-  `docs/handoff/current-state.md`, and Obsidian docs maps/dashboard so
-  V2-0046 is visible in the central resume chain.
-
-Verification:
-
-- Official Supabase operational docs were checked read-only on 2026-06-24:
-  database backups/PITR, telemetry logs, telemetry reports, and database
-  advisors. The plan accounts for plan-dependent backup retention, PITR as an
-  add-on, restore downtime, and Supabase Logs/Reports/Advisors as monitoring
-  inputs.
-- Documentation/ADR-only; no runtime app code, migration SQL, staging data, V1
-  production files, GAS deployments, Sheets, URLs, LINE tokens, deployment
-  settings, or secrets changed.
-- `git diff --check` passes.
-
-Next action: confirm ADR `0023` import scope if proceeding with `V2-0044`.
-Before PR/PO/GR transactional writes, execute `V2-0046` tasks 1-5 to create
-and approve the operational readiness docs.
-
-## 2026-06-24 - Schema/Master/Folder Hardening (V2-0045)
-
-Context:
-
-- User asked whether Database Schema, Master data design, and Folder Structure
-  needed improvement, then asked to handle the improvements. Scope was kept to
-  documentation and folder-boundary hardening only: no runtime behavior,
-  migration SQL, staging data, V1 production system, or secret changes.
-
-Changes:
-
-- Added `docs/database/schema-catalog.md`: a human-readable catalog of the
-  current `0001`-`0013` migration shape, table families, RLS/access posture,
-  staging baseline, known gaps, and PR/PO/GR import status.
-- Added `docs/migration/master-data-vocabulary.md`: standard vocabulary for
-  `source_app`, `source_file`, `legacy_source`, raw fields, nullable FKs,
-  `match_status`, canonical-vs-alias rules, PR/PO/GR import handling, and
-  module/script folder boundaries.
-- Added accepted ADR
-  `docs/decisions/0024-master-data-vocabulary-and-folder-boundaries.md`:
-  `source_app` stays a legacy source-family field (e.g. `po-pr-gr`), module
-  visibility stays in `catalog_product_scopes`, and shared import helpers
-  should live under `scripts/lib`.
-- Added `docs/plans/V2-0045-schema-master-folder-hardening.md` and updated
-  docs maps/dashboard plus `docs/project-management/decision-board.md`.
-- Updated `docs/migration/product-catalog-v1-mapping.md`,
-  `docs/migration/pr-po-gr-v1-mapping.md`, and
-  `docs/migration/database-strategy.md` to point to the vocabulary doc and
-  avoid confusing `source_app` with module names.
-- Updated `src/modules/README.md` and added README-only tracked boundaries for
-  future modules: `src/modules/purchasing`, `receiving`, `warehouse`,
-  `returns`, and `kpi`.
-- Added `scripts/lib/README.md` so future dry-run/apply/verify shared helpers
-  have a defined boundary before `V2-0044` implementation.
-
-Verification:
-
-- Official Supabase changelog/docs were checked read-only on 2026-06-24. The
-  relevant guidance remains explicit grants + RLS for Data API access; new
-  public tables are not automatically safe/exposed without the correct grants
-  and policies.
-- Documentation/README-only; no runtime app code, migration SQL, staging data,
-  V1 production files, GAS deployments, Sheets, URLs, LINE tokens, or secrets
-  changed.
-- `git diff --check` passes.
-- `npm run check:migrations` passes.
-- `npm run check:notes` was attempted but this repo has no such package
-  script; no notes-specific checker is currently available.
-
-Next action: still confirm ADR `0023` import scope (recommended full snapshot),
-then execute `V2-0044`.
-
 See `docs/handoff/archive/work-log-2026-06-24-pr-derived-decision-through-import-slice-plan.md`
-for the `V2-0040` ADR `0022` decision entry and the `V2-0044` planning entry
-(both 2026-06-24, archived to stay under the context budget).
+for the `V2-0040` ADR `0022` decision entry and the `V2-0044` planning entry,
+and
+`docs/handoff/archive/work-log-2026-06-24-operational-readiness-plan-through-schema-hardening.md`
+for `V2-0046`'s original planning-only entry (now superseded by its own
+execution entry above) and the `V2-0045` entry (all archived to stay under
+the context budget).

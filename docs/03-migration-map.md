@@ -40,7 +40,13 @@ phase and module references.
 
 - [PR/PO/GR V1 mapping](migration/pr-po-gr-v1-mapping.md)
 - [V2-0044 PR/PO/GR staging import slice](plans/V2-0044-pr-po-gr-staging-import-slice.md)
+- [V2-0047 PR/PO/GR read-only list/detail UI](plans/V2-0047-pr-po-gr-readonly-ui.md)
 - [V2-0046 Operational readiness before PR/PO/GR writes](plans/V2-0046-operational-readiness-before-pr-po-gr-writes.md)
+- [PR/PO/GR readiness gates](operations/pr-po-gr-readiness-gates.md)
+- [Environment matrix](operations/environment-matrix.md)
+- [Monitoring/observability plan](operations/monitoring-observability-plan.md)
+- [Backup/DR plan](operations/backup-dr-plan.md)
+- [Module rollback runbook](operations/module-rollback-runbook.md)
 - [V2-0045 Schema/master/folder hardening](plans/V2-0045-schema-master-folder-hardening.md)
 - [V2-0036 PR/PO/GR foundation](plans/V2-0036-pr-po-gr-foundation.md)
 - [V2-0039 PR/PO/GR release shape](plans/V2-0039-pr-po-gr-release-shape-decision.md)

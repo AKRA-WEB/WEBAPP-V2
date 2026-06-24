@@ -2,6 +2,14 @@
 
 Use this checklist for every module before replacing V1 behavior with V2.
 
+Before any module with a transactional write workflow (e.g. PR/PO/GR) starts
+cutover planning, also check `docs/operations/pr-po-gr-readiness-gates.md` (or
+the module-specific equivalent) and the operational readiness package it
+points to: `docs/operations/environment-matrix.md`,
+`docs/operations/monitoring-observability-plan.md`,
+`docs/operations/backup-dr-plan.md`, and
+`docs/operations/module-rollback-runbook.md` (ADR `0025`, `V2-0046`).
+
 ## Planning
 
 - Module owner and scope identified.
@@ -41,7 +49,9 @@ Use this checklist for every module before replacing V1 behavior with V2.
 - Vercel Preview verified.
 - Supabase staging verified.
 - Production env vars prepared but not exposed.
-- Rollback path documented.
+- Rollback path documented (see
+  `docs/operations/module-rollback-runbook.md` for the generic states and any
+  module-specific section).
 - User approval received.
 
 ## Cutover

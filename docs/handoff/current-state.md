@@ -136,15 +136,25 @@ Last updated: 2026-06-24
   data, V1 production files, GAS deployments, Sheets, URLs, LINE tokens, or
   secrets changed. Official Supabase changelog/docs were checked read-only on
   2026-06-24 before documenting the RLS/Data API posture.
-  `V2-0046` (Draft, 2026-06-24) plans the Operational Readiness package
-  requested before PR/PO/GR write workflow: Environment Matrix,
-  Monitoring/Observability, Backup/DR, Rollback, and readiness gates. ADR
-  `0025` accepts the gate: `V2-0044` staging import/read-only validation can
-  proceed, but transactional PR/PO/GR write workflow should wait until the
-  readiness package is approved; production cutover requires implemented and
-  verified readiness checks. Official Supabase backup, telemetry/logging,
-  reports, and database-advisor docs were checked read-only on 2026-06-24 for
-  this plan.
+  `V2-0046` (Complete, 2026-06-24) planned and delivered the Operational
+  Readiness package requested before PR/PO/GR write workflow: tasks 1-5
+  added `docs/operations/environment-matrix.md`,
+  `docs/operations/monitoring-observability-plan.md`,
+  `docs/operations/backup-dr-plan.md`,
+  `docs/operations/module-rollback-runbook.md`, and
+  `docs/operations/pr-po-gr-readiness-gates.md`; task 6 linked them from
+  `docs/migration/cutover-checklist.md`. Documentation-only — no monitoring
+  tool installed, no restore drill run, no rollback owner named yet (each doc
+  lists these as Open Questions, not silently assumed). ADR `0025` accepts
+  the gate: `V2-0044` staging import/read-only validation can proceed
+  (already done), and per `pr-po-gr-readiness-gates.md`, PR/PO/GR
+  write-workflow *implementation* against Staging may now be planned once
+  this package is reviewed/accepted — the Open Questions do not have to be
+  answered first, only acknowledged. Production cutover keeps the stricter
+  bar: readiness checks must be implemented and verified (task 7, deferred,
+  not started), not merely documented. Official Supabase backup,
+  telemetry/logging, reports, and database-advisor docs were checked
+  read-only on 2026-06-24 for this plan.
   `V2-0047` (Complete, 2026-06-24) implemented the first read-only PR/PO/GR
   UI slice: permission-gated `/purchasing`/`/purchasing/[id]` (PO list/detail)
   and `/receiving`/`/receiving/[id]` (GR list/detail with line splits),
@@ -969,11 +979,14 @@ Status:
 17. ~~Harden Database Schema / Master data design / Folder Structure docs.~~
     Done 2026-06-24 (`V2-0045`): schema catalog, master-data vocabulary,
     ADR `0024`, module README boundaries, and `scripts/lib` boundary added.
-18. Plan Operational Readiness before PR/PO/GR write workflow. Done
-    2026-06-24 (`V2-0046`, Draft): Environment Matrix, Monitoring,
-    Backup/DR, Rollback, and readiness gates planned; ADR `0025` accepted the
-    gate. Next: execute `V2-0046` tasks 1-5 before PR/PO/GR transactional
-    writes. This does not block `V2-0044` staging import/read-only validation.
+18. Plan and execute Operational Readiness before PR/PO/GR write workflow.
+    Done 2026-06-24 (`V2-0046`, Complete, tasks 1-6): Environment Matrix,
+    Monitoring, Backup/DR, Rollback, and readiness gates docs all added under
+    `docs/operations/`, linked from `docs/migration/cutover-checklist.md`;
+    ADR `0025` accepted the gate. Next: task 7 (install monitoring tooling,
+    run a real restore drill) is deferred and only required before
+    production cutover, not before planning PR/PO/GR write-workflow
+    implementation in Staging.
 19. Plan and execute the first read-only PR/PO/GR UI slice. Done 2026-06-24
     (`V2-0047`, Complete): `/purchasing`+`/purchasing/[id]` and
     `/receiving`+`/receiving/[id]` implemented over the already-imported

@@ -58,6 +58,9 @@ for live decision status. This page groups ADRs for Obsidian browsing.
 ADR `0023` is Accepted; `V2-0044`'s staging import is complete (253 PO/588
 GR headers, 0 PR rows). No PR/PO/GR import decision remains open.
 
-Operational readiness sub-decisions under ADR `0025` remain open before
-PR/PO/GR writes: production RPO/RTO, backup/PITR posture, monitoring tool,
-alert owners, rollback authority, and production/staging data separation.
+ADR `0025`'s readiness package is now documented (`V2-0046` Complete, see
+[readiness gates](operations/pr-po-gr-readiness-gates.md)). Its sub-decisions
+remain open as Open Questions, not blockers to planning PR/PO/GR write
+workflow: production RPO/RTO, backup/PITR posture, monitoring tool, alert
+owners, rollback authority, and production/staging data separation. They
+remain hard blockers for production cutover.

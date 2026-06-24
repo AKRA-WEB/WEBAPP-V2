@@ -76,23 +76,30 @@ and ADR `0024` now standardize the schema reference, `source_app`/
 `legacy_source`/`match_status` vocabulary, and module/script folder
 boundaries before PR/PO/GR import code is written.
 
-`V2-0046` (Draft, 2026-06-24) now plans the operational-readiness package
-requested before PR/PO/GR write workflow: Environment Matrix,
-Monitoring/Observability, Backup/DR, Rollback, and readiness gates. ADR `0025`
-is Accepted: `V2-0044` staging import/read-only validation can proceed, but
-transactional PR/PO/GR writes should wait until the readiness package is
-approved; production cutover requires implemented and verified readiness
-checks, not just draft documents.
+`V2-0046` (Complete, 2026-06-24) planned and delivered the operational-readiness
+package requested before PR/PO/GR write workflow: tasks 1-5 added
+`docs/operations/environment-matrix.md`,
+`docs/operations/monitoring-observability-plan.md`,
+`docs/operations/backup-dr-plan.md`,
+`docs/operations/module-rollback-runbook.md`, and
+`docs/operations/pr-po-gr-readiness-gates.md`; task 6 linked them from
+`docs/migration/cutover-checklist.md`. ADR `0025` is Accepted: `V2-0044`
+staging import/read-only validation can proceed (already done), and per
+`pr-po-gr-readiness-gates.md`, PR/PO/GR write-workflow implementation against
+Staging can now be planned; production cutover still requires implemented
+and verified readiness checks (task 7, deferred), not just documents.
 
-`V2-0047` (Draft, 2026-06-24) plans the first read-only PR/PO/GR UI slice:
-permission-gated `/purchasing`/`/purchasing/[id]` (PO) and `/receiving`/
+`V2-0047` (Complete, 2026-06-24) implemented the first read-only PR/PO/GR UI
+slice: permission-gated `/purchasing`/`/purchasing/[id]` (PO) and `/receiving`/
 `/receiving/[id]` (GR, with line splits), reading the real rows `V2-0044`
 already imported. **Not** blocked by `V2-0046`/ADR `0025` — that gate covers
-write workflow only. Found a real gap to fix during execution: the shared
-`ModuleLandingPage` placeholder checks only the single `purchasing.read`/
+write workflow only. Fixed a real gap found during execution: the shared
+`ModuleLandingPage` placeholder checked only the single `purchasing.read`/
 `receiving.read` permission, but no role currently holds those `.read`
-values (only `.write`), so a `.write`-only role is incorrectly denied today;
-the new routes should use `anyOf` like Picking's page guard. Awaiting `Go:`.
+values (only `.write`), so a `.write`-only role was incorrectly denied; the
+new routes now use `anyOf` like Picking's page guard, proven against a
+synthetic `SUPERVISOR`-role test account. Committed and pushed
+(`c4797f9`, 2026-06-24).
 
 ## Near-Term Queue
 
@@ -104,8 +111,8 @@ the new routes should use `anyOf` like Picking's page guard. Awaiting `Go:`.
 | 4 | Fresh PR CSV reconciliation | Required before PR/PO/GR data import/runtime UI | Done (`V2-0040`, 2026-06-23; ADR `0022`, 2026-06-24): logic built+proven (0 blockers, 9 warnings); 3 PR-derived PO rows resolved as manual-review/nullable PR linkage, no recovery needed |
 | 5 | Placeholder route guard pass | Prevents future route content from inheriting open placeholders | Done (`V2-0041`, 2026-06-23): `ModuleLandingPage` now guards all 5 non-Picking routes with `requirePermission()` |
 | 6 | PR/PO/GR staging import slice | Required before any PR/PO/GR read-only UI | Done (`V2-0044`, 2026-06-24): 253 PO/588 GR headers imported, 16/16 checks pass, idempotent re-run proven; ADR `0026` added for synthesized `po_number` |
-| 7 | Operational readiness before PR/PO/GR writes | Prevents core write workflow from starting without environment, monitoring, backup/DR, and rollback posture | Planned (`V2-0046`, 2026-06-24, Draft); ADR `0025` accepted the gate. Does not block `V2-0044` import/read-only validation; blocks PR/PO/GR write workflow until readiness package is approved |
-| 8 | PR/PO/GR read-only list/detail UI | First UI over the imported PO/GR data; not blocked by the write-readiness gate | Planned (`V2-0047`, 2026-06-24, Draft); awaiting `Go:` |
+| 7 | Operational readiness before PR/PO/GR writes | Prevents core write workflow from starting without environment, monitoring, backup/DR, and rollback posture | Done (`V2-0046`, 2026-06-24, Complete, tasks 1-6); ADR `0025` accepted the gate. Does not block `V2-0044` import/read-only validation; PR/PO/GR write-workflow implementation can now be planned, task 7 (tooling/drill) still required before production cutover |
+| 8 | PR/PO/GR read-only list/detail UI | First UI over the imported PO/GR data; not blocked by the write-readiness gate | Done (`V2-0047`, 2026-06-24, Complete); pushed `c4797f9` |
 
 ## Resolved Decisions
 
@@ -117,10 +124,12 @@ package covering Environment Matrix, Monitoring/Observability, Backup/DR,
 Rollback, and PR/PO/GR readiness gates.
 
 Implication: `V2-0044` staging import and read-only validation can continue.
-PR/PO/GR write workflow waits for `V2-0046` readiness docs/approval.
-Production cutover waits for readiness implementation and verification
-evidence. Production Supabase should be a separate data plane from staging
-unless a later ADR accepts an exception.
+The `V2-0046` readiness docs now exist (2026-06-24); PR/PO/GR write-workflow
+implementation can be planned once the user reviews/accepts them. Production
+cutover still waits for readiness implementation and verification evidence
+(task 7: tooling install, real restore drill, named rollback owner —
+deferred, not started). Production Supabase should be a separate data plane
+from staging unless a later ADR accepts an exception.
 
 ### Master Data Vocabulary And Folder Boundaries
 
