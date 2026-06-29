@@ -286,6 +286,7 @@ Plan IDs:
 - `V2-0047` (`docs/plans/V2-0047-pr-po-gr-readonly-ui.md`)
 - `V2-0048` (`docs/plans/V2-0048-figjam-app-workflow-board.md`)
 - `V2-0049` (`docs/plans/V2-0049-pr-create-write-slice.md`)
+- `V2-0050` (`docs/plans/V2-0050-pr-approve-reject-slice.md`)
 
 Goal: Continue Phase 3 from the verified Picking read-only/create baseline
 toward a full V1 replacement roadmap. `V2-0022` now frames the remaining work
@@ -1045,6 +1046,10 @@ Status:
     create a staging PR from `/purchasing/pr/new`, verify
     `/purchasing/pr/[id]`, check permission behavior, mobile 390px layout,
     and console errors. Then plan PR approve/reject or PO-from-approved-PR.
+25. Review `V2-0050` (`docs/plans/V2-0050-pr-approve-reject-slice.md`) and
+    decide whether PR approval/rejection uses existing `purchasing.write` for
+    the MVP or introduces a new granular `purchasing.approve` permission before
+    implementation.
 
 
 ## Open Questions

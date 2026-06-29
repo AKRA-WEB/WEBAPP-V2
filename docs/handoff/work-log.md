@@ -472,3 +472,41 @@ Next action:
   need patch staging.
 - Run signed-in browser UAT for V2-0049 with a `purchasing.write` user before
   any production cutover decision.
+
+## 2026-06-29 - PR Approve/Reject Slice Planned (V2-0050)
+
+Context:
+
+- After committing V2-0048 and V2-0049 locally, the user authorized continuing
+  work and said new work could be planned.
+- The next logical PR/PO/GR step after V2-native PR creation is an explicit
+  approval/rejection gate before PO-from-approved-PR is implemented.
+
+Changes:
+
+- Added `docs/plans/V2-0050-pr-approve-reject-slice.md` as a plan-only Draft.
+- Updated `docs/plans/index.md` with V2-0050 in the active queue and current
+  direction.
+- Updated `docs/handoff/current-state.md` with the V2-0050 plan id and next
+  decision.
+
+Plan summary:
+
+- MVP: one service-role-only public RPC, default `SECURITY INVOKER`, enforcing
+  `pr_pending -> pr_approved` or `pr_pending -> pr_rejected`; update PR header
+  and lines atomically; record `pr_approved`/`pr_rejected` events; show
+  pending-only approve/reject controls on `/purchasing/pr/[id]`.
+- Preconditions: run V2-0049 signed-in browser UAT and decide whether approval
+  uses the existing `purchasing.write` permission or a new
+  `purchasing.approve` permission.
+- Out of scope: PO creation, PR editing/reopen, V1 Sheet/GAS writeback,
+  production cutover.
+
+Verification:
+
+- Pending after the plan edits: run documentation checks before committing.
+
+Next action:
+
+- Review/accept the permission model for V2-0050, then execute with `Go:` after
+  or alongside V2-0049 signed-in browser UAT.

@@ -148,6 +148,12 @@ passed, lint/typecheck/build passed, and a direct transaction-wrapped RPC smoke
 test proved one header, one line, and one `pr_created` event before rollback.
 Production cutover remains gated by readiness task 7, grouped PR/PO/GR UAT,
 signed-in browser UAT, and explicit user approval.
+`V2-0050` is now drafted as the next PR workflow slice: approve/reject pending
+V2-native PRs through an atomic service-role-only transition RPC and pending-
+only controls on `/purchasing/pr/[id]`. It is plan-only for now; recommended
+precondition is running the `V2-0049` signed-in browser UAT and deciding whether
+approval uses the current `purchasing.write` permission or a new granular
+`purchasing.approve` permission.
 
 ## Active Queue
 
@@ -713,6 +719,17 @@ signed-in browser UAT, and explicit user approval.
    - Next action: run signed-in browser UAT with a `purchasing.write` user,
      then plan PR approve/reject or PO-from-approved-PR.
    - File: `docs/plans/V2-0049-pr-create-write-slice.md`
+42. `V2-0050` - PR approve/reject slice
+   - Status: Draft on 2026-06-29.
+   - Goal: approve or reject pending V2-native PRs atomically, update header
+     and lines, record `pr_approved`/`pr_rejected` events, and expose
+     pending-only controls on `/purchasing/pr/[id]`.
+   - Preconditions: run `V2-0049` signed-in browser UAT first, and decide
+     whether MVP approval uses the existing `purchasing.write` permission or a
+     new granular `purchasing.approve` permission.
+   - Next action: user chooses the approval permission model, then sends `Go:`
+     to implement the slice.
+   - File: `docs/plans/V2-0050-pr-approve-reject-slice.md`
 
 ## Completed Or Baseline Plans
 
