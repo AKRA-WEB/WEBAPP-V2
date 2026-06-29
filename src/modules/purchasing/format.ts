@@ -1,4 +1,5 @@
 export type PurchaseOrderStatus = "po_pending_receipt" | "po_closed_apv_ready";
+export type PurchaseRequestStatus = "pr_pending" | "pr_approved" | "pr_rejected";
 
 const STATUS_LABELS: Record<PurchaseOrderStatus, string> = {
   po_pending_receipt: "Pending receipt",
@@ -10,12 +11,32 @@ const STATUS_TONES: Record<PurchaseOrderStatus, "blue" | "green" | "slate"> = {
   po_closed_apv_ready: "green",
 };
 
+const REQUEST_STATUS_LABELS: Record<PurchaseRequestStatus, string> = {
+  pr_pending: "Pending approval",
+  pr_approved: "Approved",
+  pr_rejected: "Rejected",
+};
+
+const REQUEST_STATUS_TONES: Record<PurchaseRequestStatus, "blue" | "green" | "slate"> = {
+  pr_pending: "blue",
+  pr_approved: "green",
+  pr_rejected: "slate",
+};
+
 export function formatPurchaseOrderStatusLabel(status: string) {
   return STATUS_LABELS[status as PurchaseOrderStatus] ?? status;
 }
 
 export function purchaseOrderStatusTone(status: string) {
   return STATUS_TONES[status as PurchaseOrderStatus] ?? "slate";
+}
+
+export function formatPurchaseRequestStatusLabel(status: string) {
+  return REQUEST_STATUS_LABELS[status as PurchaseRequestStatus] ?? status;
+}
+
+export function purchaseRequestStatusTone(status: string) {
+  return REQUEST_STATUS_TONES[status as PurchaseRequestStatus] ?? "slate";
 }
 
 const MATCH_STATUS_LABELS: Record<string, string> = {

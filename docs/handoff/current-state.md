@@ -1,6 +1,6 @@
 # Current State
 
-Last updated: 2026-06-24
+Last updated: 2026-06-29
 
 ## Project
 
@@ -182,6 +182,38 @@ Last updated: 2026-06-24
   resolved by using the existing committed test-account script instead — no
   real V1 user account was touched, no password reset on any existing
   account. `lint`/`typecheck`/`build`/`git diff --check` all pass.
+  `V2-0048` (Complete, 2026-06-25; flowchart revision 2026-06-26) produced a
+  Figma/FigJam-ready workflow board for all 8 V2 app workflows from
+  `docs/architecture/app-flow-diagrams.md`, corrected with the latest status
+  from the plan board (`V2-0047` means PO/GR now have read-only runtime UI).
+  After user feedback that the earlier SVG versions were not clear enough,
+  the generator now emits a proper flowchart diagram (`3600 x 8058`) with
+  101 flowchart nodes, 101 labeled edges, diamond decision nodes, explicit
+  red reject/blocked outcomes, and editable vector/text elements after
+  ungrouping in Figma/FigJam.
+  Direct remote FigJam write was not possible from the available tools:
+  there is no exposed Figma/FigJam write tool in this session, and the user
+  supplied a `figma.com/board/new...` URL rather than an editable node link.
+  Deliverables: `docs/figma/akra-v2-app-workflow-board.svg`,
+  `docs/figma/README.md`, and
+  `scripts/generate-figjam-workflow-board.mjs`. No runtime code, schema,
+  staging data, deployment settings, V1 production files, GAS deployments,
+  Sheets, live URLs, LINE tokens, or secrets changed.
+  `V2-0049` (implementation complete and staging-verified on 2026-06-26;
+  signed-in browser UAT pending) starts the PR/PO/GR write workflow with the
+  smallest transactional slice: V2-native PR creation. It adds
+  `public.create_purchase_requisition(...)` as a public-schema, default
+  `SECURITY INVOKER`, service-role-only RPC; extends the schema verifier so
+  public service-role RPCs are checked consistently; adds Purchasing PR
+  reference data, create server action, multi-line PR form, PR list/detail
+  read helpers, `/purchasing/pr/new`, `/purchasing/pr/[id]`, and a
+  writer-only "New PR" action on `/purchasing` while preserving the existing
+  PO list. The migration was applied to staging, schema verification passed,
+  lint/typecheck/build passed, a transaction-wrapped direct RPC smoke test
+  proved one PR header/line/`pr_created` event before rollback, and a
+  production-server HTTP route smoke for `/purchasing/pr/new` returned 200.
+  Production PR/PO/GR cutover remains blocked by readiness task 7, grouped
+  UAT, signed-in browser UAT for the new PR form, and explicit user approval.
 - Production impact: None
 - V1 reference path: `C:\dev\WEBAPP`
 
@@ -252,6 +284,8 @@ Plan IDs:
 - `V2-0045` (`docs/plans/V2-0045-schema-master-folder-hardening.md`)
 - `V2-0046` (`docs/plans/V2-0046-operational-readiness-before-pr-po-gr-writes.md`)
 - `V2-0047` (`docs/plans/V2-0047-pr-po-gr-readonly-ui.md`)
+- `V2-0048` (`docs/plans/V2-0048-figjam-app-workflow-board.md`)
+- `V2-0049` (`docs/plans/V2-0049-pr-create-write-slice.md`)
 
 Goal: Continue Phase 3 from the verified Picking read-only/create baseline
 toward a full V1 replacement roadmap. `V2-0022` now frames the remaining work
@@ -993,12 +1027,24 @@ Status:
     staging data, mirroring `V2-0019`; `.read`-vs-`.write` permission gap
     fixed and proven via temporary synthetic test accounts. No further
     action needed for this slice.
-20. Keep `docs/plans/index.md` updated whenever a plan status or next action
+20. Create a Figma/FigJam workflow board for all app workflows. Done
+    2026-06-25 (`V2-0048`, Complete), revised 2026-06-26 into a proper
+    flowchart: import-ready SVG at
+    `docs/figma/akra-v2-app-workflow-board.svg` now has 101 nodes, 101
+    labeled edges, decision diamonds, and explicit reject destinations
+    (notably PR/PO/Returns); direct remote FigJam write was not possible
+    with the available tools. Next manual action: drag the SVG into the
+    user's FigJam board and ungroup it.
+21. Keep `docs/plans/index.md` updated whenever a plan status or next action
     changes.
-21. Keep `docs/handoff/work-log.md` as the active recent log; archive older
+22. Keep `docs/handoff/work-log.md` as the active recent log; archive older
     entries under `docs/handoff/archive/` when it becomes long again.
-22. Use `docs/project-management/executive-summary-th.md` when the user needs
+23. Use `docs/project-management/executive-summary-th.md` when the user needs
     a supervisor-friendly project summary.
+24. Run signed-in browser UAT for `V2-0049` with a `purchasing.write` user:
+    create a staging PR from `/purchasing/pr/new`, verify
+    `/purchasing/pr/[id]`, check permission behavior, mobile 390px layout,
+    and console errors. Then plan PR approve/reject or PO-from-approved-PR.
 
 
 ## Open Questions

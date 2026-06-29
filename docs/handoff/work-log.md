@@ -308,3 +308,167 @@ and
 for `V2-0046`'s original planning-only entry (now superseded by its own
 execution entry above) and the `V2-0045` entry (all archived to stay under
 the context budget).
+
+## 2026-06-25 - FigJam App Workflow Board Artifact (V2-0048)
+
+Context:
+
+- User asked: `Go: ทำ workflow board ของทุก app ลง Figma/FigJam จาก
+  docs/architecture/app-flow-diagrams.md` and supplied
+  `figma.com/board/new?t=zRQVoG1u4OErYAiP-0`.
+- The Figma skill was read. Tool discovery found no exposed Figma/FigJam write
+  tool in this session, and the supplied URL is a new-board URL rather than an
+  exact editable node/frame link. Therefore the deliverable is an import-ready
+  SVG board instead of a remote write into FigJam.
+
+Changes:
+
+- Added `scripts/generate-figjam-workflow-board.mjs`, a no-dependency Node
+  generator for the workflow board SVG.
+- Generated `docs/figma/akra-v2-app-workflow-board.svg`.
+- Added `docs/figma/README.md` with FigJam/Figma import instructions.
+- Added plan `docs/plans/V2-0048-figjam-app-workflow-board.md` and updated
+  `docs/plans/index.md` / `docs/handoff/current-state.md`.
+- Board covers Main/Auth, Picking, Purchasing PR, Purchasing PO, Receiving GR,
+  Warehouse, Returns, and KPI. It uses `docs/architecture/app-flow-diagrams.md`
+  for flow content and latest plan-board status where that source was stale
+  (notably PO/GR read-only UI is now implemented by `V2-0047`).
+
+Verification:
+
+- `node scripts/generate-figjam-workflow-board.mjs` successfully wrote the SVG.
+- Confirmed the SVG contains all 8 module labels and has non-empty content
+  (38,560 bytes). The local image preview tool cannot render SVG directly.
+- No runtime app code, Supabase schema/migration, staging data, deployment
+  settings, V1 production files, GAS deployments, Sheets, live URLs, LINE
+  tokens, or secrets changed.
+
+Next action:
+
+- Open the FigJam board and drag in
+  `docs/figma/akra-v2-app-workflow-board.svg`; ungroup in Figma/FigJam if
+  individual text/shape editing is needed.
+
+## 2026-06-26 - FigJam Flowchart Diagram Revision (V2-0048)
+
+Context:
+
+- User reviewed `docs/figma/akra-v2-app-workflow-board.svg` and said it was
+  not clear enough. The requested direction was a clearer workflow diagram
+  that feels usable in Figma/FigJam, with every step easy to change later.
+- User then rejected the detailed step-list revision because it still did not
+  read like a flowchart and asked where the `Reject` branch goes.
+- The Figma skill was read again. Tool discovery still exposed no Figma/FigJam
+  write tool, so the practical deliverable remains an import-ready SVG rather
+  than a direct remote board write.
+
+Changes:
+
+- Updated `scripts/generate-figjam-workflow-board.mjs` again to generate a
+  proper flowchart graph rather than a vertical step list. The new renderer
+  uses explicit node/edge definitions, diamond decision nodes, labeled arrows,
+  and red reject/blocked outcome nodes.
+- Regenerated `docs/figma/akra-v2-app-workflow-board.svg` at `3600 x 8058`.
+  The artifact now has 101 flowchart nodes and 101 labeled edges. Reject paths
+  are explicit: for example, PR goes `Supervisor review -> Reject -> Reject
+  with comment -> Status: rejected / closed -> No PO is created`; Returns goes
+  `Supervisor review -> Reject -> Status: rejected -> End: no warehouse
+  processing`; PO change-request/reject loops back to `Draft PO` for revision.
+- Updated `docs/figma/README.md`, `docs/plans/V2-0048-figjam-app-workflow-board.md`,
+  `docs/plans/index.md`, and `docs/handoff/current-state.md` to record the
+  2026-06-26 flowchart revision and the remaining direct-Figma-write
+  limitation.
+
+Verification:
+
+- `node scripts/generate-figjam-workflow-board.mjs` rewrote the SVG
+  successfully (`Canvas: 3600x8058`, `Flowchart nodes: 101`,
+  `Flowchart edges: 101`).
+- `node --check scripts/generate-figjam-workflow-board.mjs` passes.
+- Structural SVG checks confirmed 17 decision diamonds, 102 path elements
+  (101 graph edges plus the arrowhead marker path), branch labels including
+  `Approve`, `Reject`, `Reject/change`, `Yes`, and `No`, and explicit reject
+  destination text for PR/PO/Returns.
+- `git diff --check` passes.
+- No raster preview tool (`magick`, `inkscape`, `rsvg-convert`) is available
+  in PATH, so visual verification was structural rather than screenshot-based.
+- No runtime app code, Supabase schema/migration, staging data, deployment
+  settings, V1 production files, GAS deployments, Sheets, live URLs, LINE
+  tokens, or secrets changed.
+
+Next action:
+
+- Drag `docs/figma/akra-v2-app-workflow-board.svg` into FigJam/Figma and
+  ungroup it before editing boxes, arrows, or text.
+
+## 2026-06-29 - V2-0049 PR Create Write Slice Closeout Docs
+
+Context:
+
+- User asked to close out V2-0049 docs and prepare split commits after a review
+  found the runtime/schema work was mostly sound but not ready to commit as-is.
+- Review findings addressed here: missing V2-0049 active work-log entry,
+  stale module README/status docs, stale migration/database strategy docs, and
+  unclear commit scope because V2-0048 FigJam artifacts and V2-0049 runtime
+  changes are both still uncommitted.
+
+Changes:
+
+- Updated `src/modules/purchasing/README.md` and `src/modules/README.md` so
+  the module status now reflects V2-0049: V2-native PR create/list/detail is
+  implemented, backed by service-role-only
+  `public.create_purchase_requisition(...)`, with signed-in browser UAT still
+  pending.
+- Updated `docs/migration/module-inventory.md` to replace the stale "No runtime
+  UI yet" PR/PO/GR note with the current state: V2-0047 PO/GR read-only UI is
+  implemented, and V2-0049 adds the first PR write slice.
+- Updated `docs/migration/database-strategy.md` to record
+  `20260626071939_pr_create_write_slice.sql`, its public-schema
+  `SECURITY INVOKER` / service-role-only posture, and staging apply status.
+- Updated `docs/handoff/current-state.md` with today's date and an explicit
+  next action for signed-in browser UAT of `/purchasing/pr/new`.
+
+Prepared split-commit grouping:
+
+- Commit 1, V2-0048 FigJam workflow board: `docs/figma/**`,
+  `docs/plans/V2-0048-figjam-app-workflow-board.md`,
+  `scripts/generate-figjam-workflow-board.mjs`, plus the V2-0048 portions of
+  `docs/plans/index.md`, `docs/handoff/current-state.md`, and this work log.
+- Commit 2, V2-0049 PR create write slice:
+  `supabase/migrations/20260626071939_pr_create_write_slice.sql`,
+  `scripts/verify-staging-schema.mjs`, `src/app/purchasing/page.tsx`,
+  `src/app/purchasing/pr/**`, `src/modules/purchasing/create-pr-action.ts`,
+  `src/modules/purchasing/new-pr-form.tsx`,
+  `src/modules/purchasing/reference-data.ts`,
+  `src/modules/purchasing/read-model.ts`, `src/modules/purchasing/format.ts`,
+  `src/modules/purchasing/README.md`, `src/modules/README.md`,
+  `src/app/globals.css`,
+  `docs/plans/V2-0049-pr-create-write-slice.md`,
+  `docs/migration/{module-inventory.md,database-strategy.md}`, and the
+  V2-0049 portions of `docs/plans/index.md`, `docs/handoff/current-state.md`,
+  and this work log.
+- `next-env.d.ts` is generated churn from Next route type generation. Decide
+  before staging whether to include it with V2-0049 or restore it out of the
+  commit; no manual file edit was made in this closeout.
+
+Verification:
+
+- `git diff --check` passed for the current working tree; only line-ending
+  warnings were reported (`docs/migration/module-inventory.md`,
+  `scripts/verify-staging-schema.mjs`, `src/app/globals.css`).
+- Earlier in the same review session, before these documentation-only closeout
+  edits, `npm run lint` passed with two pre-existing FigJam warnings,
+  `npm run typecheck` passed, `npm run check:migrations` passed,
+  `npm run build` passed, and `npm run db:verify-staging-schema` passed.
+- No runtime behavior, Supabase schema, staging data, V1 production files, GAS
+  deployments, Sheets, live URLs, LINE tokens, deployment settings, or secrets
+  changed during this closeout.
+
+Next action:
+
+- Stage the split commits carefully, because shared docs
+  (`docs/plans/index.md`, `docs/handoff/current-state.md`,
+  `docs/handoff/work-log.md`) contain both V2-0048 and V2-0049 content and may
+  need patch staging.
+- Run signed-in browser UAT for V2-0049 with a `purchasing.write` user before
+  any production cutover decision.

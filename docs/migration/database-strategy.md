@@ -161,6 +161,17 @@ future write-workflow actions, not an import audit trail. See
 `docs/migration/pr-po-gr-v1-mapping.md`'s "V2-0044 Staging Import Result"
 section and ADR `0026` (synthesized `po_number` for legacy bills with no
 source value) for the real gaps found during implementation.
+`V2-0049` (2026-06-26) adds the first PR write workflow slice through
+`supabase/migrations/20260626071939_pr_create_write_slice.sql`: a public
+schema, default `SECURITY INVOKER`, service-role-only
+`public.create_purchase_requisition(date, uuid, text, jsonb)` RPC that
+atomically creates one V2-native PR header, its lines, and a `pr_created`
+event. The Next.js server action calls it only after
+`requirePermission({ permission: "purchasing.write" })`; no authenticated
+insert/update/delete RLS policy was added. Staging schema verification checks
+this RPC with the same public service-role grant/revoke posture as the Picking
+transaction RPCs. Signed-in browser UAT for `/purchasing/pr/new` remains open
+before production cutover.
 
 - The first PR/PO/GR migration is schema/RLS only. It should create
   `public.purchasing_*` and `public.receiving_*` tables, indexes, constraints,
@@ -200,11 +211,16 @@ source value) for the real gaps found during implementation.
 
 ## Staging Apply Status
 
-- Migrations `0001`-`0014` have been applied to the staging Supabase project.
+- Migrations `0001`-`0014` plus
+  `20260626071939_pr_create_write_slice.sql` have been applied to the staging
+  Supabase project.
 - `0013_pr_po_gr_foundation.sql` adds the PR/PO/GR schema/RLS foundation;
   `0014_pr_po_gr_import_events.sql` widens its event-type checks for the
   import audit trail. `V2-0044` (2026-06-24) loaded real staging data into
   `0013`'s tables — see "PR/PO/GR Foundation Assumptions" above.
+- `20260626071939_pr_create_write_slice.sql` adds
+  `public.create_purchase_requisition(...)`; `V2-0049` verified it in staging
+  with schema verification and a transaction-wrapped direct RPC smoke test.
 - Migrations `0001`-`0009` have been applied to the staging Supabase project.
 - `0009_picking_catalog_bridge.sql` adds the Picking-to-catalog nullable bridge
   columns and `public.create_picking_requisition(...)`.

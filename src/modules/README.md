@@ -11,7 +11,7 @@ data to the matching module folder.
 | `auth` | Implemented permission/session helpers and route guards. |
 | `core` | Implemented app registry and shared placeholder landing page. |
 | `picking` | Implemented read/create/status/problem/LINE-retry workflow slices. |
-| `purchasing` | Implemented read-only PO list/detail slice (`V2-0047`); no write actions yet. |
+| `purchasing` | Implemented PO read-only list/detail (`V2-0047`) plus V2-native PR create/list/detail slice (`V2-0049`); signed-in PR create UAT pending. |
 | `receiving` | Implemented read-only GR list/detail slice (`V2-0047`); no write actions yet. |
 | `warehouse` | README boundary only; shared warehouse baseline exists, no runtime workflow yet. |
 | `returns` | README boundary only; no runtime workflow yet. |

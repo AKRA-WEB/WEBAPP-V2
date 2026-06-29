@@ -8,17 +8,19 @@ Current status:
 - `read-model.ts`/`format.ts` implement a permission-gated read-only PO
   list (`/purchasing`) and detail (`/purchasing/[id]`) over the `V2-0044`
   staging import (`V2-0047`).
-- PR read model/UI is not implemented yet — the current PR source has 0
-  imported rows, so there is no real data to display.
-- No write actions/RPC wrapper exist yet; blocked by `V2-0046`/ADR `0025`
-  until the operational-readiness package is approved.
+- PR read helpers, detail UI, reference-data loading, and V2-native PR create
+  form/action are implemented in `V2-0049`: `/purchasing/pr/new` creates a
+  pending PR through service-role-only `public.create_purchase_requisition(...)`,
+  then redirects to `/purchasing/pr/[id]`.
+- Signed-in browser UAT for the PR create form is still pending before any
+  production cutover.
 
 Expected future shape:
 
-- `reference-data.ts` for vendors, products, warehouses, and status options.
-- PR read model/UI once a non-empty PR export is imported and proven.
-- Server actions for approved write workflows only after `V2-0046` is
-  approved.
+- Supervisor approve/reject actions.
+- PO-from-approved-PR workflow.
+- Direct PO mutation and GR receive/reset/confirm workflows, after grouped
+  PR/PO/GR staging UAT planning.
 
 Rules:
 
@@ -27,4 +29,3 @@ Rules:
 - Keep PR/PO bill identity rules aligned with
   `docs/migration/master-data-vocabulary.md` and ADR `0020`/`0022`.
 - Route files under `src/app/purchasing/**` should remain thin.
-

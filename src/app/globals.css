@@ -35,7 +35,9 @@ body {
 }
 
 button,
-input {
+input,
+select,
+textarea {
   font: inherit;
 }
 
@@ -453,7 +455,8 @@ button {
 }
 
 .field input,
-.field select {
+.field select,
+.field textarea {
   inline-size: 100%;
   min-block-size: 2.75rem;
   padding-inline: 0.8rem;
@@ -461,6 +464,12 @@ button {
   border-radius: 8px;
   background: #ffffff;
   color: var(--text);
+}
+
+.field textarea {
+  min-block-size: 5.5rem;
+  padding-block: 0.7rem;
+  resize: vertical;
 }
 
 .primary-button {
@@ -593,6 +602,10 @@ button {
   gap: 0.6rem;
 }
 
+.line-row__wide {
+  grid-column: span 2;
+}
+
 .line-row__footer {
   display: flex;
   align-items: center;
@@ -635,6 +648,10 @@ button {
 @media (max-width: 560px) {
   .line-row__grid {
     grid-template-columns: 1fr;
+  }
+
+  .line-row__wide {
+    grid-column: auto;
   }
 }
 

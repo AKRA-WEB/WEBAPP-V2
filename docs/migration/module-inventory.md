@@ -99,11 +99,17 @@ For each module, capture:
 - `purchasing` / `receiving` (PR/PO/GR): schema migration applied to
   staging (2026-06-22); **staging data now imported (2026-06-24, `V2-0044`)**:
   253 PO headers / 748 lines, 588 GR headers / 1868 lines / 6 splits, 0 PR
-  rows (source genuinely empty). No runtime UI yet — see
-  `docs/migration/pr-po-gr-v1-mapping.md`'s "V2-0044 Staging Import Result"
-  section for the real gaps found/resolved (qty=0 skip, `LEGACY-` synthesized
-  `po_number` per ADR `0026`, new GR header grouping logic, migration `0014`
-  import-event types). `V2-0036`'s first slice (2026-06-22) profiled V1
+  rows (source genuinely empty). `V2-0047` implemented read-only PO list/detail
+  (`/purchasing`, `/purchasing/[id]`) and GR list/detail
+  (`/receiving`, `/receiving/[id]`) over that import. `V2-0049` adds the first
+  PR write slice: service-role-only `public.create_purchase_requisition(...)`,
+  `/purchasing/pr/new`, `/purchasing/pr/[id]`, and a writer-only "New PR"
+  action on `/purchasing`; signed-in browser UAT is still pending before any
+  production cutover. See `docs/migration/pr-po-gr-v1-mapping.md`'s
+  "V2-0044 Staging Import Result" section for the real import gaps
+  found/resolved (qty=0 skip, `LEGACY-` synthesized `po_number` per ADR
+  `0026`, new GR header grouping logic, migration `0014` import-event types).
+  `V2-0036`'s first slice (2026-06-22) profiled V1
   sources read-only: confirmed a live V1 `PR` sheet exists (same spreadsheet
   as `PO`/`GR`) but has no CSV export in `import-data/po-pr-gr/` yet;
   documented V1's own PO bill-grouping key and the
@@ -122,7 +128,7 @@ For each module, capture:
   `public.receiving_goods_receipt_lines`, `public.receiving_line_splits`,
   and `public.receiving_events`, all with RLS, explicit grants, and
   `purchasing.read/write`/`receiving.read/write` select policies only —
-  no data import, no RPC, no UI in this migration.
+  no data import, no RPC, no UI in that migration.
   `npm run check:migrations` and `npm run db:verify-staging-schema` both
   pass (36 public tables, 34 RLS policies, applied to staging 2026-06-22). A
   live anon Data API call against two new tables returned `HTTP 401`,
