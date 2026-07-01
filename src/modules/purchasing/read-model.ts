@@ -100,6 +100,8 @@ export type PurchaseRequestDetail = {
   approvedAt: string | null;
   rejectedReason: string | null;
   createdAt: string;
+  linkedPoId: string | null;
+  linkedPoNumber: string | null;
   lines: PurchaseRequestLine[];
   events: PurchaseRequestEvent[];
 };
@@ -359,7 +361,7 @@ export type PurchaseRequestDetailResult =
 export async function getPurchaseRequestDetail(id: string): Promise<PurchaseRequestDetailResult> {
   const supabase = await createClient();
 
-  const [requestResult, linesResult, eventsResult] = await Promise.all([
+  const [requestResult, linesResult, eventsResult, linkedPoResult] = await Promise.all([
     supabase
       .from("purchasing_purchase_requests")
       .select(
@@ -379,9 +381,16 @@ export async function getPurchaseRequestDetail(id: string): Promise<PurchaseRequ
       .select("id, event_type, actor_name, created_at")
       .eq("purchase_request_id", id)
       .order("created_at", { ascending: true }),
+    supabase
+      .from("purchasing_purchase_orders")
+      .select("id, po_number")
+      .eq("legacy_source", "v2_app")
+      .eq("bill_identity_kind", "pr_uid")
+      .eq("bill_identity_value", id)
+      .maybeSingle(),
   ]);
 
-  if (requestResult.error || linesResult.error || eventsResult.error) {
+  if (requestResult.error || linesResult.error || eventsResult.error || linkedPoResult.error) {
     return { status: "error" };
   }
 
@@ -392,6 +401,7 @@ export async function getPurchaseRequestDetail(id: string): Promise<PurchaseRequ
   const request = requestResult.data as unknown as PurchaseRequestDetailRow;
   const lines = (linesResult.data ?? []) as unknown as PurchaseRequestLineRow[];
   const events = (eventsResult.data ?? []) as unknown as PurchaseRequestEventRow[];
+  const linkedPo = linkedPoResult.data as { id: string; po_number: string } | null;
 
   return {
     status: "ok",
@@ -407,6 +417,8 @@ export async function getPurchaseRequestDetail(id: string): Promise<PurchaseRequ
       approvedAt: request.approved_at,
       rejectedReason: request.rejected_reason,
       createdAt: request.created_at,
+      linkedPoId: linkedPo?.id ?? null,
+      linkedPoNumber: linkedPo?.po_number ?? null,
       lines: lines.map((line) => ({
         id: line.id,
         lineNo: line.line_no,

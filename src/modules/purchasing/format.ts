@@ -29,6 +29,13 @@ const REQUEST_EVENT_LABELS: Record<string, string> = {
   pr_rejected: "Rejected",
 };
 
+const ORDER_EVENT_LABELS: Record<string, string> = {
+  po_created_from_pr: "Created from PR",
+  po_created_direct: "Created (direct)",
+  po_closed: "Closed",
+  po_apv_marked: "APV marked",
+};
+
 export function formatPurchaseOrderStatusLabel(status: string) {
   return STATUS_LABELS[status as PurchaseOrderStatus] ?? status;
 }
@@ -47,6 +54,10 @@ export function purchaseRequestStatusTone(status: string) {
 
 export function formatPurchaseRequestEventType(eventType: string) {
   return REQUEST_EVENT_LABELS[eventType] ?? eventType;
+}
+
+export function formatPurchaseOrderEventType(eventType: string) {
+  return ORDER_EVENT_LABELS[eventType] ?? eventType;
 }
 
 const MATCH_STATUS_LABELS: Record<string, string> = {

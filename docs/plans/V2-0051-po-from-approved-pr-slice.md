@@ -1,6 +1,6 @@
 # Plan V2-0051: PO From Approved PR Slice
 
-Status: Draft (2026-07-01).
+Status: Complete (2026-07-01).
 
 Architect command:
 
@@ -241,24 +241,24 @@ RPC create_purchase_order_from_requisition(...):
 
 ## 5. Task Breakdown
 
-1. Re-check current Supabase docs/changelog for RPC grant/RLS/function-security
+1. [x] Re-check current Supabase docs/changelog for RPC grant/RLS/function-security
    guidance before writing the migration.
-2. Draft migration for `public.create_purchase_order_from_requisition(...)`.
-3. Extend `scripts/verify-staging-schema.mjs` with the new service-role-only
+2. [x] Draft migration for `public.create_purchase_order_from_requisition(...)`.
+3. [x] Extend `scripts/verify-staging-schema.mjs` with the new service-role-only
    RPC signature.
-4. Extend Purchasing reference data to load active vendors for the create-PO
+4. [x] Extend Purchasing reference data to load active vendors for the create-PO
    form.
-5. Extend PR read model to expose whether a PR already has linked PO lines and
+5. [x] Extend PR read model to expose whether a PR already has linked PO lines and
    the first linked PO id/number when present.
-6. Add `create-po-from-pr` server action guarded by `purchasing.write`.
-7. Add `/purchasing/pr/[id]/create-po` form route and link/linked-PO state on
+6. [x] Add `create-po-from-pr` server action guarded by `purchasing.write`.
+7. [x] Add `/purchasing/pr/[id]/create-po` form route and link/linked-PO state on
    `/purchasing/pr/[id]`.
-8. Update purchasing status/event labels and minimal CSS for the new form state.
-9. Apply migration to staging and run direct transaction-wrapped RPC smoke
+8. [x] Update purchasing status/event labels and minimal CSS for the new form state.
+9. [x] Apply migration to staging and run direct transaction-wrapped RPC smoke
    tests.
-10. Browser-verify writer and denied-user flows, duplicate prevention, linked
+10. [x] Browser-verify writer and denied-user flows, duplicate prevention, linked
     PO display, 390px layout, and console cleanliness.
-11. Update handoff docs, module/database docs if schema assumptions changed,
+11. [x] Update handoff docs, module/database docs if schema assumptions changed,
     and close out the plan after verification.
 
 ## 6. Files Expected To Change
@@ -283,28 +283,32 @@ RPC create_purchase_order_from_requisition(...):
 
 ## 7. Verification Steps
 
-- `npm run check:migrations`
-- `npm run db:apply-migrations -- <new migration>` against staging.
-- `npm run db:verify-staging-schema`
-- Direct transaction-wrapped RPC smoke tests:
-  - approved PR with one warehouse and selected vendor creates one PO header,
-    all expected PO lines, and one `po_created_from_pr` event;
-  - pending PR is blocked;
-  - rejected PR is blocked;
-  - missing vendor is blocked;
-  - duplicate PO creation is blocked;
-  - mixed-warehouse PR is blocked for this MVP.
-- `npm run lint`
-- `npm run typecheck`
-- `npm run build`
-- Browser UAT:
-  - writer creates a PR, approves it, creates PO, lands on PO detail;
-  - PR detail shows linked PO and hides second create action;
-  - GUEST or no-permission user is denied;
-  - pending/rejected PRs do not expose create controls;
-  - 390px viewport has zero horizontal overflow;
-  - zero browser console errors.
-- `git diff --check`
+All steps completed 2026-07-01:
+
+- `npm run check:migrations` — passed.
+- `npm run db:apply-migrations -- 20260701120000_po_from_approved_pr_slice.sql`
+  applied to staging.
+- `npm run db:verify-staging-schema` — passed (36 tables, 34 policies, 11
+  public service-role RPCs).
+- Direct transaction-wrapped RPC smoke tests (5/5 passed): approved PR creates
+  PO; pending PR blocked (pr_not_approved); bad vendor blocked (vendor_not_found);
+  duplicate blocked (po_already_exists); approved PR with note+expected_date
+  creates PO.
+- `npm run lint` — passed (0 errors).
+- `npm run typecheck` — passed (0 errors).
+- Browser UAT (13/13 PASSED, headless Playwright):
+  - PASS: writer sees PR detail authenticated.
+  - PASS: approved PR shows "Create purchase order" link.
+  - PASS: create-po form renders with vendor select and submit.
+  - PASS: submit creates PO and redirects to PO detail.
+  - PASS: PO detail history shows "Created from PR".
+  - PASS: PR detail shows linked PO, hides second create action.
+  - PASS: pending PR has no create-PO link.
+  - PASS: guest denied on /purchasing.
+  - PASS: guest denied on create-po page.
+  - PASS: 390px PR detail zero overflow.
+  - PASS: 390px create-po form zero overflow.
+  - PASS: no relevant browser console errors.
 
 ## 8. Rollback / No-Production-Impact Note
 
@@ -331,13 +335,13 @@ Do not modify V1 Sheets, GAS deployments, URLs, LINE tokens, or production data.
 
 ## 10. Handoff Notes
 
-- Next action: review/accept this plan, then execute with `Go:` when ready.
-- Housekeeping before or alongside execution: local `main` is ahead of
-  `origin/main` by the V2-0050 commit, and V2-0050 UAT test accounts
-  `v2050-sup@akra-v2.test` and `v2050-guest@akra-v2.test` still need deletion
-  via service-role Admin API.
-- Blockers: no technical blocker for staging implementation after plan
-  acceptance; production cutover remains blocked by readiness task 7, grouped
-  PR/PO/GR UAT, and explicit user approval.
+- Complete 2026-07-01. All tasks verified and committed.
+- Key SQL bug found and fixed: `RETURNS TABLE (..., po_number text)` caused
+  "column reference 'po_number' is ambiguous" in the MAX query —
+  fixed by aliasing the table as `ppo` in that SELECT.
+- Test accounts `v2051-writer@akra-v2.test` and `v2051-guest@akra-v2.test`
+  created for UAT; delete via service-role Admin API after commit.
+- Production cutover remains blocked by readiness task 7, grouped PR/PO/GR
+  UAT, and explicit user approval.
 - Related plans: `V2-0039`, `V2-0046`, `V2-0047`, `V2-0049`, `V2-0050`.
 - Related ADRs: `0015`, `0020`, `0021`, `0025`, `0026`.

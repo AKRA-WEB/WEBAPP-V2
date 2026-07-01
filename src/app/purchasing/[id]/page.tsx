@@ -10,6 +10,7 @@ import {
   formatMatchStatusLabel,
   formatOptionalDate,
   formatPoNumberLabel,
+  formatPurchaseOrderEventType,
   formatPurchaseOrderStatusLabel,
   formatQuantity,
   purchaseOrderStatusTone,
@@ -175,7 +176,7 @@ export default async function PurchaseOrderDetailPage({
         <ul className="requisition-timeline">
           {order.events.map((event) => (
             <li className="requisition-timeline__item" key={event.id}>
-              <span className="requisition-timeline__type">{event.eventType}</span>
+              <span className="requisition-timeline__type">{formatPurchaseOrderEventType(event.eventType)}</span>
               <span className="requisition-timeline__meta">
                 {formatDateTime(event.createdAt)}
                 {event.actorName ? ` · ${event.actorName}` : ""}

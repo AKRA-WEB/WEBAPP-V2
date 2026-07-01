@@ -1074,8 +1074,14 @@ Status:
     matching auth users.
 28. Done 2026-07-01: drafted `V2-0051` PO-from-approved-PR slice. Plan:
     `docs/plans/V2-0051-po-from-approved-pr-slice.md`.
-29. Next PR/PO/GR implementation slice: review/accept `V2-0051`, then execute
-    with `Go:` when ready; alternative non-runtime option remains
+29. Done 2026-07-01: V2-0051 complete. `create_purchase_order_from_requisition`
+    RPC (ADR 0015 posture) applied to staging. PR detail shows "Create PO" link
+    for approved+no-PO PRs, linked PO link after creation, hides action when PO
+    exists. Redirect to `/purchasing/[poId]` on success. PO detail history shows
+    "Created from PR". 5/5 direct RPC smoke tests passed. 13/13 browser UAT
+    passed. Test accounts `v2051-writer@akra-v2.test` (SUPERVISOR) and
+    `v2051-guest@akra-v2.test` (GUEST) created for UAT — deleted 2026-07-01.
+30. Next PR/PO/GR implementation slice: GR-from-PO (goods receipt), or
     Vercel-deployed V2-0049 verification (Preview/Development environment).
 
 

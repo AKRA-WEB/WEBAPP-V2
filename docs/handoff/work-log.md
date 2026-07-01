@@ -687,3 +687,98 @@ Next action:
 
 - Proceed with `V2-0051` implementation only after a `Go:` command, or run the
   Vercel-deployed V2-0049 verification if that path is prioritized.
+
+## 2026-07-01 - V2-0051 PO From Approved PR Slice (Go: V2-0051)
+
+Context:
+
+- User issued `Go: V2-0051` to execute the PO-from-approved-PR slice.
+- Context window carried full reconnaissance from the prior session
+  (all source files and schema details already read before implementation).
+
+Changes:
+
+- `supabase/migrations/20260701120000_po_from_approved_pr_slice.sql` (new):
+  `public.create_purchase_order_from_requisition(p_request_id, p_actor_profile_id,
+  p_actor_name, p_vendor_id, p_po_date, p_expected_date, p_note)`. ADR 0015
+  posture: default SECURITY INVOKER, EXECUTE revoked from public/anon/authenticated,
+  granted to service_role. Logic: locks PR row FOR UPDATE; validates pr_approved
+  status; validates ≥1 line; validates single non-null warehouse across all lines
+  (blocks mixed-warehouse in MVP); validates vendor is_active; guards against
+  duplicate PO via both PO-line linkage check and bill-identity header check;
+  locks table in SHARE ROW EXCLUSIVE MODE for V2 PO number allocation
+  (`V2-PO-YYYYMMDD-NNNN`); inserts PO header, PO lines (copied from PR lines with
+  `purchase_request_line_id` set), and `po_created_from_pr` event. Alias fix:
+  `ppo.po_number` in MAX query to avoid OUT-param name collision.
+- `scripts/verify-staging-schema.mjs`: added `create_purchase_order_from_requisition`
+  to `publicServiceRoleRpcNames` array and `assertSetEqual` expected list.
+- `src/modules/purchasing/format.ts`: added `ORDER_EVENT_LABELS` map
+  (`po_created_from_pr → "Created from PR"`, plus other PO event types) and
+  `formatPurchaseOrderEventType()` function.
+- `src/modules/purchasing/reference-data.ts`: added `PurchaseOrderVendorOption`,
+  `CreatePoReferenceData` types and `listCreatePoReferenceData()` function (loads
+  active vendors via `createAdminClient()`).
+- `src/modules/purchasing/read-model.ts`: added `linkedPoId: string | null` and
+  `linkedPoNumber: string | null` to `PurchaseRequestDetail`; extended
+  `getPurchaseRequestDetail()` with a fourth parallel query for PO header by
+  `(legacy_source='v2_app', bill_identity_kind='pr_uid', bill_identity_value=<id>)`.
+- `src/modules/purchasing/create-po-from-pr-action.ts` (new): server action
+  `createPurchaseOrderFromRequisition(requestId, previousState, formData)` —
+  guarded by `requirePermission({ permission: "purchasing.write" })`, calls
+  `createAdminClient().rpc(...)`, maps RPC error strings to user-facing messages,
+  redirects to `/purchasing/${poId}` on success.
+- `src/modules/purchasing/create-po-from-pr-form.tsx` (new): client component
+  with `useActionState`, vendor select, PO date (defaulted to Bangkok today),
+  optional expected date and note, read-only PR line preview.
+- `src/app/purchasing/pr/[id]/create-co/page.tsx` (new): server component;
+  requires `purchasing.write`; blocks non-approved PR and already-PO'd PR with
+  clear messages; renders `CreatePoFromPrForm`.
+- `src/app/purchasing/pr/[id]/page.tsx`: added `canCreatePo` flag (approved +
+  no linked PO + purchasing.write); shows linked-PO section or create-PO link
+  section accordingly; `Route` type cast added for dynamic hrefs.
+- `src/app/purchasing/[id]/page.tsx`: added `formatPurchaseOrderEventType` import
+  and used it on event history list (was rendering raw `event_type` string).
+
+Key bug fixed during SQL writing:
+- `po_number` in RETURNS TABLE caused ambiguity with `purchasing_purchase_orders.po_number`
+  column reference in MAX query — fixed by aliasing table as `ppo` in that SELECT.
+
+Verification:
+- `npm run typecheck` — passed (0 errors).
+- `npm run lint` — passed (0 errors; pre-existing V2-0048 FigJam warnings only).
+- `npm run check:migrations` — passed.
+- `npm run db:apply-migrations -- 20260701120000_po_from_approved_pr_slice.sql` —
+  applied to staging.
+- `npm run db:verify-staging-schema` — passed (36 tables, 34 policies).
+- Direct RPC smoke tests (5/5 in BEGIN/ROLLBACK): approved PR creates PO with
+  V2-PO-YYYYMMDD-NNNN number; pending PR blocked (pr_not_approved); bad vendor
+  blocked (vendor_not_found); duplicate blocked; approved PR with note+expected_date
+  creates PO.
+- Browser UAT (13/13 PASSED — headless Playwright, session injection):
+  - PASS: writer authenticated, sees PR detail.
+  - PASS: approved PR shows "Create purchase order" link.
+  - PASS: create-po form renders (h1="Create purchase order", vendor select, submit).
+  - PASS: submit creates PO, redirects to `/purchasing/${poId}`.
+  - PASS: PO detail history shows "Created from PR".
+  - PASS: PR detail shows linked PO section, create action hidden.
+  - PASS: pending PR has no create-PO link.
+  - PASS: guest denied on /purchasing.
+  - PASS: guest denied on create-po page directly.
+  - PASS: 390px PR detail zero overflow.
+  - PASS: 390px create-po form zero overflow.
+  - PASS: no relevant browser console errors.
+
+Test accounts:
+
+- `v2051-writer@akra-v2.test` (SUPERVISOR, `purchasing.write`) — created for UAT;
+  delete via service-role Admin API after commit.
+- `v2051-guest@akra-v2.test` (GUEST, no purchasing perms) — created for UAT;
+  delete via service-role Admin API after commit.
+
+No V1 production files, GAS deployments, Sheets, live URLs, LINE tokens,
+deployment settings, or secrets changed.
+
+Next action:
+
+- Delete V2-0051 UAT test accounts.
+- Next PR/PO/GR slice: GR-from-PO (goods receipt), or Vercel V2-0049 verification.

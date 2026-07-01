@@ -186,6 +186,19 @@ repeat transitions raise a Postgres exception. Applied to staging 2026-07-01;
 smoke tests passed (BEGIN/ROLLBACK); browser UAT 15/15 passed. Production
 cutover remains gated by readiness task 7, grouped PR/PO/GR UAT, and explicit
 user approval.
+`V2-0051` (2026-07-01) adds the PO-from-approved-PR write slice through
+`supabase/migrations/20260701120000_po_from_approved_pr_slice.sql`:
+`public.create_purchase_order_from_requisition(uuid, uuid, text, uuid, date, date, text)`
+— locks PR row (`SELECT FOR UPDATE`), validates `pr_approved` status, validates
+single non-null warehouse across all PR lines (MVP: blocks mixed-warehouse PRs),
+validates vendor is active, guards against duplicate PO creation via PO-line
+linkage check and bill-identity header check, locks table in SHARE ROW EXCLUSIVE
+MODE for `V2-PO-YYYYMMDD-NNNN` number allocation, inserts PO header
+(`bill_identity_kind='pr_uid'`, `legacy_source='v2_app'`), PO lines (copying PR
+lines with `purchase_request_line_id` set), and a `po_created_from_pr` event.
+SECURITY INVOKER, EXECUTE to service_role only (ADR 0015). Applied to staging
+2026-07-01; `db:verify-staging-schema` passed (36 tables, 34 policies); 5/5
+smoke tests passed; 13/13 browser UAT passed.
 
 - The first PR/PO/GR migration is schema/RLS only. It should create
   `public.purchasing_*` and `public.receiving_*` tables, indexes, constraints,

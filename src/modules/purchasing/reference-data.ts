@@ -34,9 +34,23 @@ type WarehouseRow = {
   display_name: string;
 };
 
+type VendorRow = {
+  id: string;
+  display_name: string;
+};
+
 export type PurchaseRequisitionReferenceData = {
   products: PurchaseRequisitionProductOption[];
   warehouses: PurchaseRequisitionWarehouseOption[];
+};
+
+export type PurchaseOrderVendorOption = {
+  id: string;
+  displayName: string;
+};
+
+export type CreatePoReferenceData = {
+  vendors: PurchaseOrderVendorOption[];
 };
 
 /**
@@ -84,4 +98,23 @@ export async function listPurchaseRequisitionReferenceData(): Promise<PurchaseRe
     }));
 
   return { products, warehouses };
+}
+
+export async function listCreatePoReferenceData(): Promise<CreatePoReferenceData> {
+  const supabase = createAdminClient();
+
+  const { data, error } = await supabase
+    .from("catalog_vendors")
+    .select("id, display_name")
+    .eq("is_active", true)
+    .order("display_name", { ascending: true });
+
+  const vendors = error
+    ? []
+    : ((data ?? []) as unknown as VendorRow[]).map((row) => ({
+      id: row.id,
+      displayName: row.display_name,
+    }));
+
+  return { vendors };
 }

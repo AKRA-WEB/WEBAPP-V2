@@ -110,7 +110,14 @@ For each module, capture:
   pending-only approve/reject controls on `/purchasing/pr/[id]`, and atomic
   `pr_approved`/`pr_rejected` transitions with event history; browser UAT
   15/15 passed (writer can act, terminal-state controls hidden, GUEST denied,
-  390px zero overflow, no console errors). See `docs/migration/pr-po-gr-v1-
+  390px zero overflow, no console errors).
+  `V2-0051` (Complete, 2026-07-01) adds the PO-from-approved-PR slice:
+  service-role-only `public.create_purchase_order_from_requisition(...)` that
+  creates one PO from one approved PR (single-warehouse MVP), `/purchasing/pr/
+  [id]/create-po` form route with vendor select, linked-PO detection in PR
+  read model, `po_created_from_pr` event label in PO history; browser UAT
+  13/13 passed (writer creates PO, PR shows linked PO, GUEST denied, 390px
+  zero overflow, no console errors). See `docs/migration/pr-po-gr-v1-
   mapping.md`'s "V2-0044 Staging Import Result" section for the real import
   gaps found/resolved (qty=0 skip, `LEGACY-` synthesized `po_number` per ADR
   `0026`, new GR header grouping logic, migration `0014` import-event types).

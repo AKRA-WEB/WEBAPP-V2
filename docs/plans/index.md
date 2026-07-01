@@ -158,11 +158,12 @@ reject-no-reason, terminal-repeat-approve, terminal-repeat-reject) all pass,
 V2-0049 and V2-0050 browser UAT complete (30/30 checks green — writer can act,
 GUEST denied, terminal-state controls hidden, 390px zero overflow, no console
 errors). MVP approval uses existing `purchasing.write`; a new
-`purchasing.approve` permission is deferred. Next: PO-from-approved-PR slice or
-V2-0049 signed-in Vercel deployment verification. `V2-0051` is now drafted as
-the PO-from-approved-PR slice: one approved V2-native PR becomes one V2-native
-PO through a service-role-only RPC, with vendor selection, duplicate guards,
-PR-line linkage, and a deliberate MVP block on mixed-warehouse PRs.
+`purchasing.approve` permission is deferred. V2-0051 (PO from approved PR) is now complete 2026-07-01: one approved
+V2-native PR becomes one V2-native PO through
+`create_purchase_order_from_requisition(...)` (ADR 0015 posture), with vendor
+selection, duplicate guards, PR-line linkage, `po_created_from_pr` event, and
+a deliberate MVP block on mixed-warehouse PRs. 13/13 browser UAT checks green.
+Next: GR-from-PO slice, or V2-0049 signed-in Vercel deployment verification.
 
 ## Active Queue
 
@@ -741,17 +742,16 @@ PR-line linkage, and a deliberate MVP block on mixed-warehouse PRs.
      2026-07-01.
    - File: `docs/plans/V2-0050-pr-approve-reject-slice.md`
 43. `V2-0051` - PO from approved PR slice
-   - Status: Draft on 2026-07-01.
-   - Goal: create one V2-native PO from one approved V2-native PR via a
-     service-role-only `create_purchase_order_from_requisition(...)` RPC,
-     copying PR lines to PO lines, requiring vendor selection, preventing
-     duplicate PO creation, and recording a `po_created_from_pr` event.
-   - MVP constraints: uses existing `purchasing.write`; direct PO, GR,
-     PO close/APV, vendor inference, and split-by-warehouse behavior remain
-     out of scope. Mixed-warehouse PRs should be blocked in this first slice
-     unless the plan is revised before execution.
-   - Next action: review/accept the plan, delete V2-0050 UAT test accounts,
-     then execute with `Go:` when ready.
+   - Status: Complete 2026-07-01.
+   - Goal: create one V2-native PO from one approved V2-native PR via
+     `create_purchase_order_from_requisition(...)` (ADR 0015 posture). Vendor
+     selection required; mixed-warehouse PRs blocked; `po_created_from_pr`
+     event recorded; PR detail shows linked PO and hides second create action.
+   - Verification: migration applied; `db:verify-staging-schema` passed (36
+     tables, 34 policies); 5/5 direct RPC smoke tests passed; 13/13 browser
+     UAT passed (writer creates PR→approve→PO, PR shows linked PO, GUEST
+     denied, pending PR no create action, 390px zero overflow, no console
+     errors). `npm run lint` and `typecheck` clean.
    - File: `docs/plans/V2-0051-po-from-approved-pr-slice.md`
 
 ## Completed Or Baseline Plans

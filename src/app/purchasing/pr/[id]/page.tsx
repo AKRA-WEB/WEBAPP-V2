@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Route } from "next";
 
 import { AccessDenied } from "@/components/access-denied";
 import { AppShell } from "@/components/app-shell";
@@ -89,6 +90,10 @@ export default async function PurchaseRequisitionDetailPage({
 
   const { request } = result;
   const canTransition = request.status === "pr_pending" && can(guard.snapshot, "purchasing.write");
+  const canCreatePo =
+    request.status === "pr_approved" &&
+    !request.linkedPoId &&
+    can(guard.snapshot, "purchasing.write");
 
   return (
     <AppShell activeHref="/purchasing">
@@ -133,6 +138,28 @@ export default async function PurchaseRequisitionDetailPage({
       </section>
 
       {canTransition && <PurchaseRequisitionTransitionControls requestId={request.id} />}
+
+      {request.linkedPoId && (
+        <section className="module-detail" aria-label="Linked purchase order">
+          <h2>Purchase order</h2>
+          <p>
+            <Link href={`/purchasing/${request.linkedPoId}` as Route}>
+              {request.linkedPoNumber ?? request.linkedPoId}
+            </Link>
+          </p>
+        </section>
+      )}
+
+      {canCreatePo && (
+        <section className="module-detail" aria-label="Create purchase order">
+          <h2>Next step</h2>
+          <p>
+            <Link className="primary-button" href={`/purchasing/pr/${request.id}/create-po` as Route}>
+              Create purchase order
+            </Link>
+          </p>
+        </section>
+      )}
 
       <section className="module-detail" aria-label="Purchase requisition lines">
         <h2>Lines ({request.lines.length})</h2>
