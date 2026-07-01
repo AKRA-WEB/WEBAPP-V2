@@ -1068,9 +1068,10 @@ Status:
     rechecked (ADR `0015` still correct), migration applied, schema verified,
     5/5 RPC smoke tests passed, V2-0050 browser UAT 15/15 passed, closeout docs
     updated, committed.
-27. Delete test accounts `v2050-sup@akra-v2.test` and `v2050-guest@akra-v2.test`
-    via service-role Admin API (created for V2-0049/V2-0050 UAT, not needed
-    after commit).
+27. Done 2026-07-01: confirmed test accounts `v2050-sup@akra-v2.test` and
+    `v2050-guest@akra-v2.test` are absent. Service-role lookup by `profiles`
+    email found no rows, and Auth Admin API `listUsers` filtering found no
+    matching auth users.
 28. Done 2026-07-01: drafted `V2-0051` PO-from-approved-PR slice. Plan:
     `docs/plans/V2-0051-po-from-approved-pr-slice.md`.
 29. Next PR/PO/GR implementation slice: review/accept `V2-0051`, then execute

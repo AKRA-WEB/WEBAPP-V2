@@ -270,7 +270,8 @@ V1 Sheets, GAS deployments, URLs, LINE tokens, or production data.
 
 - Complete on 2026-07-01. All tasks done, verified, and committed.
 - Test accounts `v2050-sup@akra-v2.test` and `v2050-guest@akra-v2.test`
-  created for UAT; delete via service-role Admin API after session ends.
+  created for UAT; confirmed absent via service-role profile lookup and Auth
+  Admin API `listUsers` filtering on 2026-07-01.
 - `.playwright-cli/` untracked artifacts cleaned before commit.
 - `next-env.d.ts` churn self-resolved (file reverted to prior state during
   typecheck run; excluded from commit).

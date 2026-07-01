@@ -660,3 +660,30 @@ Next action:
 
 - Review/accept `V2-0051`, delete the two V2-0050 UAT test accounts when
   execution/cleanup is authorized, then execute with `Go:` when ready.
+
+## 2026-07-01 - V2-0050/V2-0051 Push And Test Account Cleanup
+
+Context:
+
+- User asked to push the local commits and delete the V2-0050 UAT test
+  accounts.
+
+Actions:
+
+- Pushed `main` to `origin/main`, including `cbec996` (V2-0050 PR
+  approve/reject slice) and `e553a4b` (V2-0051 PO-from-approved-PR plan).
+- Checked `v2050-sup@akra-v2.test` and `v2050-guest@akra-v2.test` with a
+  service-role Supabase client:
+  - `profiles` lookup by email returned no rows;
+  - Auth Admin API `listUsers` filtering returned no matching auth users.
+- Updated handoff/current plan notes so the cleanup item is no longer pending.
+
+Verification:
+
+- `git push` completed successfully.
+- Auth Admin API confirmed both target test accounts are absent.
+
+Next action:
+
+- Proceed with `V2-0051` implementation only after a `Go:` command, or run the
+  Vercel-deployed V2-0049 verification if that path is prioritized.
