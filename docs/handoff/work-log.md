@@ -621,3 +621,42 @@ Next action:
 - Delete the two test accounts via service-role Admin API after commit.
 - Next PR/PO/GR slice options: PO-from-approved-PR, or Vercel-deployed
   verification of V2-0049 in a Preview/Development environment.
+
+## 2026-07-01 - PO From Approved PR Slice Planned (V2-0051)
+
+Context:
+
+- User requested `Architect:plan PO-from-approved-PR`.
+- Per the Architect lane, this session planned only; no runtime code,
+  migrations, staging data, V1 production files, GAS deployments, Sheets, live
+  URLs, LINE tokens, deployment settings, or secrets were changed.
+
+Changes:
+
+- Added `docs/plans/V2-0051-po-from-approved-pr-slice.md` as a Draft plan.
+- Updated `docs/plans/index.md` with `V2-0051` in the active queue and current
+  direction.
+- Updated `docs/handoff/current-state.md` with the V2-0051 active plan entry
+  and next action.
+
+Plan summary:
+
+- MVP: create one V2-native PO from one approved V2-native PR using a
+  service-role-only `public.create_purchase_order_from_requisition(...)` RPC,
+  copying all PR lines to PO lines, requiring a selected vendor, recording a
+  `po_created_from_pr` event, and redirecting to the existing PO detail route.
+- Permission model: keep existing `purchasing.write`; no new granular
+  permission in this slice.
+- Safety constraints: block pending/rejected PRs, duplicate PO creation,
+  missing vendor, and mixed-warehouse PRs in the first MVP.
+- Out of scope: Direct PO, GR receiving, PO close/APV, vendor inference,
+  split-by-warehouse behavior, V1 writeback, and production cutover.
+
+Verification:
+
+- Pending after the plan edits: run documentation checks before committing.
+
+Next action:
+
+- Review/accept `V2-0051`, delete the two V2-0050 UAT test accounts when
+  execution/cleanup is authorized, then execute with `Go:` when ready.

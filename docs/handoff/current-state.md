@@ -223,6 +223,13 @@ Last updated: 2026-07-01
   (writer can approve/reject, terminal-state controls hidden, GUEST denied,
   390px zero overflow, no console errors). MVP approval uses existing
   `purchasing.write`; `purchasing.approve` deferred.
+  `V2-0051` (PO from approved PR) is drafted on 2026-07-01 as the next
+  PR/PO/GR write slice. The proposed MVP creates one V2-native PO from one
+  approved V2-native PR through a service-role-only
+  `create_purchase_order_from_requisition(...)` RPC, requires vendor selection,
+  copies all PR lines to PO lines, prevents duplicates through PR-line and bill
+  identity checks, records `po_created_from_pr`, and deliberately blocks
+  mixed-warehouse PRs until split behavior is planned.
 - Production impact: None
 - V1 reference path: `C:\dev\WEBAPP`
 
@@ -296,6 +303,7 @@ Plan IDs:
 - `V2-0048` (`docs/plans/V2-0048-figjam-app-workflow-board.md`)
 - `V2-0049` (`docs/plans/V2-0049-pr-create-write-slice.md`)
 - `V2-0050` (`docs/plans/V2-0050-pr-approve-reject-slice.md`)
+- `V2-0051` (`docs/plans/V2-0051-po-from-approved-pr-slice.md`)
 
 Goal: Continue Phase 3 from the verified Picking read-only/create baseline
 toward a full V1 replacement roadmap. `V2-0022` now frames the remaining work
@@ -1063,8 +1071,11 @@ Status:
 27. Delete test accounts `v2050-sup@akra-v2.test` and `v2050-guest@akra-v2.test`
     via service-role Admin API (created for V2-0049/V2-0050 UAT, not needed
     after commit).
-28. Next PR/PO/GR slice: plan PO-from-approved-PR or Vercel-deployed V2-0049
-    verification (Preview/Development environment).
+28. Done 2026-07-01: drafted `V2-0051` PO-from-approved-PR slice. Plan:
+    `docs/plans/V2-0051-po-from-approved-pr-slice.md`.
+29. Next PR/PO/GR implementation slice: review/accept `V2-0051`, then execute
+    with `Go:` when ready; alternative non-runtime option remains
+    Vercel-deployed V2-0049 verification (Preview/Development environment).
 
 
 ## Open Questions
