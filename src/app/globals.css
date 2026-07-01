@@ -487,6 +487,11 @@ button {
   text-decoration: none;
 }
 
+.primary-button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
 .secondary-button {
   display: inline-flex;
   align-items: center;
@@ -503,6 +508,25 @@ button {
 
 .secondary-button:disabled {
   opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.danger-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-block-size: 2.75rem;
+  padding-inline: 1rem;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  background: #fee2e2;
+  color: #991b1b;
+  font-weight: 700;
+}
+
+.danger-button:disabled {
+  opacity: 0.65;
   cursor: not-allowed;
 }
 
@@ -612,6 +636,22 @@ button {
   justify-content: flex-end;
 }
 
+.pr-transition-panel {
+  margin-block-end: 1rem;
+}
+
+.pr-transition-panel__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  gap: 1rem;
+}
+
+.pr-transition-form {
+  display: grid;
+  align-content: start;
+  gap: 0.6rem;
+}
+
 @container (max-width: 360px) {
   .module-card {
     grid-template-columns: 1fr;
@@ -652,6 +692,10 @@ button {
 
   .line-row__wide {
     grid-column: auto;
+  }
+
+  .pr-transition-panel__grid {
+    grid-template-columns: 1fr;
   }
 }
 

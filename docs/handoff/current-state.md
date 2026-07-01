@@ -1,6 +1,6 @@
 # Current State
 
-Last updated: 2026-06-29
+Last updated: 2026-07-01
 
 ## Project
 
@@ -214,6 +214,15 @@ Last updated: 2026-06-29
   production-server HTTP route smoke for `/purchasing/pr/new` returned 200.
   Production PR/PO/GR cutover remains blocked by readiness task 7, grouped
   UAT, signed-in browser UAT for the new PR form, and explicit user approval.
+  `V2-0050` (PR approve/reject) is **Complete** (2026-07-01): migration
+  `20260629102300_pr_approve_reject_slice.sql` applied to staging, schema
+  verified (36 tables/34 policies), ADR `0015` posture confirmed against
+  current Supabase docs, 5 direct RPC smoke tests passed (approve,
+  reject-with-reason, reject-no-reason/terminal-repeat both correctly rejected),
+  V2-0049 browser UAT 15/15 passed, and V2-0050 browser UAT 15/15 passed
+  (writer can approve/reject, terminal-state controls hidden, GUEST denied,
+  390px zero overflow, no console errors). MVP approval uses existing
+  `purchasing.write`; `purchasing.approve` deferred.
 - Production impact: None
 - V1 reference path: `C:\dev\WEBAPP`
 
@@ -1042,14 +1051,20 @@ Status:
     entries under `docs/handoff/archive/` when it becomes long again.
 23. Use `docs/project-management/executive-summary-th.md` when the user needs
     a supervisor-friendly project summary.
-24. Run signed-in browser UAT for `V2-0049` with a `purchasing.write` user:
-    create a staging PR from `/purchasing/pr/new`, verify
-    `/purchasing/pr/[id]`, check permission behavior, mobile 390px layout,
-    and console errors. Then plan PR approve/reject or PO-from-approved-PR.
-25. Review `V2-0050` (`docs/plans/V2-0050-pr-approve-reject-slice.md`) and
-    decide whether PR approval/rejection uses existing `purchasing.write` for
-    the MVP or introduces a new granular `purchasing.approve` permission before
-    implementation.
+24. Done 2026-07-01: V2-0049 signed-in browser UAT passed (15/15) — SUPERVISOR
+    creates PR, verifies detail/status/history/lines, GUEST denied, 390px zero
+    overflow, no console errors.
+25. Done 2026-07-01: V2-0050 reviewed and committed with `purchasing.write` as
+    MVP permission; `purchasing.approve` deferred.
+26. Done 2026-07-01: `.playwright-cli/` cleaned, Supabase docs/changelog
+    rechecked (ADR `0015` still correct), migration applied, schema verified,
+    5/5 RPC smoke tests passed, V2-0050 browser UAT 15/15 passed, closeout docs
+    updated, committed.
+27. Delete test accounts `v2050-sup@akra-v2.test` and `v2050-guest@akra-v2.test`
+    via service-role Admin API (created for V2-0049/V2-0050 UAT, not needed
+    after commit).
+28. Next PR/PO/GR slice: plan PO-from-approved-PR or Vercel-deployed V2-0049
+    verification (Preview/Development environment).
 
 
 ## Open Questions

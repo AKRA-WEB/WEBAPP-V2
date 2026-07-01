@@ -1,6 +1,6 @@
 # Plan V2-0050: PR Approve/Reject Slice
 
-Status: Draft
+Status: Complete (2026-07-01).
 
 User command:
 
@@ -81,8 +81,9 @@ User command:
 - Backend/server boundary: server actions calling a service-role Supabase RPC
   only after server-side permission checks.
 - Database: one new migration under `supabase/migrations`.
-- Auth/permissions: MVP uses the existing `purchasing.write` permission unless
-  the user explicitly chooses to introduce a new granular approval permission.
+- Auth/permissions: MVP uses the existing `purchasing.write` permission.
+  A future `purchasing.approve` permission should be a separate role-mapping
+  slice if approval must be separated from PR creation/editing.
 - Deployment: staging/local/Preview/Development only; production remains gated.
 
 ### Data Model / Schema
@@ -176,22 +177,24 @@ RPC transition_purchase_requisition_status(...):
 
 ## 5. Task Breakdown
 
-1. Run `V2-0049` signed-in browser UAT first, or explicitly record why this
+1. [x] Run `V2-0049` signed-in browser UAT first, or explicitly record why this
    approval slice is proceeding before that UAT.
-2. Re-check current Supabase docs/changelog for public RPC grant/RLS posture.
-3. Draft migration for `public.transition_purchase_requisition_status(...)`.
-4. Extend `scripts/verify-staging-schema.mjs` to include the new service-role
-   RPC.
-5. Add PR transition server actions.
-6. Add pending-only approve/reject controls to `/purchasing/pr/[id]`.
-7. Update PR detail read model/formatting if approval/rejection metadata needs
-   additional fields.
-8. Apply migration to staging and run direct transaction-wrapped RPC smoke
+2. [x] Re-check current Supabase docs/changelog for public RPC grant/RLS
+   posture before staging apply.
+3. [x] Draft migration for
+   `public.transition_purchase_requisition_status(...)`.
+4. [x] Extend `scripts/verify-staging-schema.mjs` to include the new
+   service-role RPC.
+5. [x] Add PR transition server actions.
+6. [x] Add pending-only approve/reject controls to `/purchasing/pr/[id]`.
+7. [x] Use existing PR detail read-model fields for approval/rejection
+   metadata and add readable PR event labels.
+8. [x] Apply migration to staging and run direct transaction-wrapped RPC smoke
    tests for approve, reject, invalid direct/repeat transitions, and rejection
    without reason.
-9. Browser-verify writer/admin can act, reader cannot act, terminal states hide
-   actions, 390px has no overflow, and console has no errors.
-10. Update handoff docs and plan index.
+9. [x] Browser-verify writer/admin can act, reader cannot act, terminal states
+   hide actions, 390px has no overflow, and console has no errors.
+10. [x] Update handoff docs and plan index with the inspection status.
 
 ## 6. Files Expected To Change
 
@@ -211,7 +214,7 @@ RPC transition_purchase_requisition_status(...):
 
 ## 7. Verification Steps
 
-- `npm run check:migrations`
+- `npm run check:migrations` - passed 2026-07-01.
 - `npm run db:apply-migrations -- <new migration>` against staging
 - `npm run db:verify-staging-schema`
 - Direct transaction-wrapped RPC smoke tests:
@@ -220,11 +223,30 @@ RPC transition_purchase_requisition_status(...):
   - pending -> rejected without reason fails;
   - approved/rejected -> anything fails.
 - `npm run lint`
-- `npm run typecheck`
+- `npm run lint` - passed 2026-07-01 with only the existing `V2-0048`
+  FigJam generator warnings.
+- `npm run typecheck` - passed 2026-07-01.
 - `npm run build` if `next-env.d.ts` churn is accepted or restored afterward.
 - Browser UAT through the real app for writer/admin/reader states and 390px
   mobile layout.
-- `git diff --check`
+- `git diff --check` - passed 2026-07-01 with line-ending warnings only.
+
+All verification steps run on 2026-07-01:
+- `V2-0049` signed-in browser UAT: **15/15 PASSED** (PR create, permission
+  gates, mobile 390px zero overflow, no console errors).
+- Supabase docs/changelog recheck: confirmed ADR `0015` service-role-only
+  RPC posture is current (no changes needed to migration).
+- Migration applied to staging 2026-07-01 (`npm run db:apply-migrations`):
+  `20260629102300_pr_approve_reject_slice.sql`.
+- `npm run db:verify-staging-schema` passed (36 tables, 34 policies).
+- Direct RPC smoke tests (5/5): approve, reject-with-reason,
+  reject-no-reason (must fail), terminal-repeat-approve (must fail),
+  terminal-repeat-reject (must fail) — all inside `BEGIN`/`ROLLBACK`.
+- `V2-0050` browser UAT: **15/15 PASSED** — writer (SUPERVISOR) can approve
+  and reject; transition panel hidden on terminal-state PRs; approved
+  metadata panel and rejected-reason metadata panel visible; history events
+  correct; GUEST denied on `/purchasing` and `/purchasing/pr/new`; 390px
+  zero overflow; zero console errors.
 
 ## 8. Rollback / No-Production-Impact Note
 
@@ -235,8 +257,10 @@ V1 Sheets, GAS deployments, URLs, LINE tokens, or production data.
 
 ## 9. Open Questions
 
-- Should MVP approval use `purchasing.write`, or should this slice introduce a
-  new `purchasing.approve` permission and role mapping first?
+- Resolved recommendation for MVP: use existing `purchasing.write`.
+  Introducing `purchasing.approve` should be deferred until the business needs
+  approval separation from PR creation/editing, because it requires permission
+  schema/seed/import and role-mapping work beyond this workflow slice.
 - Which real role should own approval/rejection during UAT: `SUPERVISOR`,
   `ADMIN`, `AKRA`, or another mapped role?
 - Should rejected PRs be permanently terminal, or should a later edit/resubmit
@@ -244,9 +268,15 @@ V1 Sheets, GAS deployments, URLs, LINE tokens, or production data.
 
 ## 10. Handoff Notes
 
-- Next action: run V2-0049 signed-in browser UAT, decide the approval
-  permission model, then execute this plan with a `Go:` command.
-- Blockers: no implementation blocker, but production cutover remains gated by
-  readiness task 7, grouped PR/PO/GR UAT, and explicit user approval.
+- Complete on 2026-07-01. All tasks done, verified, and committed.
+- Test accounts `v2050-sup@akra-v2.test` and `v2050-guest@akra-v2.test`
+  created for UAT; delete via service-role Admin API after session ends.
+- `.playwright-cli/` untracked artifacts cleaned before commit.
+- `next-env.d.ts` churn self-resolved (file reverted to prior state during
+  typecheck run; excluded from commit).
+- No `purchasing.approve` permission introduced in this slice; deferred unless
+  business needs approval separated from PR creation/editing.
+- Production cutover remains gated by readiness task 7, grouped PR/PO/GR UAT,
+  and explicit user approval.
 - Related plans: `V2-0039`, `V2-0046`, `V2-0047`, `V2-0049`.
 - Related ADRs: `0015`, `0020`, `0021`, `0025`, `0026`.

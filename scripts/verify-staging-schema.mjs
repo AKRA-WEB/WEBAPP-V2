@@ -58,6 +58,7 @@ const publicServiceRoleRpcNames = [
   "transition_picking_requisition_status",
   "report_picking_problem",
   "create_purchase_requisition",
+  "transition_purchase_requisition_status",
 ];
 
 const client = new Client({
@@ -215,6 +216,7 @@ try {
     "public.report_picking_problem",
     "public.set_updated_at",
     "public.transition_picking_requisition_status",
+    "public.transition_purchase_requisition_status",
   ]);
 
   // Public RPCs are reachable via the Data API (unlike private.* functions,

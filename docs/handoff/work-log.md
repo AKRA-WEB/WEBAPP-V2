@@ -510,3 +510,114 @@ Next action:
 
 - Review/accept the permission model for V2-0050, then execute with `Go:` after
   or alongside V2-0049 signed-in browser UAT.
+
+## 2026-07-01 - V2-0050 Local Implementation Inspection
+
+Context:
+
+- User resumed with `Let's work` plus `Architect:` and asked whether V2-0050
+  implementation files were already in progress, whether they needed
+  review/commit, which PR approval permission model to use, and whether
+  V2-0049 browser UAT should run before committing V2-0050.
+- Per the Architect lane, no runtime code was edited in this inspection.
+
+Findings:
+
+- `git status --short` shows local uncommitted V2-0050 runtime/schema files:
+  `supabase/migrations/20260629102300_pr_approve_reject_slice.sql`,
+  `scripts/verify-staging-schema.mjs`,
+  `src/modules/purchasing/transition-pr-action.ts`,
+  `src/modules/purchasing/pr-transition-controls.tsx`,
+  `src/app/purchasing/pr/[id]/page.tsx`,
+  `src/modules/purchasing/format.ts`, `src/app/globals.css`, and generated
+  `next-env.d.ts` churn. `.playwright-cli/` is also untracked and should be
+  cleaned before commit.
+- The local implementation covers the expected MVP shape: service-role-only
+  `public.transition_purchase_requisition_status(...)`, server action guarded
+  by `purchasing.write`, pending-only approve/reject controls, approval/reject
+  metadata display on the PR detail page, event labels, and schema verifier
+  entries.
+- Permission recommendation: keep MVP approval/rejection on existing
+  `purchasing.write`; defer `purchasing.approve` to a separate
+  permission/schema/role-mapping slice only if the business needs approval
+  separated from PR creation/editing.
+
+Verification:
+
+- `npm run check:migrations` passed.
+- `npm run lint` passed with only the pre-existing V2-0048 FigJam generator
+  warnings.
+- `npm run typecheck` passed.
+- `git diff --check` passed with line-ending warnings only.
+- Not run: V2-0049 signed-in browser UAT, current Supabase docs/changelog
+  recheck, V2-0050 staging migration apply, `db:verify-staging-schema`, direct
+  transition RPC smoke tests, `npm run build`, or V2-0050 browser verification.
+
+Next action:
+
+- Do not commit V2-0050 yet. Run V2-0049 signed-in browser UAT first, review
+  the local V2-0050 implementation, clean `.playwright-cli/`, re-check current
+  Supabase docs/changelog before staging apply, apply/smoke-test the V2-0050
+  migration in staging, browser-verify V2-0050, update closeout docs, then
+  commit.
+
+## 2026-07-01 - V2-0050 PR Approve/Reject Slice Closeout (V2-0049 + V2-0050)
+
+Context:
+
+- Resumed from the V2-0050 local-inspection handoff. All pending verification
+  tasks were executed in this session in order. Migration was already present
+  locally; no new runtime code was written in this session.
+- Two Playwright-based browser UAT scripts were written in the project root,
+  run, then deleted after all checks passed.
+
+Changes:
+
+- Cleaned untracked `.playwright-cli/` artifacts (removed before commit).
+- Confirmed `next-env.d.ts` churn self-resolved (file reverted to prior tracked
+  state during typecheck run; excluded from commit).
+- Applied migration `20260629102300_pr_approve_reject_slice.sql` to staging via
+  `npm run db:apply-migrations`.
+
+Verification:
+
+- **V2-0049 signed-in browser UAT**: 15/15 PASSED — SUPERVISOR creates a
+  V2-native PR from `/purchasing/pr/new`, verifies PR detail status pill,
+  history `pr_created` event, PR lines content, mobile 390px zero overflow, no
+  console errors, GUEST denied on `/purchasing` and `/purchasing/pr/new`.
+- **Supabase docs/changelog recheck**: confirmed ADR `0015` posture
+  (`SECURITY INVOKER`, `EXECUTE` revoked from `public`/`anon`/`authenticated`,
+  granted to `service_role` only) is still the recommended approach — no
+  migration changes needed.
+- **`npm run db:apply-migrations`**: migration applied cleanly to staging
+  (2026-07-01).
+- **`npm run db:verify-staging-schema`**: passed (36 tables, 34 policies).
+- **Direct RPC smoke tests** (5/5): approve, reject-with-reason, reject-no-
+  reason (must fail), terminal-repeat-approve (must fail), terminal-repeat-
+  reject (must fail) — all run inside `pg` `BEGIN`/`ROLLBACK` transactions,
+  no staging data permanently modified.
+- **V2-0050 browser UAT**: 15/15 PASSED — SUPERVISOR approves a pending PR
+  (transition panel disappears, status pill shows "Approved", history shows
+  `pr_approved` event, approved-by metadata panel visible), SUPERVISOR rejects
+  a second pending PR with reason (status "Rejected", history, rejected-reason
+  panel visible), both terminal PRs have no transition controls; GUEST denied;
+  390px zero overflow; zero browser console errors.
+- Playwright UAT key fix: used `transitionSection.waitFor({ state: "hidden" })`
+  instead of `waitForURL(same-url)` because Next.js `redirect()` back to the
+  same `/purchasing/pr/[id]` resolves Playwright's URL check immediately
+  (before the page reloads to new content).
+- No V1 production files, GAS deployments, Sheets, live URLs, LINE tokens,
+  deployment settings, or secrets changed.
+
+Test accounts:
+
+- `v2050-sup@akra-v2.test` (SUPERVISOR, `purchasing.write`) — created for UAT;
+  delete via service-role Admin API.
+- `v2050-guest@akra-v2.test` (GUEST, no purchasing perms) — created for UAT;
+  delete via service-role Admin API.
+
+Next action:
+
+- Delete the two test accounts via service-role Admin API after commit.
+- Next PR/PO/GR slice options: PO-from-approved-PR, or Vercel-deployed
+  verification of V2-0049 in a Preview/Development environment.

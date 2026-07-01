@@ -4,11 +4,14 @@ import { AccessDenied } from "@/components/access-denied";
 import { AppShell } from "@/components/app-shell";
 import { StatusPill } from "@/components/status-pill";
 import { requirePermission } from "@/modules/auth/guard";
+import { can } from "@/modules/auth/permissions";
+import { PurchaseRequisitionTransitionControls } from "@/modules/purchasing/pr-transition-controls";
 import { getPurchaseRequestDetail } from "@/modules/purchasing/read-model";
 import {
   formatDateTime,
   formatMatchStatusLabel,
   formatOptionalDate,
+  formatPurchaseRequestEventType,
   formatPurchaseRequestStatusLabel,
   formatQuantity,
   purchaseRequestStatusTone,
@@ -85,6 +88,7 @@ export default async function PurchaseRequisitionDetailPage({
   }
 
   const { request } = result;
+  const canTransition = request.status === "pr_pending" && can(guard.snapshot, "purchasing.write");
 
   return (
     <AppShell activeHref="/purchasing">
@@ -128,6 +132,8 @@ export default async function PurchaseRequisitionDetailPage({
         )}
       </section>
 
+      {canTransition && <PurchaseRequisitionTransitionControls requestId={request.id} />}
+
       <section className="module-detail" aria-label="Purchase requisition lines">
         <h2>Lines ({request.lines.length})</h2>
         <ul className="requisition-lines">
@@ -159,7 +165,9 @@ export default async function PurchaseRequisitionDetailPage({
         <ul className="requisition-timeline">
           {request.events.map((event) => (
             <li className="requisition-timeline__item" key={event.id}>
-              <span className="requisition-timeline__type">{event.eventType}</span>
+              <span className="requisition-timeline__type">
+                {formatPurchaseRequestEventType(event.eventType)}
+              </span>
               <span className="requisition-timeline__meta">
                 {formatDateTime(event.createdAt)}
                 {event.actorName ? ` · ${event.actorName}` : ""}

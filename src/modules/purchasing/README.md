@@ -11,13 +11,18 @@ Current status:
 - PR read helpers, detail UI, reference-data loading, and V2-native PR create
   form/action are implemented in `V2-0049`: `/purchasing/pr/new` creates a
   pending PR through service-role-only `public.create_purchase_requisition(...)`,
-  then redirects to `/purchasing/pr/[id]`.
-- Signed-in browser UAT for the PR create form is still pending before any
-  production cutover.
+  then redirects to `/purchasing/pr/[id]`. Browser UAT passed 2026-07-01.
+- PR approve/reject write slice is implemented in `V2-0050` (Complete,
+  2026-07-01): `transition-pr-action.ts` and `pr-transition-controls.tsx`
+  expose pending-only approve/reject controls on `/purchasing/pr/[id]`,
+  backed by service-role-only
+  `public.transition_purchase_requisition_status(...)` (migration
+  `20260629102300_pr_approve_reject_slice.sql`). Terminal-state PRs show no
+  controls; approved PRs show approval metadata; rejected PRs show the
+  rejection reason. Browser UAT 15/15 passed 2026-07-01.
 
 Expected future shape:
 
-- Supervisor approve/reject actions.
 - PO-from-approved-PR workflow.
 - Direct PO mutation and GR receive/reset/confirm workflows, after grouped
   PR/PO/GR staging UAT planning.

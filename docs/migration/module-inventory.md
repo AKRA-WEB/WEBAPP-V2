@@ -104,10 +104,15 @@ For each module, capture:
   (`/receiving`, `/receiving/[id]`) over that import. `V2-0049` adds the first
   PR write slice: service-role-only `public.create_purchase_requisition(...)`,
   `/purchasing/pr/new`, `/purchasing/pr/[id]`, and a writer-only "New PR"
-  action on `/purchasing`; signed-in browser UAT is still pending before any
-  production cutover. See `docs/migration/pr-po-gr-v1-mapping.md`'s
-  "V2-0044 Staging Import Result" section for the real import gaps
-  found/resolved (qty=0 skip, `LEGACY-` synthesized `po_number` per ADR
+  action on `/purchasing`; signed-in browser UAT passed 15/15 on 2026-07-01.
+  `V2-0050` (Complete, 2026-07-01) adds the PR approve/reject write slice:
+  service-role-only `public.transition_purchase_requisition_status(...)`,
+  pending-only approve/reject controls on `/purchasing/pr/[id]`, and atomic
+  `pr_approved`/`pr_rejected` transitions with event history; browser UAT
+  15/15 passed (writer can act, terminal-state controls hidden, GUEST denied,
+  390px zero overflow, no console errors). See `docs/migration/pr-po-gr-v1-
+  mapping.md`'s "V2-0044 Staging Import Result" section for the real import
+  gaps found/resolved (qty=0 skip, `LEGACY-` synthesized `po_number` per ADR
   `0026`, new GR header grouping logic, migration `0014` import-event types).
   `V2-0036`'s first slice (2026-06-22) profiled V1
   sources read-only: confirmed a live V1 `PR` sheet exists (same spreadsheet

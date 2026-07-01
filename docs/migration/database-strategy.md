@@ -170,8 +170,22 @@ event. The Next.js server action calls it only after
 `requirePermission({ permission: "purchasing.write" })`; no authenticated
 insert/update/delete RLS policy was added. Staging schema verification checks
 this RPC with the same public service-role grant/revoke posture as the Picking
-transaction RPCs. Signed-in browser UAT for `/purchasing/pr/new` remains open
-before production cutover.
+transaction RPCs. Signed-in browser UAT verified on 2026-07-01 (15/15 passed).
+`V2-0050` (2026-07-01) adds the PR approve/reject write slice through
+`supabase/migrations/20260629102300_pr_approve_reject_slice.sql`: a public
+schema, default `SECURITY INVOKER`, service-role-only
+`public.transition_purchase_requisition_status(uuid, text, uuid, text, text)`
+RPC that atomically enforces `pr_pending -> pr_approved` or
+`pr_pending -> pr_rejected` transitions (using `SELECT ... FOR UPDATE` row
+locking), updates the PR header and all PR lines, and inserts a
+`pr_approved`/`pr_rejected` event. `EXECUTE` revoked from
+`public`/`anon`/`authenticated`, granted to `service_role` only (ADR `0015`).
+Requires a non-empty rejection reason for `pr_rejected`; terminal-state
+repeat transitions raise a Postgres exception. Applied to staging 2026-07-01;
+`npm run db:verify-staging-schema` passed (36 tables, 34 policies); 5 direct
+smoke tests passed (BEGIN/ROLLBACK); browser UAT 15/15 passed. Production
+cutover remains gated by readiness task 7, grouped PR/PO/GR UAT, and explicit
+user approval.
 
 - The first PR/PO/GR migration is schema/RLS only. It should create
   `public.purchasing_*` and `public.receiving_*` tables, indexes, constraints,

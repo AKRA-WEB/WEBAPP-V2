@@ -23,6 +23,12 @@ const REQUEST_STATUS_TONES: Record<PurchaseRequestStatus, "blue" | "green" | "sl
   pr_rejected: "slate",
 };
 
+const REQUEST_EVENT_LABELS: Record<string, string> = {
+  pr_created: "Created",
+  pr_approved: "Approved",
+  pr_rejected: "Rejected",
+};
+
 export function formatPurchaseOrderStatusLabel(status: string) {
   return STATUS_LABELS[status as PurchaseOrderStatus] ?? status;
 }
@@ -37,6 +43,10 @@ export function formatPurchaseRequestStatusLabel(status: string) {
 
 export function purchaseRequestStatusTone(status: string) {
   return REQUEST_STATUS_TONES[status as PurchaseRequestStatus] ?? "slate";
+}
+
+export function formatPurchaseRequestEventType(eventType: string) {
+  return REQUEST_EVENT_LABELS[eventType] ?? eventType;
 }
 
 const MATCH_STATUS_LABELS: Record<string, string> = {

@@ -1,6 +1,6 @@
 # V2 Plan Index
 
-Last updated: 2026-06-29
+Last updated: 2026-07-01
 
 This is the central plan board for AKRA WEBAPP V2. It is the first file to read
 after `CONDUCTOR.md` when another agent needs to continue work.
@@ -148,12 +148,18 @@ passed, lint/typecheck/build passed, and a direct transaction-wrapped RPC smoke
 test proved one header, one line, and one `pr_created` event before rollback.
 Production cutover remains gated by readiness task 7, grouped PR/PO/GR UAT,
 signed-in browser UAT, and explicit user approval.
-`V2-0050` is now drafted as the next PR workflow slice: approve/reject pending
-V2-native PRs through an atomic service-role-only transition RPC and pending-
-only controls on `/purchasing/pr/[id]`. It is plan-only for now; recommended
-precondition is running the `V2-0049` signed-in browser UAT and deciding whether
-approval uses the current `purchasing.write` permission or a new granular
-`purchasing.approve` permission.
+`V2-0050` (Complete, 2026-07-01) adds the PR approve/reject write slice:
+`public.transition_purchase_requisition_status(...)` (service-role-only, ADR
+`0015` posture), atomic update of header + lines + one `pr_approved`/
+`pr_rejected` event, pending-only approve/reject controls on
+`/purchasing/pr/[id]`. Staging migration applied, schema verified, Supabase
+docs/changelog rechecked, 5 direct RPC smoke tests (approve, reject-with-reason,
+reject-no-reason, terminal-repeat-approve, terminal-repeat-reject) all pass,
+V2-0049 and V2-0050 browser UAT complete (30/30 checks green — writer can act,
+GUEST denied, terminal-state controls hidden, 390px zero overflow, no console
+errors). MVP approval uses existing `purchasing.write`; a new
+`purchasing.approve` permission is deferred. Next: PO-from-approved-PR slice or
+V2-0049 signed-in Vercel deployment verification.
 
 ## Active Queue
 
@@ -720,15 +726,16 @@ approval uses the current `purchasing.write` permission or a new granular
      then plan PR approve/reject or PO-from-approved-PR.
    - File: `docs/plans/V2-0049-pr-create-write-slice.md`
 42. `V2-0050` - PR approve/reject slice
-   - Status: Draft on 2026-06-29.
+   - Status: **Complete** (2026-07-01).
    - Goal: approve or reject pending V2-native PRs atomically, update header
      and lines, record `pr_approved`/`pr_rejected` events, and expose
      pending-only controls on `/purchasing/pr/[id]`.
-   - Preconditions: run `V2-0049` signed-in browser UAT first, and decide
-     whether MVP approval uses the existing `purchasing.write` permission or a
-     new granular `purchasing.approve` permission.
-   - Next action: user chooses the approval permission model, then sends `Go:`
-     to implement the slice.
+   - Permission model: uses existing `purchasing.write`; `purchasing.approve`
+     deferred.
+   - Verification: V2-0049 browser UAT 15/15, Supabase docs recheck clean,
+     staging migration applied, schema verified (36 tables/34 policies), 5
+     direct RPC smoke tests pass, V2-0050 browser UAT 15/15 — all on
+     2026-07-01.
    - File: `docs/plans/V2-0050-pr-approve-reject-slice.md`
 
 ## Completed Or Baseline Plans
