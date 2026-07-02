@@ -117,7 +117,14 @@ For each module, capture:
   [id]/create-po` form route with vendor select, linked-PO detection in PR
   read model, `po_created_from_pr` event label in PO history; browser UAT
   13/13 passed (writer creates PO, PR shows linked PO, GUEST denied, 390px
-  zero overflow, no console errors). See `docs/migration/pr-po-gr-v1-
+  zero overflow, no console errors). `V2-0052` (Complete, 2026-07-02) adds
+  the GR-from-PO slice: service-role-only
+  `public.create_goods_receipt_from_order(...)`, `/purchasing/[id]/create-gr`
+  form route, linked-GR display on PO detail, cross-module PO/GR detail guards
+  aligned to the existing 0013 RLS shape, and `gr_created_from_po` event labels;
+  Browser UAT 19/19 passed (receiving.write create flow, purchasing.write-only
+  linked-GR read path, GUEST denied, 390px zero overflow, no console errors).
+  See `docs/migration/pr-po-gr-v1-
   mapping.md`'s "V2-0044 Staging Import Result" section for the real import
   gaps found/resolved (qty=0 skip, `LEGACY-` synthesized `po_number` per ADR
   `0026`, new GR header grouping logic, migration `0014` import-event types).

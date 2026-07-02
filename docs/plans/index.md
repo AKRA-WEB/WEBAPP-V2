@@ -1,6 +1,6 @@
 # V2 Plan Index
 
-Last updated: 2026-07-01
+Last updated: 2026-07-02
 
 This is the central plan board for AKRA WEBAPP V2. It is the first file to read
 after `CONDUCTOR.md` when another agent needs to continue work.
@@ -136,8 +136,8 @@ Figma/FigJam write tool is exposed, and the supplied
 The deliverable is `docs/figma/akra-v2-app-workflow-board.svg`, with import
 instructions in `docs/figma/README.md` and a reproducible generator script
 under `scripts/`.
-`V2-0049` (2026-06-26, implementation complete with staging verification;
-signed-in browser UAT pending) starts the PR/PO/GR write workflow with the
+`V2-0049` (2026-06-26 implementation complete; signed-in browser UAT passed
+2026-07-01) starts the PR/PO/GR write workflow with the
 smallest safe slice: V2-native PR creation. It adds the service-role-only
 `public.create_purchase_requisition(...)` RPC, extends schema verification for
 public service-role RPC grants/revokes, adds PR reference-data/read helpers,
@@ -147,7 +147,7 @@ the existing PO list. The staging migration was applied, schema verification
 passed, lint/typecheck/build passed, and a direct transaction-wrapped RPC smoke
 test proved one header, one line, and one `pr_created` event before rollback.
 Production cutover remains gated by readiness task 7, grouped PR/PO/GR UAT,
-signed-in browser UAT, and explicit user approval.
+deployed verification, and explicit user approval.
 `V2-0050` (Complete, 2026-07-01) adds the PR approve/reject write slice:
 `public.transition_purchase_requisition_status(...)` (service-role-only, ADR
 `0015` posture), atomic update of header + lines + one `pr_approved`/
@@ -163,7 +163,11 @@ V2-native PR becomes one V2-native PO through
 `create_purchase_order_from_requisition(...)` (ADR 0015 posture), with vendor
 selection, duplicate guards, PR-line linkage, `po_created_from_pr` event, and
 a deliberate MVP block on mixed-warehouse PRs. 13/13 browser UAT checks green.
-Next: GR-from-PO slice, or V2-0049 signed-in Vercel deployment verification.
+V2-0052 (GR from PO) is complete 2026-07-02: staging migration/schema/RPC
+smoke tests passed, Browser UAT passed 19/19, and all temporary UAT accounts,
+role, and rows were cleaned up. Next: choose the next PR/PO/GR slice (likely
+PO close/APV or a grouped PR -> PO -> GR staging UAT package), or run deployed
+Vercel verification for the existing PR/PO/GR write chain.
 
 ## Active Queue
 
@@ -753,6 +757,37 @@ Next: GR-from-PO slice, or V2-0049 signed-in Vercel deployment verification.
      denied, pending PR no create action, 390px zero overflow, no console
      errors). `npm run lint` and `typecheck` clean.
    - File: `docs/plans/V2-0051-po-from-approved-pr-slice.md`
+44. `V2-0052` - GR from PO slice
+   - Status: **Complete** (2026-07-02).
+   - Goal: create one V2-native GR from one `po_pending_receipt` PO via a new
+     service-role-only `public.create_goods_receipt_from_order(...)` RPC; copy
+     PO lines as GR lines with user-entered `received_qty`; widen
+     `receiving_events_type_check` to add `'gr_created_from_po'`; show linked
+     GRs on the PO detail page; redirect to `/receiving/[grId]` after creation.
+     Permission: `receiving.write`. Initial GR status: `gr_draft`. ADR `0015`
+     posture. Multiple GRs per PO allowed (partial delivery). PO status does not
+     change in this slice. `receipt_number` deferred (Open Question).
+   - Review note: implementation must align page-level guards with existing
+     0013 cross-module read RLS: `/purchasing/[id]` should admit
+     `purchasing.*` or `receiving.*`, and `/receiving/[id]` should admit
+     `receiving.*` or `purchasing.*`.
+   - Architect review 2026-07-02: current Supabase docs/changelog still
+     support the ADR `0015` posture; the April 2026 explicit-grants Data API
+     change reinforces the plan's grant/revoke verification rather than
+     requiring a design change. Default MVP recommendations: defer
+     `receipt_number`, over-receive blocking, PO status changes, unit override,
+     and a dedicated receiving PO queue.
+   - Verification: staging migration applied; `db:verify-staging-schema`
+     passed (36 tables, 34 policies, 7 public service-role RPCs); direct RPC
+     smoke tests 9/9 passed; `typecheck`, `lint`, `check:migrations`, and
+     `build` passed; Browser UAT 19/19 passed (receiving.write create flow,
+     GUEST denial, purchasing.write-only linked-GR read path, 390px zero
+     overflow, no console/page errors). Temporary `v2052-*` accounts,
+     `V2052_PURCHASING_ONLY` role, and UAT rows/events were cleaned up.
+   - Next action: choose the next PR/PO/GR slice (likely PO close/APV or a
+     grouped PR -> PO -> GR staging UAT package), or run deployed Vercel
+     verification for the existing PR/PO/GR write chain.
+   - File: `docs/plans/V2-0052-gr-from-po-slice.md`
 
 ## Completed Or Baseline Plans
 

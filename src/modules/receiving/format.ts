@@ -99,3 +99,19 @@ export function formatQuantity(qty: number, unit: string) {
   const formatted = Number.isInteger(qty) ? String(qty) : qty.toFixed(3).replace(/0+$/, "").replace(/\.$/, "");
   return `${formatted} ${unit}`;
 }
+
+const EVENT_TYPE_LABELS: Record<string, string> = {
+  gr_draft_saved: "Draft saved",
+  gr_submitted_for_review: "Submitted for review",
+  gr_confirmed: "Confirmed",
+  gr_reset: "Reset to draft",
+  gr_recalled: "Recalled",
+  gr_split_updated: "Split updated",
+  gr_corrected: "Corrected",
+  gr_imported: "Imported (legacy)",
+  gr_created_from_po: "Created from purchase order",
+};
+
+export function formatGoodsReceiptEventType(eventType: string) {
+  return EVENT_TYPE_LABELS[eventType] ?? eventType;
+}

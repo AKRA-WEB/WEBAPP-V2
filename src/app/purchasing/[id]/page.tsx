@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Route } from "next";
 
 import { AppShell } from "@/components/app-shell";
 import { StatusPill } from "@/components/status-pill";
@@ -15,6 +16,11 @@ import {
   formatQuantity,
   purchaseOrderStatusTone,
 } from "@/modules/purchasing/format";
+import { can } from "@/modules/auth/permissions";
+import {
+  formatGoodsReceiptStatusLabel,
+  goodsReceiptStatusTone,
+} from "@/modules/receiving/format";
 
 // Auth-gated, per-user data: never statically cache this page.
 export const dynamic = "force-dynamic";
@@ -28,7 +34,9 @@ export default async function PurchaseOrderDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const guard = await requirePermission({ anyOf: ["purchasing.read", "purchasing.write"] });
+  const guard = await requirePermission({
+    anyOf: ["purchasing.read", "purchasing.write", "receiving.read", "receiving.write"],
+  });
 
   if (guard.status !== "allowed") {
     return (
@@ -38,7 +46,7 @@ export default async function PurchaseOrderDetailPage({
         eyebrow="Purchasing"
         body={
           guard.reason === "forbidden"
-            ? "You need the purchasing.read or purchasing.write permission to view this page."
+            ? "You need purchasing.read, purchasing.write, receiving.read, or receiving.write to view this page."
             : undefined
         }
       />
@@ -88,6 +96,7 @@ export default async function PurchaseOrderDetailPage({
 
   const { order } = result;
   const poLabel = formatPoNumberLabel(order.poNumber);
+  const canCreateGr = order.status === "po_pending_receipt" && can(guard.snapshot, "receiving.write");
 
   return (
     <AppShell activeHref="/purchasing">
@@ -144,6 +153,40 @@ export default async function PurchaseOrderDetailPage({
           </div>
         )}
       </section>
+
+      {canCreateGr && (
+        <section className="module-detail" aria-label="Create goods receipt">
+          <h2>Next step</h2>
+          <p>
+            <Link className="primary-button" href={`/purchasing/${order.id}/create-gr` as Route}>
+              Create goods receipt
+            </Link>
+          </p>
+        </section>
+      )}
+
+      {order.linkedGrs.length > 0 && (
+        <section className="module-detail" aria-label="Linked goods receipts">
+          <h2>Goods receipts ({order.linkedGrs.length})</h2>
+          <ul className="requisition-lines">
+            {order.linkedGrs.map((gr) => (
+              <li className="requisition-line" key={gr.id}>
+                <Link href={`/receiving/${gr.id}` as Route}>
+                  <span className="requisition-line__name">
+                    {formatOptionalDate(gr.receiptDate)}
+                    <StatusPill tone={goodsReceiptStatusTone(gr.status)}>
+                      {formatGoodsReceiptStatusLabel(gr.status)}
+                    </StatusPill>
+                  </span>
+                  {gr.receiverName && (
+                    <p className="module-card__note">{gr.receiverName}</p>
+                  )}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <section className="module-detail" aria-label="Purchase order lines">
         <h2>Lines ({order.lines.length})</h2>

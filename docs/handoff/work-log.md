@@ -782,3 +782,254 @@ Next action:
 
 - Delete V2-0051 UAT test accounts.
 - Next PR/PO/GR slice: GR-from-PO (goods receipt), or Vercel V2-0049 verification.
+
+## 2026-07-01 - GR From PO Slice Planned (Architect: V2-0052)
+
+Context:
+
+User requested plan for the next PR/PO/GR write slice after V2-0051 complete.
+Architect-lane only — no runtime code, schema, migrations, or deployment changes.
+
+What was done:
+
+- Read `supabase/migrations/0013_pr_po_gr_foundation.sql` (GR schema, event
+  constraint, RLS policies) and `0014_pr_po_gr_import_events.sql` (current
+  `receiving_events_type_check` values).
+- Read `src/modules/receiving/read-model.ts` and
+  `src/modules/purchasing/read-model.ts` to understand existing GR/PO types
+  and read helpers.
+- Confirmed that `receiving_goods_receipts` is readable by `purchasing.*`
+  AND `receiving.*` via existing 0013 RLS — no new RLS needed for showing
+  linked GRs on the PO detail page.
+- Confirmed that `receiving_events_type_check` does NOT yet include
+  `gr_created_from_po` — migration must widen it.
+- Confirmed PO status constraint: `('po_pending_receipt', 'po_closed_apv_ready')`.
+- Created `docs/plans/V2-0052-gr-from-po-slice.md` (Draft).
+- Updated `docs/plans/index.md` entry 44 and Current Direction.
+- Updated `docs/handoff/current-state.md` status paragraph and plan list.
+
+Key design decisions:
+
+- RPC returns plain `uuid` (gr_id), not `RETURNS TABLE` — avoids the
+  `po_number` column-ambiguity bug from V2-0051.
+- `p_line_quantities jsonb` array of `{po_line_id, received_qty}` — mirrors
+  the PR create RPC's `p_lines jsonb` pattern.
+- Lines with `received_qty = 0` are skipped (not inserted); at least one
+  non-zero line required.
+- Multiple GRs per PO allowed (partial delivery support).
+- PO status does not change in this slice.
+- `receipt_number` (`V2-GR-YYYYMMDD-NNNN`) deferred as Open Question.
+- Permission: `receiving.write` to create; existing `purchasing.*`/`receiving.*`
+  read access covers linked-GR display on PO detail.
+
+No V1 production files, GAS deployments, Sheets, live URLs, LINE tokens,
+deployment settings, secrets, runtime code, schema, or migrations changed.
+
+Next action:
+
+- `Go: V2-0052` to execute the GR-from-PO write slice.
+- Or: resolve V2-0052 Open Questions (GR number format, over-receive behavior)
+  before executing.
+
+## 2026-07-01 - V2-0052 Plan Review Follow-up
+
+Context:
+
+- User asked to inspect the drafted `V2-0052` plan and adjust it if needed.
+- Architect/review lane only — no runtime code, schema, migrations, staging
+  data, deployment settings, V1 production files, GAS deployments, Sheets,
+  live URLs, LINE tokens, or secrets changed.
+
+Findings and adjustments:
+
+- Confirmed current Supabase guidance still supports the ADR `0015` posture:
+  explicit grants/RLS belong together, functions are controlled by `EXECUTE`
+  grants, and default `SECURITY INVOKER` remains preferred.
+- Confirmed 0013 RLS already allows cross-module PO/GR reads:
+  `purchasing_purchase_orders`/lines are readable by `purchasing.*` or
+  `receiving.*`, and receiving tables/events are readable by `receiving.*` or
+  `purchasing.*`.
+- Found the implementation-sensitive gap: current page-level guards are
+  narrower than 0013 RLS (`/purchasing/[id]` currently admits only
+  purchasing permissions, and `/receiving/[id]` currently admits only
+  receiving permissions). Without a plan note, `receiving.write` users might
+  be blocked from opening the PO detail before creating a GR, and purchasing
+  users might be blocked from opening linked GR details.
+- Updated `docs/plans/V2-0052-gr-from-po-slice.md` to require guard alignment:
+  `/purchasing/[id]` should admit purchasing or receiving permissions, and
+  `/receiving/[id]` should admit receiving or purchasing permissions.
+- Updated `docs/plans/index.md` and `docs/handoff/current-state.md` with the
+  reviewed guard requirement.
+
+Next action:
+
+- Execute with `Go: V2-0052` when ready, keeping the route-guard alignment in
+  scope alongside the RPC/form work.
+
+## 2026-07-02 - V2-0052 Architect Refresh
+
+Context:
+
+- User requested `Architect: V2-0052` after the resume/status pass.
+- Plan-only lane: no runtime code, schema, migrations, staging data,
+  deployment settings, V1 production files, GAS deployments, Sheets, live URLs,
+  LINE tokens, or secrets changed.
+
+What was checked:
+
+- Read the V2 architecture/migration context, module inventory, database
+  strategy, PR/PO/GR mapping, V1 `development_context.md`, and ADRs `0015`,
+  `0020`, `0021`, and `0025`.
+- Used the Supabase skill and rechecked current official Supabase docs/
+  changelog for Data API grants, RLS, and function privileges.
+
+Result:
+
+- `V2-0052` remains the right next PR/PO/GR write slice. No design change is
+  needed.
+- The April 2026 Supabase Data API change reinforces explicit `GRANT` usage;
+  this plan already follows the repo's explicit grant/revoke posture and ADR
+  `0015` service-role-only RPC pattern.
+- Updated `docs/plans/V2-0052-gr-from-po-slice.md`,
+  `docs/plans/index.md`, and `docs/handoff/current-state.md` with the
+  2026-07-02 architect review note.
+
+Recommended MVP defaults if execution starts without more user decisions:
+
+- Defer `receipt_number`.
+- Do not block over-receive yet.
+- Do not change PO status after GR creation.
+- Use the logged-in user as receiver.
+- Copy unit from PO line.
+- Defer a dedicated `/receiving` PO queue.
+
+Next action:
+
+- Execute with `Go: V2-0052`, or override one of the MVP defaults before
+  implementation.
+
+## 2026-07-02 - V2-0052 GR From PO Slice Execution
+
+Context:
+
+- User issued `let's work  Go: V2-0052`.
+- Context carried full reconnaissance from prior session (all schema and
+  source files already read).
+
+Changes:
+
+- `supabase/migrations/20260702120000_gr_from_po_slice.sql` (new):
+  widened `receiving_events_type_check` to add `gr_created_from_po`
+  (drop + re-add); added `public.create_goods_receipt_from_order(
+  p_purchase_order_id, p_actor_profile_id, p_actor_name, p_receipt_date,
+  p_line_quantities jsonb, p_remark)` returning plain `uuid`. ADR 0015
+  posture: SECURITY INVOKER, EXECUTE revoked from public/anon/authenticated,
+  granted to service_role. Logic: locks PO FOR UPDATE; validates
+  po_pending_receipt status; validates at least one entry in
+  p_line_quantities; validates all po_line_ids belong to the target PO;
+  validates at least one positive received_qty; inserts GR header
+  (status='gr_draft', legacy_source='v2_app', remark set on column not just
+  metadata), GR lines (skipping zero-qty entries, copying product identity
+  from PO lines), and `gr_created_from_po` event.
+- `scripts/verify-staging-schema.mjs`: added `create_goods_receipt_from_order`
+  to `publicServiceRoleRpcNames` (6→7) and `assertSetEqual` expected list
+  (10→12 entries in the full function set).
+- `src/modules/purchasing/read-model.ts`: added `LinkedGr` type and
+  `LinkedGrRow`; added `linkedGrs: LinkedGr[]` to `PurchaseOrderDetail`;
+  extended `getPurchaseOrderDetail()` with 4th parallel query on
+  `receiving_goods_receipts WHERE purchase_order_id = id`.
+- `src/modules/receiving/create-gr-from-po-action.ts` (new): server action
+  `createGoodsReceiptFromOrder(purchaseOrderId, previousState, formData)` —
+  `receiving.write` guard; collects per-line `qty_<po_line_id>` from formData,
+  skips zeros, requires at least one positive; calls
+  `createAdminClient().rpc(...)` with scalar `uuid` return; maps error strings
+  to user-facing messages; redirects to `/receiving/${grId}`.
+- `src/modules/receiving/create-gr-from-po-form.tsx` (new): client component
+  with `useActionState`, per-line qty inputs (`qty_<po_line_id>`), receipt
+  date (defaulted to Bangkok today), optional remark textarea.
+- `src/modules/receiving/format.ts`: added full `EVENT_TYPE_LABELS` map and
+  `formatGoodsReceiptEventType()` function covering all 9 known event types.
+- `src/app/purchasing/[id]/create-gr/page.tsx` (new): `force-dynamic`;
+  `receiving.write` guard; redirects to `/purchasing/${id}` if PO not
+  `po_pending_receipt`; renders `CreateGrFromPoForm`.
+- `src/app/purchasing/[id]/page.tsx`: expanded guard to `anyOf: [purchasing.*,
+  receiving.*]`; updated AccessDenied body text; added "Create goods receipt"
+  action section (canCreateGr = po_pending_receipt + can receiving.write);
+  added "Goods receipts" list section showing linked GRs with status pills
+  and links to `/receiving/[grId]`.
+- `src/app/receiving/[id]/page.tsx`: expanded guard to `anyOf: [receiving.*,
+  purchasing.*]`; updated AccessDenied body text; replaced raw
+  `{event.eventType}` with `formatGoodsReceiptEventType(event.eventType)`.
+
+Verification:
+
+- `npm run typecheck` — passed (0 errors).
+- `npm run lint` — passed (0 errors; pre-existing V2-0048 warnings only).
+- `node scripts/apply-migrations.mjs 20260702120000_gr_from_po_slice.sql`
+  — applied to staging.
+- `npm run db:verify-staging-schema` — passed (36 tables, 34 policies).
+- Direct RPC smoke tests (9/9 PASSED): happy path (GR created, header
+  verified status=gr_draft + remark, 1 line with qty=5, gr_created_from_po
+  event, cleanup); reject no-positive-qty (no_lines); reject invalid
+  po_line_id (invalid_po_line); reject unknown PO (po_not_found); reject
+  wrong status (po_not_pending_receipt).
+
+No V1 production files, GAS deployments, Sheets, live URLs, LINE tokens,
+deployment settings, or secrets changed. Browser UAT pending.
+
+Next action:
+
+- Browser UAT: sign in as SUPERVISOR (receiving.write), navigate to a
+  po_pending_receipt PO, create GR with partial line quantities, verify
+  redirect to /receiving/[grId] and event label "Created from purchase order".
+- Verify purchasing-only user can see linked GRs on PO detail, and
+  receiving-only user can open PO detail from GR links.
+- Optionally verify GUEST denied on /purchasing/[id]/create-gr.
+
+## 2026-07-02 - V2-0052 Browser UAT Closeout
+
+Context:
+
+- User supplied the implementation/staging smoke-test summary and noted Browser
+  UAT was pending.
+- This session ran the missing browser verification only, then updated closeout
+  docs. Temporary Playwright UAT scripts and `test-results/` artifacts were
+  removed after the run.
+
+Verification:
+
+- `npm run typecheck` — passed.
+- `npm run lint` — passed with only the pre-existing V2-0048 FigJam generator
+  warnings.
+- `npm run check:migrations` — passed.
+- `npm run build` — passed; route list includes
+  `/purchasing/[id]/create-gr`.
+- Browser UAT via Playwright runner — 19/19 passed:
+  - receiving.write user opened PO detail and saw "Create goods receipt";
+  - create-GR form rendered PO lines and qty inputs;
+  - 390px create-GR form had zero horizontal overflow;
+  - submit created a GR and redirected to `/receiving/[grId]`;
+  - GR detail showed "Created from purchase order" and copied line;
+  - 390px GR detail had zero horizontal overflow;
+  - PO detail showed linked GR;
+  - non-pending PO did not show create-GR action;
+  - GUEST denied on PO detail, create-GR route, and GR detail;
+  - temporary purchasing.write-only user saw linked GR on PO detail, had no
+    create-GR action, and could open linked GR detail;
+  - no browser console or page errors.
+
+Cleanup:
+
+- Temporary accounts `v2052-receiver@akra-v2.test`,
+  `v2052-purchasing-only@akra-v2.test`, and `v2052-guest@akra-v2.test` were
+  deleted.
+- Temporary role `V2052_PURCHASING_ONLY` was deleted.
+- UAT PR/PO/GR rows and events created for the run were deleted.
+- Service-role verification after cleanup found 0 matching profiles/Auth users,
+  0 temp roles, and 0 V2-0052 UAT actor events.
+
+Next action:
+
+- `V2-0052` is complete. Choose the next PR/PO/GR step: PO close/APV,
+  grouped PR -> PO -> GR staging UAT package, or deployed Vercel verification
+  for the existing write chain.

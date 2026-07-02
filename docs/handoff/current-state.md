@@ -1,6 +1,6 @@
 # Current State
 
-Last updated: 2026-07-01
+Last updated: 2026-07-02
 
 ## Project
 
@@ -200,7 +200,7 @@ Last updated: 2026-07-01
   staging data, deployment settings, V1 production files, GAS deployments,
   Sheets, live URLs, LINE tokens, or secrets changed.
   `V2-0049` (implementation complete and staging-verified on 2026-06-26;
-  signed-in browser UAT pending) starts the PR/PO/GR write workflow with the
+  signed-in browser UAT passed on 2026-07-01) starts the PR/PO/GR write workflow with the
   smallest transactional slice: V2-native PR creation. It adds
   `public.create_purchase_requisition(...)` as a public-schema, default
   `SECURITY INVOKER`, service-role-only RPC; extends the schema verifier so
@@ -223,13 +223,33 @@ Last updated: 2026-07-01
   (writer can approve/reject, terminal-state controls hidden, GUEST denied,
   390px zero overflow, no console errors). MVP approval uses existing
   `purchasing.write`; `purchasing.approve` deferred.
-  `V2-0051` (PO from approved PR) is drafted on 2026-07-01 as the next
-  PR/PO/GR write slice. The proposed MVP creates one V2-native PO from one
-  approved V2-native PR through a service-role-only
-  `create_purchase_order_from_requisition(...)` RPC, requires vendor selection,
-  copies all PR lines to PO lines, prevents duplicates through PR-line and bill
-  identity checks, records `po_created_from_pr`, and deliberately blocks
-  mixed-warehouse PRs until split behavior is planned.
+  `V2-0051` (PO from approved PR) is complete 2026-07-01: one V2-native PO
+  created from one approved V2-native PR through service-role-only
+  `create_purchase_order_from_requisition(...)` RPC; vendor selection required;
+  PR lines copied to PO lines with `purchase_request_line_id` linkage; duplicate
+  PO guards; `po_created_from_pr` event; PR detail shows linked PO and hides
+  create action after PO exists; 13/13 browser UAT passed.
+  `V2-0052` (GR from PO) is **Complete** 2026-07-02: migration
+  `20260702120000_gr_from_po_slice.sql` widened `receiving_events_type_check`
+  to add `gr_created_from_po` and added `public.create_goods_receipt_from_order(...)`
+  as a service-role-only RPC (returns plain `uuid`; ADR 0015 posture). Applied
+  to staging; schema verifier passed (36 tables/34 policies/7 service-role RPCs).
+  9/9 direct RPC smoke tests passed (happy path, header/line/event verification,
+  cleanup, no-positive-qty, invalid-po-line-id, po-not-found,
+  po-wrong-status). App layer: new `/purchasing/[id]/create-gr` page
+  (`receiving.write`-gated, redirects if PO not `po_pending_receipt`),
+  `CreateGrFromPoForm` client component, `createGoodsReceiptFromOrder` server
+  action; PO detail page expanded guard to `purchasing.*` or `receiving.*`,
+  added linked-GR list and "Create goods receipt" action link; GR detail page
+  expanded guard to `receiving.*` or `purchasing.*`, events now use
+  `formatGoodsReceiptEventType()`; `receiving/format.ts` gained full event
+  label map. `typecheck`/`lint`/`check:migrations`/`build` pass. Browser UAT
+  passed 19/19: receiving.write create flow, redirect to GR detail, event
+  label, linked-GR display, non-pending no-create-action check, GUEST denial,
+  purchasing.write-only linked-GR read path, 390px zero overflow, and no
+  console/page errors. Cleanup verification found 0 `v2052-*` profiles/Auth
+  users, 0 `V2052_PURCHASING_ONLY` temp roles, and 0 UAT actor events
+  remaining in staging.
 - Production impact: None
 - V1 reference path: `C:\dev\WEBAPP`
 
@@ -304,6 +324,7 @@ Plan IDs:
 - `V2-0049` (`docs/plans/V2-0049-pr-create-write-slice.md`)
 - `V2-0050` (`docs/plans/V2-0050-pr-approve-reject-slice.md`)
 - `V2-0051` (`docs/plans/V2-0051-po-from-approved-pr-slice.md`)
+- `V2-0052` (`docs/plans/V2-0052-gr-from-po-slice.md`)
 
 Goal: Continue Phase 3 from the verified Picking read-only/create baseline
 toward a full V1 replacement roadmap. `V2-0022` now frames the remaining work
@@ -1081,8 +1102,10 @@ Status:
     "Created from PR". 5/5 direct RPC smoke tests passed. 13/13 browser UAT
     passed. Test accounts `v2051-writer@akra-v2.test` (SUPERVISOR) and
     `v2051-guest@akra-v2.test` (GUEST) created for UAT — deleted 2026-07-01.
-30. Next PR/PO/GR implementation slice: GR-from-PO (goods receipt), or
-    Vercel-deployed V2-0049 verification (Preview/Development environment).
+30. Done 2026-07-02: `V2-0052` GR-from-PO complete and browser-verified
+    19/19. Next PR/PO/GR option: PO close/APV slice, grouped PR -> PO -> GR
+    staging UAT package, or Vercel-deployed verification for the existing
+    write chain.
 
 
 ## Open Questions

@@ -8,6 +8,7 @@ import { getGoodsReceiptDetail } from "@/modules/receiving/read-model";
 import {
   formatDateTime,
   formatExpiry,
+  formatGoodsReceiptEventType,
   formatGoodsReceiptStatusLabel,
   formatMatchStatusLabel,
   formatOptionalDate,
@@ -27,7 +28,9 @@ export default async function GoodsReceiptDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const guard = await requirePermission({ anyOf: ["receiving.read", "receiving.write"] });
+  const guard = await requirePermission({
+    anyOf: ["receiving.read", "receiving.write", "purchasing.read", "purchasing.write"],
+  });
 
   if (guard.status !== "allowed") {
     return (
@@ -37,7 +40,7 @@ export default async function GoodsReceiptDetailPage({
         eyebrow="Receiving"
         body={
           guard.reason === "forbidden"
-            ? "You need the receiving.read or receiving.write permission to view this page."
+            ? "You need receiving.read, receiving.write, purchasing.read, or purchasing.write to view this page."
             : undefined
         }
       />
@@ -195,7 +198,7 @@ export default async function GoodsReceiptDetailPage({
         <ul className="requisition-timeline">
           {receipt.events.map((event) => (
             <li className="requisition-timeline__item" key={event.id}>
-              <span className="requisition-timeline__type">{event.eventType}</span>
+              <span className="requisition-timeline__type">{formatGoodsReceiptEventType(event.eventType)}</span>
               <span className="requisition-timeline__meta">
                 {formatDateTime(event.createdAt)}
                 {event.actorName ? ` · ${event.actorName}` : ""}

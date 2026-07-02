@@ -60,6 +60,7 @@ const publicServiceRoleRpcNames = [
   "create_purchase_requisition",
   "transition_purchase_requisition_status",
   "create_purchase_order_from_requisition",
+  "create_goods_receipt_from_order",
 ];
 
 const client = new Client({
@@ -212,6 +213,7 @@ try {
     "private.has_permission",
     "private.is_admin",
     "private.next_picking_bill_no",
+    "public.create_goods_receipt_from_order",
     "public.create_picking_requisition",
     "public.create_purchase_order_from_requisition",
     "public.create_purchase_requisition",

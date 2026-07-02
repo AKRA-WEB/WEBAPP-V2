@@ -199,6 +199,20 @@ lines with `purchase_request_line_id` set), and a `po_created_from_pr` event.
 SECURITY INVOKER, EXECUTE to service_role only (ADR 0015). Applied to staging
 2026-07-01; `db:verify-staging-schema` passed (36 tables, 34 policies); 5/5
 smoke tests passed; 13/13 browser UAT passed.
+`V2-0052` (2026-07-02) adds the GR-from-PO write slice through
+`supabase/migrations/20260702120000_gr_from_po_slice.sql`: widens
+`receiving_events_type_check` to add `gr_created_from_po` (drop + re-add);
+adds `public.create_goods_receipt_from_order(uuid, uuid, text, date, jsonb, text)`
+returning `uuid` — locks PO row (`SELECT FOR UPDATE`), validates
+`po_pending_receipt` status, validates all submitted `po_line_id` values belong
+to the target PO, requires at least one positive `received_qty`, inserts GR
+header (`status='gr_draft'`, `remark` set on column, `legacy_source='v2_app'`),
+GR lines (skipping zero-qty entries, copying product identity from PO lines),
+and a `gr_created_from_po` event. SECURITY INVOKER, EXECUTE to service_role
+only (ADR 0015). Applied to staging 2026-07-02; `db:verify-staging-schema`
+passed (36 tables, 34 policies, 7 service-role RPCs); 9/9 smoke tests passed;
+browser UAT 19/19 passed. Temporary UAT Auth users, temp role, and test
+PR/PO/GR rows were cleaned up after verification.
 
 - The first PR/PO/GR migration is schema/RLS only. It should create
   `public.purchasing_*` and `public.receiving_*` tables, indexes, constraints,

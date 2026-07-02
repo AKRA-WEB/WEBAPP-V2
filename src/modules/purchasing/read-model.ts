@@ -36,6 +36,13 @@ export type PurchaseOrderEvent = {
   createdAt: string;
 };
 
+export type LinkedGr = {
+  id: string;
+  receiptDate: string | null;
+  status: string;
+  receiverName: string | null;
+};
+
 export type PurchaseOrderDetail = {
   id: string;
   poNumber: string;
@@ -54,6 +61,7 @@ export type PurchaseOrderDetail = {
   closedByName: string | null;
   lines: PurchaseOrderLine[];
   events: PurchaseOrderEvent[];
+  linkedGrs: LinkedGr[];
 };
 
 export type PurchaseRequestListItem = {
@@ -154,6 +162,13 @@ type PurchaseOrderEventRow = {
   created_at: string;
 };
 
+type LinkedGrRow = {
+  id: string;
+  receipt_date: string | null;
+  status: string;
+  receiver_name: string | null;
+};
+
 type PurchaseRequestListRow = {
   id: string;
   request_number: string | null;
@@ -244,7 +259,7 @@ export type PurchaseOrderDetailResult =
 export async function getPurchaseOrderDetail(id: string): Promise<PurchaseOrderDetailResult> {
   const supabase = await createClient();
 
-  const [orderResult, linesResult, eventsResult] = await Promise.all([
+  const [orderResult, linesResult, eventsResult, linkedGrsResult] = await Promise.all([
     supabase
       .from("purchasing_purchase_orders")
       .select(
@@ -264,9 +279,14 @@ export async function getPurchaseOrderDetail(id: string): Promise<PurchaseOrderD
       .select("id, event_type, actor_name, created_at")
       .eq("purchase_order_id", id)
       .order("created_at", { ascending: true }),
+    supabase
+      .from("receiving_goods_receipts")
+      .select("id, receipt_date, status, receiver_name")
+      .eq("purchase_order_id", id)
+      .order("created_at", { ascending: true }),
   ]);
 
-  if (orderResult.error || linesResult.error || eventsResult.error) {
+  if (orderResult.error || linesResult.error || eventsResult.error || linkedGrsResult.error) {
     return { status: "error" };
   }
 
@@ -277,6 +297,7 @@ export async function getPurchaseOrderDetail(id: string): Promise<PurchaseOrderD
   const order = orderResult.data as unknown as PurchaseOrderDetailRow;
   const lines = (linesResult.data ?? []) as unknown as PurchaseOrderLineRow[];
   const events = (eventsResult.data ?? []) as unknown as PurchaseOrderEventRow[];
+  const linkedGrRows = (linkedGrsResult.data ?? []) as unknown as LinkedGrRow[];
 
   return {
     status: "ok",
@@ -313,6 +334,12 @@ export async function getPurchaseOrderDetail(id: string): Promise<PurchaseOrderD
         eventType: event.event_type,
         actorName: event.actor_name,
         createdAt: event.created_at,
+      })),
+      linkedGrs: linkedGrRows.map((gr) => ({
+        id: gr.id,
+        receiptDate: gr.receipt_date,
+        status: gr.status,
+        receiverName: gr.receiver_name,
       })),
     },
   };
